@@ -1,17 +1,56 @@
 'use client';
 
-import React, { useState } from 'react';
-import { usePathname } from 'next/navigation';
+import React, { useEffect, useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import { motion } from 'motion/react';
 import { useAppPreferences } from '@/components/providers/app-preferences-provider';
+import { isPublicAuthPath } from '@/lib/auth/validation';
+import { createSupabaseBrowserClient } from '@/lib/supabase/browser';
 import { Sidebar } from './sidebar';
 import { Topbar } from './topbar';
 
-export function AppShell({ children }: { children: React.ReactNode }) {
+export interface AppShellProps {
+  children: React.ReactNode;
+  userEmail?: string | null;
+  supabaseConfigured?: boolean;
+}
+
+export function AppShell({
+  children,
+  userEmail = null,
+  supabaseConfigured = false,
+}: AppShellProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const { dict } = useAppPreferences();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const isAuthPage = isPublicAuthPath(pathname);
+
+  useEffect(() => {
+    if (isAuthPage || !supabaseConfigured) {
+      return;
+    }
+
+    const supabase = createSupabaseBrowserClient();
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_OUT') {
+        router.replace('/login?message=signed_out');
+        router.refresh();
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [isAuthPage, supabaseConfigured, router]);
+
+  if (isAuthPage) {
+    return <>{children}</>;
+  }
 
   return (
     <div className="flex min-h-screen w-full bg-slate-50 text-slate-950 dark:bg-slate-950 dark:text-slate-100">
@@ -23,7 +62,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       />
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <Topbar onOpenMobileMenu={() => setMobileMenuOpen(true)} />
+        <Topbar
+          onOpenMobileMenu={() => setMobileMenuOpen(true)}
+          userEmail={userEmail}
+          supabaseConfigured={supabaseConfigured}
+        />
 
         <main className="mx-auto w-full max-w-[1360px] flex-1 px-4 py-6 sm:px-6 lg:px-8">
           <motion.div

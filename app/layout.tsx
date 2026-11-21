@@ -1,4 +1,6 @@
 import type { Metadata } from 'next';
+import { headers } from 'next/headers';
+import { redirect } from 'next/navigation';
 import {
   IBM_Plex_Mono,
   Plus_Jakarta_Sans,
@@ -6,6 +8,8 @@ import {
 } from 'next/font/google';
 import { AppPreferencesProvider } from '@/components/providers/app-preferences-provider';
 import { AppShell } from '@/components/layout/app-shell';
+import { isPublicAuthPath } from '@/lib/auth/validation';
+import { getAuthenticatedUser } from '@/lib/supabase/server';
 import './globals.css';
 
 const plusJakartaSans = Plus_Jakarta_Sans({
@@ -47,11 +51,21 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const [headerStore, authState] = await Promise.all([
+    headers(),
+    getAuthenticatedUser(),
+  ]);
+
+  const pathname = headerStore.get('x-kiralis-pathname');
+  if (pathname && !isPublicAuthPath(pathname) && !authState.user) {
+    redirect(authState.configured ? '/login' : '/login?error=config_missing');
+  }
+
   return (
     <html
       lang="fr"
@@ -63,7 +77,12 @@ export default function RootLayout({
         className="min-h-screen bg-slate-50 text-slate-950 antialiased dark:bg-slate-950 dark:text-slate-100"
       >
         <AppPreferencesProvider>
-          <AppShell>{children}</AppShell>
+          <AppShell
+            userEmail={authState.user?.email ?? null}
+            supabaseConfigured={authState.configured}
+          >
+            {children}
+          </AppShell>
         </AppPreferencesProvider>
       </body>
     </html>
