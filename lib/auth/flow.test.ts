@@ -12,6 +12,7 @@ import {
   type SupabaseAuthLike,
 } from './actions';
 import { evaluateAuthRouteGuard } from './route-guard';
+import { getOptionalSupabaseEnv } from '../supabase/env';
 
 function createStubAuth(
   overrides: Partial<SupabaseAuthLike> = {}
@@ -214,7 +215,7 @@ test('route guard enforces protected routes, redirects unauthenticated users, an
     }),
     {
       action: 'redirect',
-      location: '/login?error=config_missing&next=%2Fvehicles',
+      location: '/login?next=%2Fvehicles',
       protectedRoute: true,
     }
   );
@@ -314,4 +315,35 @@ test('SSR server and middleware modules verify identity with getUser() and never
 
   assert.match(browserSrc, /createBrowserClient/);
   assert.doesNotMatch(browserSrc, /service_role|SUPABASE_SERVICE_ROLE/i);
+});
+
+test('getOptionalSupabaseEnv accepts valid publishable config and rejects missing or secret keys', () => {
+  assert.equal(getOptionalSupabaseEnv({}), null);
+
+  assert.equal(
+    getOptionalSupabaseEnv({
+      NEXT_PUBLIC_SUPABASE_URL: 'https://example.supabase.co',
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: 'legacy-anon-key',
+    }),
+    null
+  );
+
+  assert.equal(
+    getOptionalSupabaseEnv({
+      NEXT_PUBLIC_SUPABASE_URL: 'https://example.supabase.co',
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: 'sb_secret_never_allow_this',
+    }),
+    null
+  );
+
+  assert.deepEqual(
+    getOptionalSupabaseEnv({
+      NEXT_PUBLIC_SUPABASE_URL: 'https://example.supabase.co',
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_valid_key_123',
+    }),
+    {
+      url: 'https://example.supabase.co',
+      publishableKey: 'sb_publishable_valid_key_123',
+    }
+  );
 });

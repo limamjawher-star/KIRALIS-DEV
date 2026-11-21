@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
   const isRecovery = rawType === 'recovery';
 
   if (!hasSupabaseEnv(process.env)) {
-    return redirectNoStore(new URL('/login?error=config_missing', origin));
+    return redirectNoStore(new URL('/login', origin));
   }
 
   if (!tokenHash || !rawType || !ALLOWED_OTP_TYPES.has(rawType)) {

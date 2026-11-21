@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
   const isRecoveryFlow = rawType === 'recovery' || nextRaw === '/reset-password';
 
   if (!hasSupabaseEnv(process.env)) {
-    return redirectNoStore(new URL('/login?error=config_missing', origin));
+    return redirectNoStore(new URL('/login', origin));
   }
 
   const safeNext = isRecoveryFlow

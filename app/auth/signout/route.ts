@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { ACTIVE_AGENCY_COOKIE_NAME } from '@/lib/agency/types';
 import { NO_STORE_CACHE_HEADERS } from '@/lib/auth/validation';
 import { hasSupabaseEnv } from '@/lib/supabase/env';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
@@ -6,26 +7,35 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
 export const dynamic = 'force-dynamic';
 
 /**
- * Server-side logout handler ensuring Supabase Auth session cookies are
- * invalidated and never cached.
+ * Server-side logout handler ensuring Supabase Auth session cookies and
+ * active agency selection cookie are invalidated and never cached.
  */
 export async function POST() {
   if (!hasSupabaseEnv(process.env)) {
-    return NextResponse.json(
+    const response = NextResponse.json(
       { ok: false, error: 'Supabase environment variables are not configured.' },
       { status: 503, headers: NO_STORE_CACHE_HEADERS }
     );
+    response.cookies.delete(ACTIVE_AGENCY_COOKIE_NAME);
+    return response;
   }
 
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase.auth.signOut();
 
   if (error) {
-    return NextResponse.json(
+    const response = NextResponse.json(
       { ok: false, error: error.message },
       { status: 500, headers: NO_STORE_CACHE_HEADERS }
     );
+    response.cookies.delete(ACTIVE_AGENCY_COOKIE_NAME);
+    return response;
   }
 
-  return NextResponse.json({ ok: true }, { status: 200, headers: NO_STORE_CACHE_HEADERS });
+  const response = NextResponse.json(
+    { ok: true },
+    { status: 200, headers: NO_STORE_CACHE_HEADERS }
+  );
+  response.cookies.delete(ACTIVE_AGENCY_COOKIE_NAME);
+  return response;
 }

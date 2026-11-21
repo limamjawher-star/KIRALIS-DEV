@@ -83,15 +83,24 @@ export function getSupabaseEnv(env: EnvRecord = process.env): SupabasePublicEnv 
 }
 
 /**
+ * Returns the validated public Supabase URL and publishable key, or null when missing/invalid.
+ * Always rejects secret keys (sb_secret_*). Safe for passing from Server Components to browser clients.
+ */
+export function getOptionalSupabaseEnv(
+  env: EnvRecord = process.env
+): SupabasePublicEnv | null {
+  try {
+    return getSupabaseEnv(env);
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Non-throwing check used to guard optional UI/server flows before Supabase is configured.
  */
 export function hasSupabaseEnv(env: EnvRecord = process.env): boolean {
-  try {
-    getSupabaseEnv(env);
-    return true;
-  } catch {
-    return false;
-  }
+  return getOptionalSupabaseEnv(env) !== null;
 }
 
 export interface ResolveOriginOptions {

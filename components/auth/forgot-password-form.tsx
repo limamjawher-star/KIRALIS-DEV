@@ -10,18 +10,20 @@ import {
 } from '@/components/ui/form-field';
 import { performPasswordResetRequest } from '@/lib/auth/actions';
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser';
+import type { SupabasePublicEnv } from '@/lib/supabase/env';
 import { cn } from '@/lib/utils';
 import { AuthAlert } from './auth-alert';
 
 export interface ForgotPasswordFormProps {
-  supabaseConfigured: boolean;
+  supabasePublicEnv: SupabasePublicEnv | null;
   initialError?: string | null;
 }
 
 export function ForgotPasswordForm({
-  supabaseConfigured,
+  supabasePublicEnv,
   initialError,
 }: ForgotPasswordFormProps) {
+  const supabaseConfigured = Boolean(supabasePublicEnv);
   const [email, setEmail] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(
@@ -34,7 +36,7 @@ export function ForgotPasswordForm({
     setErrorMessage(null);
     setSubmitted(false);
 
-    if (!supabaseConfigured) {
+    if (!supabasePublicEnv) {
       setErrorMessage(
         'L’authentification Supabase n’est pas configurée dans cet environnement.'
       );
@@ -43,7 +45,7 @@ export function ForgotPasswordForm({
 
     setSubmitting(true);
     try {
-      const supabase = createSupabaseBrowserClient();
+      const supabase = createSupabaseBrowserClient(supabasePublicEnv);
       const result = await performPasswordResetRequest(supabase.auth, email, {
         configuredUrl: process.env.NEXT_PUBLIC_APP_URL,
         requestOrigin: window.location.origin,

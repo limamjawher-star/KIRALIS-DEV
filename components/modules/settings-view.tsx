@@ -1,378 +1,287 @@
 'use client';
 
-import React, { useState } from 'react';
-import { CheckCircle2, AlertCircle } from 'lucide-react';
+import React from 'react';
+import { Building2, CheckCircle2, Globe, ShieldCheck } from 'lucide-react';
 import {
-  INITIAL_AGENCY_SETTINGS,
-  hasValidationErrors,
-  validateAgencySettings,
-  type AgencySettingsErrors,
-  type AgencySettingsFormValues,
-} from '@/lib/settings-validation';
+  formatAgencyRoleLabel,
+  formatCountryLabel,
+  formatVatRateFromBps,
+  type AgencyRecord,
+  type AgencyRole,
+} from '@/lib/agency/types';
 import { useAppPreferences } from '@/components/providers/app-preferences-provider';
-import { Button } from '@/components/ui/button';
 import {
   FormField,
   INPUT_BASE_CLASSES,
   getInputStateClasses,
 } from '@/components/ui/form-field';
-import { ModuleNotice } from '@/components/ui/module-notice';
 import { PageHeader } from '@/components/ui/page-header';
 import { Surface } from '@/components/ui/surface';
 import { cn } from '@/lib/utils';
 
-export function SettingsView() {
-  const { dict } = useAppPreferences();
+export interface SettingsViewProps {
+  agency: AgencyRecord;
+  role: AgencyRole;
+}
+
+const LOCALE_NAMES: Record<'fr' | 'en' | 'ar', string> = {
+  fr: 'Français (FR)',
+  en: 'English (EN)',
+  ar: 'العربية (AR)',
+};
+
+export function SettingsView({ agency, role }: SettingsViewProps) {
+  const { dict, locale } = useAppPreferences();
   const moduleCopy = dict.modules.settings;
   const copy = dict.settings;
+  const roleLabel = formatAgencyRoleLabel(role, locale);
+  const countryLabel = formatCountryLabel(agency.country_code, locale);
+  const vatFormatted = formatVatRateFromBps(agency.vat_rate_bps, locale);
 
-  const [values, setValues] = useState<AgencySettingsFormValues>(
-    INITIAL_AGENCY_SETTINGS
+  const createdDate = new Intl.DateTimeFormat('fr-TN', {
+    dateStyle: 'long',
+    timeZone: agency.timezone || 'Africa/Tunis',
+  }).format(new Date(agency.created_at));
+
+  const readOnlyInputClass = cn(
+    INPUT_BASE_CLASSES,
+    getInputStateClasses(false),
+    'bg-slate-50 text-slate-900 dark:bg-slate-950/70 dark:text-slate-100'
   );
-  const [errors, setErrors] = useState<AgencySettingsErrors>({});
-  const [submissionState, setSubmissionState] = useState<
-    'idle' | 'invalid' | 'validated'
-  >('idle');
-
-  const updateField = <K extends keyof AgencySettingsFormValues>(
-    field: K,
-    nextValue: AgencySettingsFormValues[K]
-  ) => {
-    setValues((prev) => ({ ...prev, [field]: nextValue }));
-    if (errors[field]) {
-      setErrors((prev) => {
-        const copyErrors = { ...prev };
-        delete copyErrors[field];
-        return copyErrors;
-      });
-    }
-    if (submissionState !== 'idle') {
-      setSubmissionState('idle');
-    }
-  };
-
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const nextErrors = validateAgencySettings(values);
-    setErrors(nextErrors);
-    if (hasValidationErrors(nextErrors)) {
-      setSubmissionState('invalid');
-      return;
-    }
-    setSubmissionState('validated');
-  };
-
-  const handleReset = () => {
-    setValues(INITIAL_AGENCY_SETTINGS);
-    setErrors({});
-    setSubmissionState('idle');
-  };
-
-  const errorTextFor = (field: keyof AgencySettingsFormValues) => {
-    const code = errors[field];
-    return code ? copy.errors[code] : undefined;
-  };
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title={moduleCopy.title}
-        description={moduleCopy.description}
-        plannedPhase="Phase 2"
+        title={`${moduleCopy.title} — ${agency.name}`}
+        description="Paramètres persistés de votre agence chargés en direct depuis Supabase PostgreSQL avec isolation par agence (RLS)."
+        meta={`Agence active · Rôle : ${roleLabel} · Créée le ${createdDate}`}
       />
 
-      <ModuleNotice
-        title={dict.common.phase1NoticeTitle}
-        body={moduleCopy.emptyDescription}
-      />
-
-      {submissionState === 'validated' ? (
-        <div
-          role="status"
-          className="flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50/70 px-4 py-3.5 text-sm dark:border-emerald-900 dark:bg-emerald-950/40"
-        >
-          <CheckCircle2
-            className="mt-0.5 h-4 w-4 shrink-0 text-emerald-700 dark:text-emerald-400"
-            aria-hidden="true"
-          />
-          <div className="space-y-0.5">
-            <p className="font-medium text-emerald-950 dark:text-emerald-200">
-              {copy.validationSuccessTitle}
-            </p>
-            <p className="text-xs leading-relaxed text-emerald-800 dark:text-emerald-300/90">
-              {copy.validationSuccessBody}
-            </p>
-          </div>
-        </div>
-      ) : null}
-
-      {submissionState === 'invalid' ? (
-        <div
-          role="alert"
-          className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50/70 px-4 py-3.5 text-sm dark:border-red-900 dark:bg-red-950/40"
-        >
-          <AlertCircle
-            className="mt-0.5 h-4 w-4 shrink-0 text-red-600 dark:text-red-400"
-            aria-hidden="true"
-          />
-          <p className="text-xs font-medium text-red-800 dark:text-red-200">
-            {copy.validationErrorSummary}
+      <div
+        role="status"
+        className="flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50/70 px-4 py-3.5 text-sm dark:border-emerald-900 dark:bg-emerald-950/40"
+      >
+        <CheckCircle2
+          className="mt-0.5 h-4 w-4 shrink-0 text-emerald-700 dark:text-emerald-400"
+          aria-hidden="true"
+        />
+        <div className="space-y-0.5">
+          <p className="font-medium text-emerald-950 dark:text-emerald-200">
+            Agence synchronisée avec Supabase PostgreSQL
+          </p>
+          <p className="text-xs leading-relaxed text-emerald-800 dark:text-emerald-300/90">
+            Les informations ci-dessous proviennent directement de votre fiche
+            agence enregistrée lors de l’onboarding. L’édition avancée des
+            paramètres et la gestion d’équipe seront ajoutées lors de la phase
+            dédiée.
           </p>
         </div>
-      ) : null}
+      </div>
 
-      <form onSubmit={handleSubmit} noValidate className="space-y-6">
-        {/* Identity section */}
-        <Surface padded className="space-y-5">
-          <div className="border-b border-slate-200 pb-4 dark:border-slate-800">
+      {/* Identity section */}
+      <Surface padded className="space-y-5">
+        <div className="flex items-start gap-3 border-b border-slate-200 pb-4 dark:border-slate-800">
+          <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-600 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300">
+            <Building2 className="h-4 w-4" aria-hidden="true" />
+          </span>
+          <div>
             <h2 className="text-base font-semibold text-slate-950 dark:text-slate-50">
               {copy.identitySectionTitle}
             </h2>
-            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+            <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
               {copy.identitySectionDesc}
             </p>
           </div>
+        </div>
 
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <FormField
-              id="agencyName"
-              label={copy.fields.agencyName}
-              required
-              errorText={errorTextFor('agencyName')}
-            >
-              <input
-                id="agencyName"
-                name="agencyName"
-                type="text"
-                value={values.agencyName}
-                onChange={(e) => updateField('agencyName', e.target.value)}
-                placeholder={copy.fields.agencyNamePlaceholder}
-                aria-invalid={Boolean(errors.agencyName)}
-                aria-describedby={errors.agencyName ? 'agencyName-error' : undefined}
-                className={cn(
-                  INPUT_BASE_CLASSES,
-                  getInputStateClasses(Boolean(errors.agencyName))
-                )}
-              />
-            </FormField>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <FormField id="settings-agency-name" label={copy.fields.agencyName}>
+            <input
+              id="settings-agency-name"
+              type="text"
+              value={agency.name}
+              readOnly
+              className={readOnlyInputClass}
+            />
+          </FormField>
 
-            <FormField id="legalName" label={copy.fields.legalName}>
-              <input
-                id="legalName"
-                name="legalName"
-                type="text"
-                value={values.legalName}
-                onChange={(e) => updateField('legalName', e.target.value)}
-                placeholder={copy.fields.legalNamePlaceholder}
-                className={cn(INPUT_BASE_CLASSES, getInputStateClasses(false))}
-              />
-            </FormField>
+          <FormField id="settings-legal-name" label={copy.fields.legalName}>
+            <input
+              id="settings-legal-name"
+              type="text"
+              value={agency.legal_name ?? 'Non renseigné'}
+              readOnly
+              className={readOnlyInputClass}
+            />
+          </FormField>
 
-            <FormField
-              id="taxId"
-              label={copy.fields.taxId}
-              helperText={copy.fields.taxIdHelp}
-            >
-              <input
-                id="taxId"
-                name="taxId"
-                type="text"
-                value={values.taxId}
-                onChange={(e) => updateField('taxId', e.target.value)}
-                placeholder={copy.fields.taxIdPlaceholder}
-                aria-describedby="taxId-help"
-                className={cn(
-                  INPUT_BASE_CLASSES,
-                  'font-mono',
-                  getInputStateClasses(false)
-                )}
-              />
-            </FormField>
+          <FormField
+            id="settings-slug"
+            label="Identifiant unique (slug)"
+            helperText="Identifiant unique de votre espace agence."
+          >
+            <input
+              id="settings-slug"
+              type="text"
+              value={agency.slug}
+              readOnly
+              className={cn(readOnlyInputClass, 'font-mono')}
+            />
+          </FormField>
 
-            <FormField
-              id="email"
-              label={copy.fields.email}
-              required
-              errorText={errorTextFor('email')}
-            >
-              <input
-                id="email"
-                name="email"
-                type="email"
-                value={values.email}
-                onChange={(e) => updateField('email', e.target.value)}
-                placeholder={copy.fields.emailPlaceholder}
-                aria-invalid={Boolean(errors.email)}
-                aria-describedby={errors.email ? 'email-error' : undefined}
-                className={cn(
-                  INPUT_BASE_CLASSES,
-                  getInputStateClasses(Boolean(errors.email))
-                )}
-              />
-            </FormField>
+          <FormField
+            id="settings-tax-id"
+            label={copy.fields.taxId}
+            helperText={copy.fields.taxIdHelp}
+          >
+            <input
+              id="settings-tax-id"
+              type="text"
+              value={agency.tax_id ?? 'Non renseigné'}
+              readOnly
+              className={cn(readOnlyInputClass, 'font-mono')}
+            />
+          </FormField>
 
-            <FormField
-              id="phone"
-              label={copy.fields.phone}
-              required
-              errorText={errorTextFor('phone')}
-            >
-              <input
-                id="phone"
-                name="phone"
-                type="tel"
-                value={values.phone}
-                onChange={(e) => updateField('phone', e.target.value)}
-                placeholder={copy.fields.phonePlaceholder}
-                aria-invalid={Boolean(errors.phone)}
-                aria-describedby={errors.phone ? 'phone-error' : undefined}
-                className={cn(
-                  INPUT_BASE_CLASSES,
-                  'font-mono',
-                  getInputStateClasses(Boolean(errors.phone))
-                )}
-              />
-            </FormField>
+          <FormField id="settings-email" label={copy.fields.email}>
+            <input
+              id="settings-email"
+              type="email"
+              value={agency.email ?? 'Non renseigné'}
+              readOnly
+              className={readOnlyInputClass}
+            />
+          </FormField>
 
-            <FormField
-              id="city"
-              label={copy.fields.city}
-              required
-              errorText={errorTextFor('city')}
-            >
-              <input
-                id="city"
-                name="city"
-                type="text"
-                value={values.city}
-                onChange={(e) => updateField('city', e.target.value)}
-                placeholder={copy.fields.cityPlaceholder}
-                aria-invalid={Boolean(errors.city)}
-                aria-describedby={errors.city ? 'city-error' : undefined}
-                className={cn(
-                  INPUT_BASE_CLASSES,
-                  getInputStateClasses(Boolean(errors.city))
-                )}
-              />
-            </FormField>
+          <FormField id="settings-phone" label={copy.fields.phone}>
+            <input
+              id="settings-phone"
+              type="tel"
+              value={agency.phone ?? 'Non renseigné'}
+              readOnly
+              className={cn(readOnlyInputClass, 'font-mono')}
+            />
+          </FormField>
 
-            <FormField
-              id="address"
-              label={copy.fields.address}
-              className="md:col-span-2"
-            >
-              <input
-                id="address"
-                name="address"
-                type="text"
-                value={values.address}
-                onChange={(e) => updateField('address', e.target.value)}
-                placeholder={copy.fields.addressPlaceholder}
-                className={cn(INPUT_BASE_CLASSES, getInputStateClasses(false))}
-              />
-            </FormField>
-          </div>
-        </Surface>
+          <FormField id="settings-city" label={copy.fields.city}>
+            <input
+              id="settings-city"
+              type="text"
+              value={agency.city ?? 'Non renseignée'}
+              readOnly
+              className={readOnlyInputClass}
+            />
+          </FormField>
 
-        {/* Regional & tax defaults */}
-        <Surface padded className="space-y-5">
-          <div className="border-b border-slate-200 pb-4 dark:border-slate-800">
+          <FormField id="settings-country" label="Pays">
+            <input
+              id="settings-country"
+              type="text"
+              value={`${countryLabel} (${agency.country_code})`}
+              readOnly
+              className={readOnlyInputClass}
+            />
+          </FormField>
+
+          <FormField
+            id="settings-address"
+            label={copy.fields.address}
+            className="md:col-span-2"
+          >
+            <input
+              id="settings-address"
+              type="text"
+              value={agency.address ?? 'Non renseignée'}
+              readOnly
+              className={readOnlyInputClass}
+            />
+          </FormField>
+        </div>
+      </Surface>
+
+      {/* Regional & tax defaults */}
+      <Surface padded className="space-y-5">
+        <div className="flex items-start gap-3 border-b border-slate-200 pb-4 dark:border-slate-800">
+          <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-600 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300">
+            <Globe className="h-4 w-4" aria-hidden="true" />
+          </span>
+          <div>
             <h2 className="text-base font-semibold text-slate-950 dark:text-slate-50">
               {copy.regionalSectionTitle}
             </h2>
-            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+            <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
               {copy.regionalSectionDesc}
             </p>
           </div>
-
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <FormField id="currency" label={copy.fields.currency}>
-              <input
-                id="currency"
-                type="text"
-                value="TND (3 décimales)"
-                disabled
-                readOnly
-                className={cn(
-                  INPUT_BASE_CLASSES,
-                  'font-mono',
-                  getInputStateClasses(false)
-                )}
-              />
-            </FormField>
-
-            <FormField id="timezone" label={copy.fields.timezone}>
-              <input
-                id="timezone"
-                type="text"
-                value="Africa/Tunis (UTC+1)"
-                disabled
-                readOnly
-                className={cn(
-                  INPUT_BASE_CLASSES,
-                  'font-mono',
-                  getInputStateClasses(false)
-                )}
-              />
-            </FormField>
-
-            <FormField id="defaultLanguage" label={copy.fields.defaultLanguage}>
-              <select
-                id="defaultLanguage"
-                name="defaultLanguage"
-                value={values.defaultLanguage}
-                onChange={(e) =>
-                  updateField(
-                    'defaultLanguage',
-                    e.target.value as 'fr' | 'en' | 'ar'
-                  )
-                }
-                className={cn(INPUT_BASE_CLASSES, getInputStateClasses(false))}
-              >
-                <option value="fr">Français (FR)</option>
-                <option value="en">English (EN)</option>
-                <option value="ar">العربية (AR)</option>
-              </select>
-            </FormField>
-
-            <FormField
-              id="vatRatePercent"
-              label={copy.fields.vatRatePercent}
-              helperText={copy.fields.vatHelp}
-              errorText={errorTextFor('vatRatePercent')}
-            >
-              <input
-                id="vatRatePercent"
-                name="vatRatePercent"
-                type="text"
-                inputMode="decimal"
-                value={values.vatRatePercent}
-                onChange={(e) => updateField('vatRatePercent', e.target.value)}
-                aria-invalid={Boolean(errors.vatRatePercent)}
-                aria-describedby={
-                  errors.vatRatePercent
-                    ? 'vatRatePercent-error'
-                    : 'vatRatePercent-help'
-                }
-                className={cn(
-                  INPUT_BASE_CLASSES,
-                  'font-mono tabular-nums',
-                  getInputStateClasses(Boolean(errors.vatRatePercent))
-                )}
-              />
-            </FormField>
-          </div>
-        </Surface>
-
-        <div className="flex flex-wrap items-center justify-end gap-3">
-          <Button variant="secondary" type="button" onClick={handleReset}>
-            {copy.resetButton}
-          </Button>
-          <Button variant="primary" type="submit">
-            {copy.validateButton}
-          </Button>
         </div>
-      </form>
+
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <FormField id="settings-currency" label={copy.fields.currency}>
+            <input
+              id="settings-currency"
+              type="text"
+              value={`${agency.currency_code} (${agency.currency_minor_unit} décimales)`}
+              readOnly
+              className={cn(readOnlyInputClass, 'font-mono')}
+            />
+          </FormField>
+
+          <FormField id="settings-timezone" label={copy.fields.timezone}>
+            <input
+              id="settings-timezone"
+              type="text"
+              value={agency.timezone}
+              readOnly
+              className={cn(readOnlyInputClass, 'font-mono')}
+            />
+          </FormField>
+
+          <FormField
+            id="settings-default-language"
+            label={copy.fields.defaultLanguage}
+          >
+            <input
+              id="settings-default-language"
+              type="text"
+              value={LOCALE_NAMES[agency.default_locale] ?? agency.default_locale}
+              readOnly
+              className={readOnlyInputClass}
+            />
+          </FormField>
+
+          <FormField
+            id="settings-vat"
+            label={copy.fields.vatRatePercent}
+            helperText="Valeur par défaut configurable pour démonstration (non présentée comme règle légale universelle)."
+          >
+            <input
+              id="settings-vat"
+              type="text"
+              value={vatFormatted}
+              readOnly
+              className={cn(readOnlyInputClass, 'font-mono tabular-nums')}
+            />
+          </FormField>
+        </div>
+      </Surface>
+
+      {/* Tenant Security Summary */}
+      <Surface padded className="flex items-start gap-3">
+        <ShieldCheck
+          className="mt-0.5 h-4 w-4 shrink-0 text-blue-700 dark:text-blue-400"
+          aria-hidden="true"
+        />
+        <div className="space-y-0.5 text-xs text-slate-600 dark:text-slate-400">
+          <p className="font-medium text-slate-900 dark:text-slate-100">
+            Accès vérifié · Rôle {roleLabel}
+          </p>
+          <p>
+            Votre adhésion active à l’agence <strong>{agency.name}</strong> est
+            vérifiée côté serveur à chaque requête via Supabase Auth et les
+            politiques Row Level Security (RLS).
+          </p>
+        </div>
+      </Surface>
     </div>
   );
 }

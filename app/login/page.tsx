@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { AuthShell } from '@/components/auth/auth-shell';
 import { LoginForm } from '@/components/auth/login-form';
 import { sanitizeNextRedirectPath } from '@/lib/auth/validation';
-import { hasSupabaseEnv } from '@/lib/supabase/env';
+import { getOptionalSupabaseEnv } from '@/lib/supabase/env';
 
 export const dynamic = 'force-dynamic';
 
@@ -34,7 +34,7 @@ interface LoginPageProps {
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
   const params = await searchParams;
-  const supabaseConfigured = hasSupabaseEnv(process.env);
+  const supabasePublicEnv = getOptionalSupabaseEnv(process.env);
   const nextPath = sanitizeNextRedirectPath(params.next, '/');
   const initialError = params.error ? ERROR_MESSAGES[params.error] ?? null : null;
   const initialNotice = params.message
@@ -45,7 +45,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
     <AuthShell
       title="Connexion"
       subtitle="Accédez à votre espace de gestion KIRALIS."
-      supabaseConfigured={supabaseConfigured}
+      supabaseConfigured={Boolean(supabasePublicEnv)}
       footer={
         <p>
           Pas encore de compte ?{' '}
@@ -59,7 +59,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
       }
     >
       <LoginForm
-        supabaseConfigured={supabaseConfigured}
+        supabasePublicEnv={supabasePublicEnv}
         nextPath={nextPath}
         initialError={initialError}
         initialNotice={initialNotice}

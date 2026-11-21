@@ -11,18 +11,20 @@ import {
 } from '@/components/ui/form-field';
 import { performResendVerificationEmail } from '@/lib/auth/actions';
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser';
+import type { SupabasePublicEnv } from '@/lib/supabase/env';
 import { cn } from '@/lib/utils';
 import { AuthAlert } from './auth-alert';
 
 export interface VerifyEmailCardProps {
-  supabaseConfigured: boolean;
+  supabasePublicEnv: SupabasePublicEnv | null;
   initialEmail?: string | null;
 }
 
 export function VerifyEmailCard({
-  supabaseConfigured,
+  supabasePublicEnv,
   initialEmail,
 }: VerifyEmailCardProps) {
+  const supabaseConfigured = Boolean(supabasePublicEnv);
   const [email, setEmail] = useState(initialEmail?.trim() ?? '');
   const [sending, setSending] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -33,7 +35,7 @@ export function VerifyEmailCard({
     setErrorMessage(null);
     setSuccessMessage(null);
 
-    if (!supabaseConfigured) {
+    if (!supabasePublicEnv) {
       setErrorMessage(
         'L’authentification Supabase n’est pas configurée dans cet environnement.'
       );
@@ -42,7 +44,7 @@ export function VerifyEmailCard({
 
     setSending(true);
     try {
-      const supabase = createSupabaseBrowserClient();
+      const supabase = createSupabaseBrowserClient(supabasePublicEnv);
       const result = await performResendVerificationEmail(
         supabase.auth,
         email,

@@ -8,19 +8,26 @@ import { getNavItemByPathname } from '@/lib/navigation';
 import { SUPPORTED_LOCALES } from '@/lib/i18n/dictionaries';
 import { useAppPreferences } from '@/components/providers/app-preferences-provider';
 import { performLogout } from '@/lib/auth/actions';
+import type { AgencySummary } from '@/lib/agency/types';
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser';
+import type { SupabasePublicEnv } from '@/lib/supabase/env';
 import { cn } from '@/lib/utils';
+import { AgencySelector } from './agency-selector';
 
 export interface TopbarProps {
   onOpenMobileMenu: () => void;
   userEmail?: string | null;
-  supabaseConfigured?: boolean;
+  supabasePublicEnv?: SupabasePublicEnv | null;
+  activeAgency?: AgencySummary | null;
+  agencies?: AgencySummary[];
 }
 
 export function Topbar({
   onOpenMobileMenu,
   userEmail = null,
-  supabaseConfigured = false,
+  supabasePublicEnv = null,
+  activeAgency = null,
+  agencies = [],
 }: TopbarProps) {
   const pathname = usePathname();
   const router = useRouter();
@@ -36,8 +43,8 @@ export function Topbar({
     setSigningOut(true);
 
     try {
-      if (supabaseConfigured) {
-        const supabase = createSupabaseBrowserClient();
+      if (supabasePublicEnv) {
+        const supabase = createSupabaseBrowserClient(supabasePublicEnv);
         await performLogout(supabase.auth);
       }
       await fetch('/auth/signout', { method: 'POST' }).catch(() => null);
@@ -86,12 +93,14 @@ export function Topbar({
         </nav>
       </div>
 
-      {/* Right: Language switcher + Light/Dark toggle + Authenticated user & Logout */}
+      {/* Right: Agency selector + Language switcher + Light/Dark toggle + User & Logout */}
       <div className="flex shrink-0 items-center gap-2">
+        <AgencySelector activeAgency={activeAgency} agencies={agencies} />
+
         <div
           role="group"
           aria-label={dict.common.languageSelectorLabel}
-          className="inline-flex items-center rounded-lg border border-slate-200 bg-slate-100 p-0.5 dark:border-slate-800 dark:bg-slate-900"
+          className="hidden items-center rounded-lg border border-slate-200 bg-slate-100 p-0.5 sm:inline-flex dark:border-slate-800 dark:bg-slate-900"
         >
           {SUPPORTED_LOCALES.map((code) => {
             const active = code === locale;

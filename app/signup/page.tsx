@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { AuthShell } from '@/components/auth/auth-shell';
 import { SignupForm } from '@/components/auth/signup-form';
-import { hasSupabaseEnv } from '@/lib/supabase/env';
+import { getOptionalSupabaseEnv } from '@/lib/supabase/env';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,13 +11,13 @@ export const metadata: Metadata = {
 };
 
 export default function SignupPage() {
-  const supabaseConfigured = hasSupabaseEnv(process.env);
+  const supabasePublicEnv = getOptionalSupabaseEnv(process.env);
 
   return (
     <AuthShell
       title="Créer un compte"
       subtitle="Inscrivez-vous avec votre adresse e-mail professionnelle pour commencer."
-      supabaseConfigured={supabaseConfigured}
+      supabaseConfigured={Boolean(supabasePublicEnv)}
       footer={
         <p>
           Vous avez déjà un compte ?{' '}
@@ -30,7 +30,7 @@ export default function SignupPage() {
         </p>
       }
     >
-      <SignupForm supabaseConfigured={supabaseConfigured} />
+      <SignupForm supabasePublicEnv={supabasePublicEnv} />
     </AuthShell>
   );
 }

@@ -60,6 +60,12 @@ export async function updateSupabaseSession(
     });
 
     if (decision.action === 'redirect') {
+      if (pathname.startsWith('/api/')) {
+        return NextResponse.json(
+          { ok: false, error: 'Configuration Supabase manquante.' },
+          { status: 503, headers: NO_STORE_CACHE_HEADERS }
+        );
+      }
       return buildRedirectWithCookies(request, decision.location, supabaseResponse);
     }
 
@@ -105,6 +111,12 @@ export async function updateSupabaseSession(
   });
 
   if (decision.action === 'redirect') {
+    if (pathname.startsWith('/api/')) {
+      return NextResponse.json(
+        { ok: false, error: 'Authentification requise.' },
+        { status: 401, headers: NO_STORE_CACHE_HEADERS }
+      );
+    }
     return buildRedirectWithCookies(request, decision.location, supabaseResponse);
   }
 

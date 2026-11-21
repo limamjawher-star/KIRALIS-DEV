@@ -12,23 +12,25 @@ import {
 } from '@/components/ui/form-field';
 import { performEmailLogin } from '@/lib/auth/actions';
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser';
+import type { SupabasePublicEnv } from '@/lib/supabase/env';
 import { cn } from '@/lib/utils';
 import { AuthAlert } from './auth-alert';
 
 export interface LoginFormProps {
-  supabaseConfigured: boolean;
+  supabasePublicEnv: SupabasePublicEnv | null;
   nextPath: string;
   initialError?: string | null;
   initialNotice?: string | null;
 }
 
 export function LoginForm({
-  supabaseConfigured,
+  supabasePublicEnv,
   nextPath,
   initialError,
   initialNotice,
 }: LoginFormProps) {
   const router = useRouter();
+  const supabaseConfigured = Boolean(supabasePublicEnv);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -43,7 +45,7 @@ export function LoginForm({
     setErrorMessage(null);
     setUnverifiedEmail(null);
 
-    if (!supabaseConfigured) {
+    if (!supabasePublicEnv) {
       setErrorMessage(
         'L’authentification Supabase n’est pas configurée dans cet environnement.'
       );
@@ -52,7 +54,7 @@ export function LoginForm({
 
     setSubmitting(true);
     try {
-      const supabase = createSupabaseBrowserClient();
+      const supabase = createSupabaseBrowserClient(supabasePublicEnv);
       const result = await performEmailLogin(supabase.auth, {
         email,
         password,

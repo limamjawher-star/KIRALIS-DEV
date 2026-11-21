@@ -36,15 +36,15 @@ export function evaluateAuthRouteGuard(input: RouteGuardInput): RouteGuardDecisi
     }
 
     const params = new URLSearchParams();
-    params.set('error', 'config_missing');
     const requestedTarget = sanitizeNextRedirectPath(`${pathname}${search}`, '');
     if (requestedTarget && requestedTarget !== '/') {
       params.set('next', requestedTarget);
     }
+    const query = params.toString();
 
     return {
       action: 'redirect',
-      location: `/login?${params.toString()}`,
+      location: query ? `/login?${query}` : '/login',
       protectedRoute: true,
     };
   }

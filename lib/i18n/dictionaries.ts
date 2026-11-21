@@ -181,10 +181,10 @@ const FR_DICTIONARY: Dictionary = {
       navLabel: 'Tableau de bord',
       title: 'Tableau de bord',
       description:
-        'Vue d’ensemble opérationnelle de votre agence de location. Les indicateurs resteront à zéro tant que la base de données agence ne sera pas connectée.',
-      emptyTitle: 'Aucune donnée opérationnelle connectée',
+        'Vue d’ensemble opérationnelle de votre agence de location connectée à Supabase PostgreSQL.',
+      emptyTitle: 'Aucun enregistrement opérationnel',
       emptyDescription:
-        'Les départs du jour, retours attendus et indicateurs de flotte apparaîtront automatiquement dès la connexion à Supabase.',
+        'Les véhicules, clients et réservations de votre agence apparaîtront ici au fur et à mesure de leur enregistrement.',
       plannedFeatureSummary: 'Synthèse flotte, réservations du jour et indicateurs TND en temps réel.',
     },
     vehicles: {
@@ -289,13 +289,13 @@ const FR_DICTIONARY: Dictionary = {
     },
   },
   common: {
-    phase1Label: 'Fondation Phase 1',
-    phase1NoticeTitle: 'Module en préparation — Socle d’interface actif',
+    phase1Label: 'KIRALIS · Espace agence',
+    phase1NoticeTitle: 'Module métier en préparation',
     phase1NoticeBody:
-      'Aucune base de données ni authentification n’est connectée à ce stade. Aucune donnée métier simulée n’est affichée.',
-    moduleNotImplemented: 'Données non connectées',
+      'Votre compte Supabase et votre agence sont connectés. Les opérations de ce module seront activées dans une phase ultérieure ; aucune donnée métier simulée n’est affichée.',
+    moduleNotImplemented: 'Module à venir',
     plannedFor: 'Activation prévue',
-    noDatabaseConnected: 'Base de données non connectée',
+    noDatabaseConnected: '0 enregistrement',
     zeroRecords: '0 enregistrement',
     searchPlaceholder: 'Rechercher…',
     resetFilters: 'Réinitialiser',
@@ -313,18 +313,18 @@ const FR_DICTIONARY: Dictionary = {
     tunisia: 'Tunisie',
     workspace: 'Espace agence',
     noFilterMatch: 'Aucun résultat pour les critères sélectionnés — aucune donnée n’est encore enregistrée.',
-    upcomingActionNote: 'Disponible après connexion à la base de données',
+    upcomingActionNote: 'Disponible lors de l’activation de ce module',
   },
   dashboard: {
     metricsHeading: 'Indicateurs de l’agence',
     metricsFootnote:
-      'Valeurs réelles à zéro : aucune statistique fictive n’est générée avant la connexion à Supabase.',
+      'Valeurs réelles depuis Supabase : 0 affiché lorsqu’aucun enregistrement n’existe encore.',
     kpiFleet: 'Véhicules en flotte',
     kpiActiveRentals: 'Locations en cours',
     kpiPendingReturns: 'Retours prévus aujourd’hui',
     kpiMonthlyRevenue: 'Chiffre d’affaires du mois',
     kpiSubZero: '0 enregistré',
-    kpiSubNoDb: 'En attente de base de données',
+    kpiSubNoDb: '0 enregistré',
     modulesHeading: 'Architecture des modules KIRALIS',
     modulesSubheading:
       'Accédez à chaque section pour vérifier la navigation, la structure des écrans et le périmètre fonctionnel prévu.',
@@ -527,10 +527,10 @@ const EN_DICTIONARY: Dictionary = {
       navLabel: 'Dashboard',
       title: 'Dashboard',
       description:
-        'Operational overview of your rental agency. Metrics remain at zero until the agency database is connected.',
-      emptyTitle: 'No operational data connected',
+        'Operational overview of your rental agency connected to Supabase PostgreSQL.',
+      emptyTitle: 'No operational records yet',
       emptyDescription:
-        'Daily pickups, expected returns, and fleet metrics will populate automatically once Supabase is connected.',
+        'Your agency vehicles, customers, and reservations will appear here as soon as they are created.',
       plannedFeatureSummary: 'Fleet summary, daily bookings, and real-time TND indicators.',
     },
     vehicles: {
@@ -635,13 +635,13 @@ const EN_DICTIONARY: Dictionary = {
     },
   },
   common: {
-    phase1Label: 'Phase 1 Foundation',
-    phase1NoticeTitle: 'Module in preparation — UI foundation active',
+    phase1Label: 'KIRALIS · Agency workspace',
+    phase1NoticeTitle: 'Operational module in preparation',
     phase1NoticeBody:
-      'No database or authentication is connected yet. Zero fabricated business data is displayed.',
-    moduleNotImplemented: 'Data not connected',
+      'Your Supabase account and agency are connected. This operational module will be enabled in an upcoming phase; zero fabricated data is displayed.',
+    moduleNotImplemented: 'Upcoming module',
     plannedFor: 'Scheduled for',
-    noDatabaseConnected: 'Database not connected',
+    noDatabaseConnected: '0 records',
     zeroRecords: '0 records',
     searchPlaceholder: 'Search…',
     resetFilters: 'Reset',
@@ -659,18 +659,18 @@ const EN_DICTIONARY: Dictionary = {
     tunisia: 'Tunisia',
     workspace: 'Agency workspace',
     noFilterMatch: 'No matching results — no records are stored in the database yet.',
-    upcomingActionNote: 'Available once database is connected',
+    upcomingActionNote: 'Available when this module is enabled',
   },
   dashboard: {
     metricsHeading: 'Agency indicators',
     metricsFootnote:
-      'Honest zero state: no simulated statistics are generated prior to connecting Supabase.',
+      'Real counts from Supabase: 0 displayed whenever your agency has no records yet.',
     kpiFleet: 'Fleet vehicles',
     kpiActiveRentals: 'Active rentals',
     kpiPendingReturns: 'Returns due today',
     kpiMonthlyRevenue: 'Monthly revenue',
     kpiSubZero: '0 recorded',
-    kpiSubNoDb: 'Awaiting database',
+    kpiSubNoDb: '0 recorded',
     modulesHeading: 'KIRALIS module architecture',
     modulesSubheading:
       'Navigate to any module to inspect screen layouts, tables, empty states, and planned scope.',
@@ -838,10 +838,10 @@ const AR_DICTIONARY: Dictionary = {
       navLabel: 'لوحة القيادة',
       title: 'لوحة القيادة',
       description:
-        'نظرة تشغيلية شاملة لوكالة كراء السيارات. تبقى المؤشرات عند الصفر إلى حين ربط قاعدة البيانات.',
-      emptyTitle: 'لا توجد بيانات تشغيلية متصلة',
+        'نظرة تشغيلية شاملة لوكالة كراء السيارات المتصلة بقاعدة بيانات Supabase PostgreSQL.',
+      emptyTitle: 'لا توجد سجلات تشغيلية بعد',
       emptyDescription:
-        'ستظهر عمليات التسليم والاسترجاع ومؤشرات الأسطول تلقائياً بعد ربط قاعدة بيانات Supabase.',
+        'ستظهر السيارات والحرفاء والحجوزات الخاصة بوكالتك هنا فور تسجيلها.',
       plannedFeatureSummary: 'ملخص الأسطول والحجوزات اليومية والمؤشرات المالية بالدينار التونسي.',
     },
     vehicles: {
@@ -946,13 +946,13 @@ const AR_DICTIONARY: Dictionary = {
     },
   },
   common: {
-    phase1Label: 'المرحلة 1 — الأساس',
-    phase1NoticeTitle: 'وحدة قيد الإعداد — هيكل الواجهة جاهز',
+    phase1Label: 'KIRALIS · مساحة الوكالة',
+    phase1NoticeTitle: 'وحدة تشغيلية قيد الإعداد',
     phase1NoticeBody:
-      'لم يتم ربط قاعدة البيانات أو المصادقة بعد. لا يتم عرض أي بيانات تجارية وهمية.',
-    moduleNotImplemented: 'البيانات غير متصلة',
+      'حساب Supabase ووكالتك متصلان حالياً. سيتم تفعيل عمليات هذه الوحدة في مرحلة لاحقة دون عرض أي بيانات وهمية.',
+    moduleNotImplemented: 'وحدة قادمة',
     plannedFor: 'مبرمج في',
-    noDatabaseConnected: 'قاعدة البيانات غير متصلة',
+    noDatabaseConnected: '0 سجل',
     zeroRecords: '0 سجل',
     searchPlaceholder: 'بحث…',
     resetFilters: 'إعادة ضبط',
@@ -970,18 +970,18 @@ const AR_DICTIONARY: Dictionary = {
     tunisia: 'تونس',
     workspace: 'مساحة الوكالة',
     noFilterMatch: 'لا توجد نتائج مطابقة — لم يتم تسجيل أي بيانات بعد.',
-    upcomingActionNote: 'متاح بعد ربط قاعدة البيانات',
+    upcomingActionNote: 'متاح عند تفعيل هذه الوحدة',
   },
   dashboard: {
     metricsHeading: 'مؤشرات الوكالة',
     metricsFootnote:
-      'قيم صفرية حقيقية: لا يتم توليد أي إحصائيات وهمية قبل ربط Supabase.',
+      'قيم حقيقية من Supabase: يظهر الصفر عندما لا توجد سجلات في الوكالة بعد.',
     kpiFleet: 'سيارات الأسطول',
     kpiActiveRentals: 'عمليات الكراء الجارية',
     kpiPendingReturns: 'الاسترجاعات المتوقعة اليوم',
     kpiMonthlyRevenue: 'مداخيل الشهر',
     kpiSubZero: '0 مسجل',
-    kpiSubNoDb: 'في انتظار قاعدة البيانات',
+    kpiSubNoDb: '0 مسجل',
     modulesHeading: 'هيكلة وحدات KIRALIS',
     modulesSubheading:
       'تنقل بين الوحدات لمعاينة بنية الشاشات والجداول والحالات الفارغة.',

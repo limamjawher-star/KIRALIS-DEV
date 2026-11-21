@@ -5,6 +5,9 @@
     "": {
       "name": "ai-studio-applet",
       "dependencies": {
+        "@fontsource-variable/plus-jakarta-sans": "^5.3.0",
+        "@fontsource-variable/public-sans": "^5.3.0",
+        "@fontsource/ibm-plex-mono": "^5.3.0",
         "@google/genai": "^2.4.0",
         "@hookform/resolvers": "^5.2.1",
         "@supabase/ssr": "^0.12.7",
@@ -101,6 +104,12 @@
     "@eslint/object-schema": ["@eslint/object-schema@2.1.7", "", {}, "sha512-VtAOaymWVfZcmZbp6E2mympDIHvyjXs/12LqWYjVw6qjrfF+VK+fyG33kChz3nnK+SU5/NeHOqrTEHS8sXO3OA=="],
 
     "@eslint/plugin-kit": ["@eslint/plugin-kit@0.4.1", "", { "dependencies": { "@eslint/core": "^0.17.0", "levn": "^0.4.1" } }, "sha512-43/qtrDUokr7LJqoF2c3+RInu/t4zfrpYdoSDfYyhg52rwLV6TnOvdG4fXm7IkSB3wErkcmJS9iEhjVtOSEjjA=="],
+
+    "@fontsource-variable/plus-jakarta-sans": ["@fontsource-variable/plus-jakarta-sans@5.3.0", "", {}, "sha512-/l/4r0yyWK9JzAlmA0LiYgGgmJe/Gswt4jTJEzr5QhJfwMbvJZDmYWyW0M4X7yCK69BajMVlV/Lx8g7WDc1+sw=="],
+
+    "@fontsource-variable/public-sans": ["@fontsource-variable/public-sans@5.3.0", "", {}, "sha512-AVfkmAt50BMXWpOO21FAntiJFKGX6xTc2dSL8dxtDteONe9IuRXJWGbs0EbG955vAMCq23ENeuopuW87cGWDSQ=="],
+
+    "@fontsource/ibm-plex-mono": ["@fontsource/ibm-plex-mono@5.3.0", "", {}, "sha512-eTgnZjZEGk1QtD3ZstF+Vclo2HLAni8YMy34/DxllwZvyz1lR/1RF/xTiAquOBO7MvqBx8D2Ig2WCPMVfdZu7Q=="],
 
     "@google-cloud/cloud-sql-connector": ["@google-cloud/cloud-sql-connector@1.13.0", "", { "dependencies": { "@google-cloud/sql": "^0.32.0", "@googleapis/sqladmin": "^42.0.0", "@grpc/grpc-js": "^1.14.7", "gaxios": "^8.3.2", "google-auth-library": "^11.3.4", "p-throttle": "^8.1.1" } }, "sha512-DAjtzUnKBsJrZTnfernOOCndi7RGFvwRk4drNBD60SJ64jx1T0+U6gyWVfbTHWTG8Nr6XwgBcGVK2W2unUzA1g=="],
 

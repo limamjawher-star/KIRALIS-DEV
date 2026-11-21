@@ -1,37 +1,18 @@
 import type { Metadata } from 'next';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
-import {
-  IBM_Plex_Mono,
-  Plus_Jakarta_Sans,
-  Public_Sans,
-} from 'next/font/google';
+import '@fontsource-variable/plus-jakarta-sans';
+import '@fontsource-variable/public-sans';
+import '@fontsource/ibm-plex-mono/400.css';
+import '@fontsource/ibm-plex-mono/500.css';
+import '@fontsource/ibm-plex-mono/600.css';
 import { AppPreferencesProvider } from '@/components/providers/app-preferences-provider';
 import { AppShell } from '@/components/layout/app-shell';
+import { getServerAgencyContext } from '@/lib/agency/server';
+import { isOnboardingPath, toAgencySummary } from '@/lib/agency/types';
 import { isPublicAuthPath } from '@/lib/auth/validation';
-import { getAuthenticatedUser } from '@/lib/supabase/server';
+import { getOptionalSupabaseEnv } from '@/lib/supabase/env';
 import './globals.css';
-
-const plusJakartaSans = Plus_Jakarta_Sans({
-  subsets: ['latin'],
-  weight: ['500', '600', '700'],
-  variable: '--font-plus-jakarta',
-  display: 'swap',
-});
-
-const publicSans = Public_Sans({
-  subsets: ['latin'],
-  weight: ['400', '500', '600'],
-  variable: '--font-public-sans',
-  display: 'swap',
-});
-
-const ibmPlexMono = IBM_Plex_Mono({
-  subsets: ['latin'],
-  weight: ['400', '500', '600'],
-  variable: '--font-ibm-plex-mono',
-  display: 'swap',
-});
 
 export const metadata: Metadata = {
   title: 'KIRALIS — Gestion de location de véhicules',
@@ -56,30 +37,39 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const [headerStore, authState] = await Promise.all([
+  const [headerStore, agencyCtx] = await Promise.all([
     headers(),
-    getAuthenticatedUser(),
+    getServerAgencyContext(),
   ]);
+  const supabasePublicEnv = getOptionalSupabaseEnv(process.env);
 
   const pathname = headerStore.get('x-kiralis-pathname');
-  if (pathname && !isPublicAuthPath(pathname) && !authState.user) {
-    redirect(authState.configured ? '/login' : '/login?error=config_missing');
+  if (pathname && !isPublicAuthPath(pathname)) {
+    if (!agencyCtx.user) {
+      redirect('/login');
+    }
+    if (!isOnboardingPath(pathname) && agencyCtx.memberships.length === 0) {
+      redirect('/onboarding');
+    }
   }
 
+  const agencies = agencyCtx.memberships.map(toAgencySummary);
+  const activeAgency = agencyCtx.activeMembership
+    ? toAgencySummary(agencyCtx.activeMembership)
+    : null;
+
   return (
-    <html
-      lang="fr"
-      suppressHydrationWarning
-      className={`${plusJakartaSans.variable} ${publicSans.variable} ${ibmPlexMono.variable}`}
-    >
+    <html lang="fr" suppressHydrationWarning>
       <body
         suppressHydrationWarning
         className="min-h-screen bg-slate-50 text-slate-950 antialiased dark:bg-slate-950 dark:text-slate-100"
       >
         <AppPreferencesProvider>
           <AppShell
-            userEmail={authState.user?.email ?? null}
-            supabaseConfigured={authState.configured}
+            userEmail={agencyCtx.user?.email ?? null}
+            supabasePublicEnv={supabasePublicEnv}
+            activeAgency={activeAgency}
+            agencies={agencies}
           >
             {children}
           </AppShell>

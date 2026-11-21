@@ -12,15 +12,17 @@ import {
 import { performEmailRegistration } from '@/lib/auth/actions';
 import { MIN_PASSWORD_LENGTH } from '@/lib/auth/validation';
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser';
+import type { SupabasePublicEnv } from '@/lib/supabase/env';
 import { cn } from '@/lib/utils';
 import { AuthAlert } from './auth-alert';
 
 export interface SignupFormProps {
-  supabaseConfigured: boolean;
+  supabasePublicEnv: SupabasePublicEnv | null;
 }
 
-export function SignupForm({ supabaseConfigured }: SignupFormProps) {
+export function SignupForm({ supabasePublicEnv }: SignupFormProps) {
   const router = useRouter();
+  const supabaseConfigured = Boolean(supabasePublicEnv);
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -33,7 +35,7 @@ export function SignupForm({ supabaseConfigured }: SignupFormProps) {
     event.preventDefault();
     setErrorMessage(null);
 
-    if (!supabaseConfigured) {
+    if (!supabasePublicEnv) {
       setErrorMessage(
         'L’authentification Supabase n’est pas configurée dans cet environnement.'
       );
@@ -42,7 +44,7 @@ export function SignupForm({ supabaseConfigured }: SignupFormProps) {
 
     setSubmitting(true);
     try {
-      const supabase = createSupabaseBrowserClient();
+      const supabase = createSupabaseBrowserClient(supabasePublicEnv);
       const result = await performEmailRegistration(
         supabase.auth,
         {

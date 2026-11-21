@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { AuthShell } from '@/components/auth/auth-shell';
 import { ForgotPasswordForm } from '@/components/auth/forgot-password-form';
-import { hasSupabaseEnv } from '@/lib/supabase/env';
+import { getOptionalSupabaseEnv } from '@/lib/supabase/env';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,14 +25,14 @@ export default async function ForgotPasswordPage({
   searchParams,
 }: ForgotPasswordPageProps) {
   const params = await searchParams;
-  const supabaseConfigured = hasSupabaseEnv(process.env);
+  const supabasePublicEnv = getOptionalSupabaseEnv(process.env);
   const initialError = params.error ? ERROR_MESSAGES[params.error] ?? null : null;
 
   return (
     <AuthShell
       title="Mot de passe oublié"
       subtitle="Indiquez votre adresse e-mail pour recevoir un lien de réinitialisation."
-      supabaseConfigured={supabaseConfigured}
+      supabaseConfigured={Boolean(supabasePublicEnv)}
       footer={
         <p>
           Vous vous souvenez de votre mot de passe ?{' '}
@@ -46,7 +46,7 @@ export default async function ForgotPasswordPage({
       }
     >
       <ForgotPasswordForm
-        supabaseConfigured={supabaseConfigured}
+        supabasePublicEnv={supabasePublicEnv}
         initialError={initialError}
       />
     </AuthShell>

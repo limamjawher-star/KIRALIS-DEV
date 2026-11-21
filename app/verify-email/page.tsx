@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { AuthShell } from '@/components/auth/auth-shell';
 import { VerifyEmailCard } from '@/components/auth/verify-email-card';
-import { hasSupabaseEnv } from '@/lib/supabase/env';
+import { getOptionalSupabaseEnv } from '@/lib/supabase/env';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,16 +19,16 @@ export default async function VerifyEmailPage({
   searchParams,
 }: VerifyEmailPageProps) {
   const params = await searchParams;
-  const supabaseConfigured = hasSupabaseEnv(process.env);
+  const supabasePublicEnv = getOptionalSupabaseEnv(process.env);
 
   return (
     <AuthShell
       title="Vérifier votre e-mail"
       subtitle="Une dernière étape avant d’accéder à votre espace KIRALIS."
-      supabaseConfigured={supabaseConfigured}
+      supabaseConfigured={Boolean(supabasePublicEnv)}
     >
       <VerifyEmailCard
-        supabaseConfigured={supabaseConfigured}
+        supabasePublicEnv={supabasePublicEnv}
         initialEmail={params.email ?? null}
       />
     </AuthShell>

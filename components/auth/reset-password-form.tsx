@@ -13,19 +13,21 @@ import {
 import { performLogout, performPasswordUpdate } from '@/lib/auth/actions';
 import { MIN_PASSWORD_LENGTH } from '@/lib/auth/validation';
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser';
+import type { SupabasePublicEnv } from '@/lib/supabase/env';
 import { cn } from '@/lib/utils';
 import { AuthAlert } from './auth-alert';
 
 export interface ResetPasswordFormProps {
-  supabaseConfigured: boolean;
+  supabasePublicEnv: SupabasePublicEnv | null;
   hasRecoverySession: boolean;
 }
 
 export function ResetPasswordForm({
-  supabaseConfigured,
+  supabasePublicEnv,
   hasRecoverySession,
 }: ResetPasswordFormProps) {
   const router = useRouter();
+  const supabaseConfigured = Boolean(supabasePublicEnv);
   const [sessionReady, setSessionReady] = useState(hasRecoverySession);
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -34,11 +36,11 @@ export function ResetPasswordForm({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!supabaseConfigured || sessionReady) {
+    if (!supabasePublicEnv || sessionReady) {
       return;
     }
 
-    const supabase = createSupabaseBrowserClient();
+    const supabase = createSupabaseBrowserClient(supabasePublicEnv);
     let active = true;
 
     const {
@@ -60,13 +62,13 @@ export function ResetPasswordForm({
       active = false;
       subscription.unsubscribe();
     };
-  }, [supabaseConfigured, sessionReady]);
+  }, [supabasePublicEnv, sessionReady]);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setErrorMessage(null);
 
-    if (!supabaseConfigured) {
+    if (!supabasePublicEnv) {
       setErrorMessage(
         'L’authentification Supabase n’est pas configurée dans cet environnement.'
       );
@@ -82,7 +84,7 @@ export function ResetPasswordForm({
 
     setSubmitting(true);
     try {
-      const supabase = createSupabaseBrowserClient();
+      const supabase = createSupabaseBrowserClient(supabasePublicEnv);
       const result = await performPasswordUpdate(supabase.auth, {
         password,
         confirmPassword,
