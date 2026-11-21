@@ -1,0 +1,6 @@
+{
+  "name": "KIRALIS",
+  "description": "Plateforme SaaS de gestion d'agence de location de véhicules pour la Tunisie et la région MENA.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
