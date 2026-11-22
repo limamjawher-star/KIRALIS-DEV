@@ -194,7 +194,7 @@ const FR_DICTIONARY: Dictionary = {
         'Répertoire du parc automobile, immatriculations tunisiennes, catégories, tarifs journaliers en TND et disponibilités.',
       emptyTitle: 'Aucun véhicule enregistré',
       emptyDescription:
-        'Votre flotte apparaîtra ici dès que le module base de données et la fiche véhicule seront activés en Phase 2.',
+        'Votre flotte apparaîtra ici dès l’activation du module de gestion des véhicules en Phase 5.',
       plannedFeatureSummary: 'Fiches véhicules, tarification TND, kilométrage, assurances et documents.',
     },
     customers: {
@@ -274,7 +274,7 @@ const FR_DICTIONARY: Dictionary = {
         'Futur copilote opérationnel pour l’analyse de flotte, l’aide à la tarification et la synthèse de gestion.',
       emptyTitle: 'Intégration Gemini prévue en phase ultérieure',
       emptyDescription:
-        'Conformément au plan de développement, aucune connexion API Gemini n’est active dans la fondation Phase 1.',
+        'Conformément au plan de développement, aucune connexion API Gemini n’est encore activée.',
       plannedFeatureSummary: 'Questions en langage naturel sur la flotte, alertes et synthèses via Gemini.',
     },
     settings: {
@@ -282,9 +282,9 @@ const FR_DICTIONARY: Dictionary = {
       title: 'Paramètres de l’agence',
       description:
         'Configuration de l’identité juridique, des coordonnées et des paramètres régionaux de votre agence en Tunisie.',
-      emptyTitle: 'Configuration non enregistrée',
+      emptyTitle: 'Paramètres de l’agence chargés',
       emptyDescription:
-        'Les champs ci-dessous permettent de valider le format de votre profil agence avant la mise en place de Supabase en Phase 2.',
+        'Les informations affichées proviennent directement de votre fiche agence enregistrée dans Supabase PostgreSQL.',
       plannedFeatureSummary: 'Profil agence, devise TND, fuseau Africa/Tunis, TVA et utilisateurs.',
     },
   },
@@ -345,7 +345,7 @@ const FR_DICTIONARY: Dictionary = {
       {
         title: 'Persistance Supabase et RLS',
         detail: 'Isolement multi-agences, authentification Supabase et schémas PostgreSQL.',
-        status: 'Phase 2',
+        status: 'Actif',
       },
       {
         title: 'Assistant IA Gemini',
@@ -442,11 +442,11 @@ const FR_DICTIONARY: Dictionary = {
     viewList: 'Liste du mois',
     selectedDateLabel: 'Date sélectionnée',
     noScheduledEvents:
-      'Aucun départ, retour ou entretien n’est planifié pour cette date. Les événements apparaîtront dès la connexion à la base de données.',
+      'Aucun départ, retour ou entretien n’est planifié pour cette date.',
     legendHint: 'Fuseau horaire de référence : Africa/Tunis (UTC+1).',
   },
   assistant: {
-    noticeTitle: 'Assistant IA non connecté en Phase 1',
+    noticeTitle: 'Assistant IA en préparation',
     noticeBody:
       'Aucune clé API Gemini ni appel IA n’est exécuté pour le moment. Cet espace prépare l’interface conversationnelle qui sera reliée au serveur en phase ultérieure.',
     promptPlaceholder: 'Posez une question sur votre flotte ou vos réservations (disponible en Phase 6)…',
@@ -499,9 +499,9 @@ const FR_DICTIONARY: Dictionary = {
     },
     validateButton: 'Vérifier le formulaire',
     resetButton: 'Effacer',
-    validationSuccessTitle: 'Format du formulaire validé localement',
+    validationSuccessTitle: 'Format du formulaire validé',
     validationSuccessBody:
-      'Les champs saisis sont valides. Aucune donnée n’a été enregistrée car la base de données Supabase sera connectée en Phase 2.',
+      'Les champs saisis respectent le format attendu pour votre profil agence.',
     validationErrorSummary: 'Veuillez corriger les champs signalés avant de continuer.',
     errors: {
       required: 'Ce champ est obligatoire.',
@@ -540,7 +540,7 @@ const EN_DICTIONARY: Dictionary = {
         'Fleet registry, registration plates, vehicle categories, daily rates in TND, and live availability.',
       emptyTitle: 'No vehicles recorded',
       emptyDescription:
-        'Your fleet records will appear here once the database and vehicle forms are enabled in Phase 2.',
+        'Your fleet records will appear here once the vehicle management module is enabled in Phase 5.',
       plannedFeatureSummary: 'Vehicle profiles, TND pricing, odometer logs, insurance, and documents.',
     },
     customers: {
@@ -620,7 +620,7 @@ const EN_DICTIONARY: Dictionary = {
         'Upcoming operational copilot for fleet analysis, pricing guidance, and agency summaries.',
       emptyTitle: 'Gemini integration planned for a later phase',
       emptyDescription:
-        'As specified for Phase 1, no Gemini API integration or AI calls are active in this foundation.',
+        'As planned, no Gemini API integration or AI calls are active yet.',
       plannedFeatureSummary: 'Natural-language queries on fleet availability, alerts, and summaries.',
     },
     settings: {
@@ -628,9 +628,9 @@ const EN_DICTIONARY: Dictionary = {
       title: 'Agency Settings',
       description:
         'Configure your agency legal identity, contact details, and Tunisia regional defaults.',
-      emptyTitle: 'Configuration not saved',
+      emptyTitle: 'Agency settings loaded',
       emptyDescription:
-        'Use this form to verify your agency profile structure before Supabase persistence is added in Phase 2.',
+        'The details shown below are loaded directly from your persisted agency record in Supabase PostgreSQL.',
       plannedFeatureSummary: 'Agency profile, TND currency, Africa/Tunis timezone, VAT, and team.',
     },
   },
@@ -691,7 +691,7 @@ const EN_DICTIONARY: Dictionary = {
       {
         title: 'Supabase persistence & RLS',
         detail: 'Per-agency tenant isolation, Supabase Auth, and PostgreSQL schemas.',
-        status: 'Phase 2',
+        status: 'Active',
       },
       {
         title: 'Gemini AI Assistant',
@@ -753,11 +753,11 @@ const EN_DICTIONARY: Dictionary = {
     viewList: 'Month list',
     selectedDateLabel: 'Selected date',
     noScheduledEvents:
-      'No pickups, returns, or maintenance events are scheduled for this date. Events will appear once the database is connected.',
+      'No pickups, returns, or maintenance events are scheduled for this date.',
     legendHint: 'Reference timezone: Africa/Tunis (UTC+1).',
   },
   assistant: {
-    noticeTitle: 'AI Assistant not connected in Phase 1',
+    noticeTitle: 'AI Assistant in preparation',
     noticeBody:
       'No Gemini API key or AI calls are active yet. This screen prepares the conversational workspace for a future phase.',
     promptPlaceholder: 'Ask a question about your fleet or reservations (available in Phase 6)…',
@@ -810,9 +810,9 @@ const EN_DICTIONARY: Dictionary = {
     },
     validateButton: 'Validate form',
     resetButton: 'Clear',
-    validationSuccessTitle: 'Form validated locally',
+    validationSuccessTitle: 'Form validated',
     validationSuccessBody:
-      'All entered fields are valid. Nothing was persisted because Supabase database storage will be wired in Phase 2.',
+      'All entered fields match the expected agency profile format.',
     validationErrorSummary: 'Please fix the highlighted fields before continuing.',
     errors: {
       required: 'This field is required.',
@@ -851,7 +851,7 @@ const AR_DICTIONARY: Dictionary = {
         'سجل الأسطول وأرقام التسجيل التونسية والفئات والتعريفات اليومية بالدينار التونسي وحالة التوفر.',
       emptyTitle: 'لا توجد سيارات مسجلة',
       emptyDescription:
-        'ستظهر سيارات الوكالة هنا فور تفعيل قاعدة البيانات ونموذج إضافة السيارات في المرحلة 2.',
+        'ستظهر سيارات الوكالة هنا فور تفعيل وحدة إدارة السيارات في المرحلة 5.',
       plannedFeatureSummary: 'بطاقات السيارات، التسعير بالدينار التونسي، العداد والوثائق.',
     },
     customers: {
@@ -931,7 +931,7 @@ const AR_DICTIONARY: Dictionary = {
         'مساعد تشغيلي مستقبلي لتحليل الأسطول وتقديم ملخصات الإدارة ودعم التسعير.',
       emptyTitle: 'ربط Gemini مبرمج في مرحلة لاحقة',
       emptyDescription:
-        'لا يوجد أي اتصال بواجهة Gemini في المرحلة الأولى من تأسيس التطبيق.',
+        'وفق خطة التطوير، لم يتم تفعيل الاتصال بواجهة Gemini بعد.',
       plannedFeatureSummary: 'استفسارات باللغة الطبيعية حول الأسطول والتنبيهات والملخصات.',
     },
     settings: {
@@ -939,9 +939,9 @@ const AR_DICTIONARY: Dictionary = {
       title: 'إعدادات الوكالة',
       description:
         'إعداد الهوية القانونية وبيانات الاتصال والإعدادات الإقليمية لوكالتك في تونس.',
-      emptyTitle: 'الإعدادات غير محفوظة',
+      emptyTitle: 'تم تحميل إعدادات الوكالة',
       emptyDescription:
-        'يمكنك التحقق من صيغة بيانات الوكالة هنا قبل ربط الحفظ في Supabase خلال المرحلة 2.',
+        'البيانات المعروضة محملة مباشرة من سجل وكالتك المحفوظ في Supabase PostgreSQL.',
       plannedFeatureSummary: 'ملف الوكالة، الدينار التونسي، توقيت تونس والضريبة.',
     },
   },
@@ -1002,7 +1002,7 @@ const AR_DICTIONARY: Dictionary = {
       {
         title: 'قاعدة بيانات Supabase وعزل الوكالات',
         detail: 'حماية الصفوف RLS ومصادقة Supabase وجداول PostgreSQL.',
-        status: 'المرحلة 2',
+        status: 'مفعل',
       },
       {
         title: 'مساعد Gemini الذكي',
@@ -1064,11 +1064,11 @@ const AR_DICTIONARY: Dictionary = {
     viewList: 'قائمة الشهر',
     selectedDateLabel: 'التاريخ المحدد',
     noScheduledEvents:
-      'لا توجد عمليات تسليم أو استرجاع أو صيانة مجدولة في هذا التاريخ. ستظهر المواعيد بعد ربط قاعدة البيانات.',
+      'لا توجد عمليات تسليم أو استرجاع أو صيانة مجدولة في هذا التاريخ.',
     legendHint: 'المنطقة الزمنية المرجعية: Africa/Tunis (UTC+1).',
   },
   assistant: {
-    noticeTitle: 'المساعد الذكي غير متصل في المرحلة 1',
+    noticeTitle: 'المساعد الذكي قيد الإعداد',
     noticeBody:
       'لا يتم تشغيل أي مفتاح Gemini أو طلبات ذكاء اصطناعي حالياً. تُعد هذه الصفحة مساحة المحادثة للمرحلة القادمة.',
     promptPlaceholder: 'اطرح سؤالاً حول أسطولك أو حجوزاتك (متاح في المرحلة 6)…',
@@ -1121,9 +1121,9 @@ const AR_DICTIONARY: Dictionary = {
     },
     validateButton: 'التحقق من النموذج',
     resetButton: 'مسح',
-    validationSuccessTitle: 'تم التحقق من صيغة النموذج محلياً',
+    validationSuccessTitle: 'تم التحقق من صيغة النموذج',
     validationSuccessBody:
-      'جميع الحقول المدخلة صالحة. لم يتم حفظ أي بيانات لأن قاعدة بيانات Supabase ستُربط في المرحلة 2.',
+      'جميع الحقول المدخلة مطابقة لصيغة ملف الوكالة المطلوبة.',
     validationErrorSummary: 'يرجى تصحيح الحقول المحددة قبل المتابعة.',
     errors: {
       required: 'هذا الحقل مطلوب.',

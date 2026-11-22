@@ -236,3 +236,55 @@ test('onboarding server & API routes use getUser(), call create_agency RPC exclu
   assert.match(serverAgencySrc, /\.eq\(\s*'status'\s*,\s*'active'\s*\)/);
   assert.doesNotMatch(serverAgencySrc, /service_role|SUPABASE_SERVICE_ROLE/i);
 });
+
+test('all 11 protected workspace pages enforce force-dynamic and server-side requireActiveAgencyContext()', () => {
+  const root = process.cwd();
+  const protectedPages = [
+    'app/page.tsx',
+    'app/vehicles/page.tsx',
+    'app/customers/page.tsx',
+    'app/reservations/page.tsx',
+    'app/calendar/page.tsx',
+    'app/contracts/page.tsx',
+    'app/payments/page.tsx',
+    'app/maintenance/page.tsx',
+    'app/reports/page.tsx',
+    'app/assistant/page.tsx',
+    'app/settings/page.tsx',
+  ];
+
+  for (const relPath of protectedPages) {
+    const src = fs.readFileSync(path.join(root, relPath), 'utf8');
+    assert.match(
+      src,
+      /export const dynamic\s*=\s*'force-dynamic'/,
+      `${relPath} must disable static caching with force-dynamic`
+    );
+    assert.match(
+      src,
+      /requireActiveAgencyContext\(\)/,
+      `${relPath} must enforce active agency membership server-side`
+    );
+  }
+});
+
+test('signout handler checks origin and clears active agency cookie with matching attributes, and dictionaries contain no disconnected-database claims', () => {
+  const root = process.cwd();
+  const signoutSrc = fs.readFileSync(
+    path.join(root, 'app/auth/signout/route.ts'),
+    'utf8'
+  );
+  assert.match(signoutSrc, /isTrustedOriginRequest/);
+  assert.match(signoutSrc, /getActiveAgencyCookieOptions/);
+  assert.match(signoutSrc, /maxAge:\s*0/);
+  assert.match(signoutSrc, /NO_STORE_CACHE_HEADERS/);
+
+  const dictSrc = fs.readFileSync(
+    path.join(root, 'lib/i18n/dictionaries.ts'),
+    'utf8'
+  );
+  assert.doesNotMatch(
+    dictSrc,
+    /Base de données non connectée|Database not connected|قاعدة البيانات غير متصلة|sera connectée en Phase 2|will be wired in Phase 2/i
+  );
+});
