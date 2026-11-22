@@ -1,12 +1,17 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { isTrustedOriginRequest } from '@/lib/agency/server';
 import { NO_STORE_CACHE_HEADERS } from '@/lib/auth/validation';
+import { isMissingPricingColumnError } from '@/lib/vehicles/pricing';
 import {
+  hydrateVehicleComplianceDefaults,
   resolveAuthenticatedAgencyForApi,
+  VEHICLE_BASE_SELECT_COLUMNS,
+  VEHICLE_COMPLIANCE_SELECT_COLUMNS,
   VEHICLE_SELECT_COLUMNS,
 } from '@/lib/vehicles/server';
-import { canManageVehicles, type VehicleRecord } from '@/lib/vehicles/types';
+import { canManageVehicles } from '@/lib/vehicles/types';
 import {
+  isMissingComplianceColumnError,
   mapVehicleDbError,
   validateVehiclePayload,
 } from '@/lib/vehicles/validation';
@@ -33,6 +38,106 @@ export async function GET() {
     .eq('agency_id', ctx.activeAgency.id)
     .order('created_at', { ascending: false });
 
+  if (error && isMissingPricingColumnError(error)) {
+    const complianceFallback = await ctx.supabase
+      .from('vehicles')
+      .select(VEHICLE_COMPLIANCE_SELECT_COLUMNS)
+      .eq('agency_id', ctx.activeAgency.id)
+      .order('created_at', { ascending: false });
+
+    if (
+      complianceFallback.error &&
+      isMissingComplianceColumnError(complianceFallback.error)
+    ) {
+      const baseFallback = await ctx.supabase
+        .from('vehicles')
+        .select(VEHICLE_BASE_SELECT_COLUMNS)
+        .eq('agency_id', ctx.activeAgency.id)
+        .order('created_at', { ascending: false });
+
+      if (baseFallback.error) {
+        const mapped = mapVehicleDbError(baseFallback.error);
+        return NextResponse.json(
+          { ok: false, error: mapped.message },
+          { status: mapped.status, headers: NO_STORE_CACHE_HEADERS }
+        );
+      }
+
+      const hydrated = (
+        (baseFallback.data as unknown as Record<string, unknown>[] | null) ?? []
+      ).map(hydrateVehicleComplianceDefaults);
+
+      return NextResponse.json(
+        {
+          ok: true,
+          agencyId: ctx.activeAgency.id,
+          role: ctx.activeMembership.role,
+          complianceSchemaReady: false,
+          pricingSchemaReady: false,
+          vehicles: hydrated,
+        },
+        { status: 200, headers: NO_STORE_CACHE_HEADERS }
+      );
+    }
+
+    if (complianceFallback.error) {
+      const mapped = mapVehicleDbError(complianceFallback.error);
+      return NextResponse.json(
+        { ok: false, error: mapped.message },
+        { status: mapped.status, headers: NO_STORE_CACHE_HEADERS }
+      );
+    }
+
+    const hydrated = (
+      (complianceFallback.data as unknown as Record<string, unknown>[] | null) ??
+      []
+    ).map(hydrateVehicleComplianceDefaults);
+
+    return NextResponse.json(
+      {
+        ok: true,
+        agencyId: ctx.activeAgency.id,
+        role: ctx.activeMembership.role,
+        complianceSchemaReady: true,
+        pricingSchemaReady: false,
+        vehicles: hydrated,
+      },
+      { status: 200, headers: NO_STORE_CACHE_HEADERS }
+    );
+  }
+
+  if (error && isMissingComplianceColumnError(error)) {
+    const fallback = await ctx.supabase
+      .from('vehicles')
+      .select(VEHICLE_BASE_SELECT_COLUMNS)
+      .eq('agency_id', ctx.activeAgency.id)
+      .order('created_at', { ascending: false });
+
+    if (fallback.error) {
+      const mapped = mapVehicleDbError(fallback.error);
+      return NextResponse.json(
+        { ok: false, error: mapped.message },
+        { status: mapped.status, headers: NO_STORE_CACHE_HEADERS }
+      );
+    }
+
+    const hydrated = (
+      (fallback.data as unknown as Record<string, unknown>[] | null) ?? []
+    ).map(hydrateVehicleComplianceDefaults);
+
+    return NextResponse.json(
+      {
+        ok: true,
+        agencyId: ctx.activeAgency.id,
+        role: ctx.activeMembership.role,
+        complianceSchemaReady: false,
+        pricingSchemaReady: false,
+        vehicles: hydrated,
+      },
+      { status: 200, headers: NO_STORE_CACHE_HEADERS }
+    );
+  }
+
   if (error) {
     const mapped = mapVehicleDbError(error);
     return NextResponse.json(
@@ -41,12 +146,18 @@ export async function GET() {
     );
   }
 
+  const hydrated = (
+    (data as unknown as Record<string, unknown>[] | null) ?? []
+  ).map(hydrateVehicleComplianceDefaults);
+
   return NextResponse.json(
     {
       ok: true,
       agencyId: ctx.activeAgency.id,
       role: ctx.activeMembership.role,
-      vehicles: (data as unknown as VehicleRecord[] | null) ?? [],
+      complianceSchemaReady: true,
+      pricingSchemaReady: true,
+      vehicles: hydrated,
     },
     { status: 200, headers: NO_STORE_CACHE_HEADERS }
   );
@@ -114,7 +225,7 @@ export async function POST(request: NextRequest) {
   }
 
   // Strictly bind tenant and attribution from verified server session (never from client body)
-  const insertPayload = {
+  const baseInsertPayload = {
     agency_id: ctx.activeAgency.id,
     created_by: ctx.user.id,
     currency_code: ctx.activeAgency.currency_code || 'TND',
@@ -134,11 +245,134 @@ export async function POST(request: NextRequest) {
     notes: validation.data.notes,
   };
 
+  const complianceInsertPayload = {
+    ...baseInsertPayload,
+    insurance_expires_on: validation.data.insurance_expires_on,
+    technical_inspection_expires_on:
+      validation.data.technical_inspection_expires_on,
+    vignette_expires_on: validation.data.vignette_expires_on,
+  };
+
+  const fullInsertPayload = {
+    ...complianceInsertPayload,
+    weekly_rate_minor: validation.data.weekly_rate_minor,
+    monthly_rate_minor: validation.data.monthly_rate_minor,
+  };
+
+  const hasComplianceDates =
+    validation.data.insurance_expires_on !== null ||
+    validation.data.technical_inspection_expires_on !== null ||
+    validation.data.vignette_expires_on !== null;
+
+  const hasPackageRates =
+    validation.data.weekly_rate_minor !== null ||
+    validation.data.monthly_rate_minor !== null;
+
   const { data, error } = await ctx.supabase
     .from('vehicles')
-    .insert(insertPayload)
+    .insert(fullInsertPayload)
     .select(VEHICLE_SELECT_COLUMNS)
     .single();
+
+  if (error && isMissingPricingColumnError(error) && !hasPackageRates) {
+    const complianceFallback = await ctx.supabase
+      .from('vehicles')
+      .insert(complianceInsertPayload)
+      .select(VEHICLE_COMPLIANCE_SELECT_COLUMNS)
+      .single();
+
+    if (
+      complianceFallback.error &&
+      isMissingComplianceColumnError(complianceFallback.error) &&
+      !hasComplianceDates
+    ) {
+      const baseFallback = await ctx.supabase
+        .from('vehicles')
+        .insert(baseInsertPayload)
+        .select(VEHICLE_BASE_SELECT_COLUMNS)
+        .single();
+
+      if (baseFallback.error) {
+        const mapped = mapVehicleDbError(baseFallback.error);
+        return NextResponse.json(
+          {
+            ok: false,
+            error: mapped.message,
+            fieldErrors: mapped.fieldErrors,
+          },
+          { status: mapped.status, headers: NO_STORE_CACHE_HEADERS }
+        );
+      }
+
+      return NextResponse.json(
+        {
+          ok: true,
+          complianceSchemaReady: false,
+          pricingSchemaReady: false,
+          vehicle: hydrateVehicleComplianceDefaults(
+            baseFallback.data as unknown as Record<string, unknown>
+          ),
+        },
+        { status: 201, headers: NO_STORE_CACHE_HEADERS }
+      );
+    }
+
+    if (complianceFallback.error) {
+      const mapped = mapVehicleDbError(complianceFallback.error);
+      return NextResponse.json(
+        {
+          ok: false,
+          error: mapped.message,
+          fieldErrors: mapped.fieldErrors,
+        },
+        { status: mapped.status, headers: NO_STORE_CACHE_HEADERS }
+      );
+    }
+
+    return NextResponse.json(
+      {
+        ok: true,
+        complianceSchemaReady: true,
+        pricingSchemaReady: false,
+        vehicle: hydrateVehicleComplianceDefaults(
+          complianceFallback.data as unknown as Record<string, unknown>
+        ),
+      },
+      { status: 201, headers: NO_STORE_CACHE_HEADERS }
+    );
+  }
+
+  if (error && isMissingComplianceColumnError(error) && !hasComplianceDates && !hasPackageRates) {
+    const fallback = await ctx.supabase
+      .from('vehicles')
+      .insert(baseInsertPayload)
+      .select(VEHICLE_BASE_SELECT_COLUMNS)
+      .single();
+
+    if (fallback.error) {
+      const mapped = mapVehicleDbError(fallback.error);
+      return NextResponse.json(
+        {
+          ok: false,
+          error: mapped.message,
+          fieldErrors: mapped.fieldErrors,
+        },
+        { status: mapped.status, headers: NO_STORE_CACHE_HEADERS }
+      );
+    }
+
+    return NextResponse.json(
+      {
+        ok: true,
+        complianceSchemaReady: false,
+        pricingSchemaReady: false,
+        vehicle: hydrateVehicleComplianceDefaults(
+          fallback.data as unknown as Record<string, unknown>
+        ),
+      },
+      { status: 201, headers: NO_STORE_CACHE_HEADERS }
+    );
+  }
 
   if (error) {
     const mapped = mapVehicleDbError(error);
@@ -155,7 +389,11 @@ export async function POST(request: NextRequest) {
   return NextResponse.json(
     {
       ok: true,
-      vehicle: data as unknown as VehicleRecord,
+      complianceSchemaReady: true,
+      pricingSchemaReady: true,
+      vehicle: hydrateVehicleComplianceDefaults(
+        data as unknown as Record<string, unknown>
+      ),
     },
     { status: 201, headers: NO_STORE_CACHE_HEADERS }
   );

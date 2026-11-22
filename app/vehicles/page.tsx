@@ -11,7 +11,8 @@ export const metadata: Metadata = {
 
 export default async function VehiclesPage() {
   const { activeAgency, activeMembership } = await requireActiveAgencyContext();
-  const { vehicles, error } = await listAgencyVehicles(activeAgency.id);
+  const { vehicles, error, complianceSchemaReady, pricingSchemaReady } =
+    await listAgencyVehicles(activeAgency.id);
 
   return (
     <VehiclesWorkspace
@@ -19,6 +20,8 @@ export default async function VehiclesPage() {
       role={activeMembership.role}
       initialVehicles={vehicles}
       initialError={error}
+      initialComplianceSchemaReady={complianceSchemaReady}
+      initialPricingSchemaReady={pricingSchemaReady}
     />
   );
 }

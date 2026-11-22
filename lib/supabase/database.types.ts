@@ -61,10 +61,29 @@ export interface VehicleRow {
   seats: number;
   odometer_km: number;
   daily_rate_minor: number;
+  weekly_rate_minor: number | null;
+  monthly_rate_minor: number | null;
   deposit_minor: number;
   currency_code: string;
   status: VehicleStatus;
   notes: string | null;
+  insurance_expires_on: string | null;
+  technical_inspection_expires_on: string | null;
+  vignette_expires_on: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface VehicleSeasonalRateRow {
+  id: string;
+  agency_id: string;
+  vehicle_id: string;
+  label: string | null;
+  start_date: string;
+  end_date: string;
+  daily_rate_minor: number;
+  is_active: boolean;
   created_by: string | null;
   created_at: string;
   updated_at: string;

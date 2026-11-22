@@ -34,6 +34,8 @@ export interface VehicleFormModalProps {
   mode: 'create' | 'edit';
   vehicle: VehicleRecord | null;
   currencyCode: string;
+  complianceSchemaReady: boolean;
+  pricingSchemaReady: boolean;
   onClose: () => void;
   onSaved: (vehicle: VehicleRecord, mode: 'create' | 'edit') => void;
 }
@@ -43,6 +45,8 @@ export function VehicleFormModal({
   mode,
   vehicle,
   currencyCode,
+  complianceSchemaReady,
+  pricingSchemaReady,
   onClose,
   onSaved,
 }: VehicleFormModalProps) {
@@ -105,9 +109,14 @@ export function VehicleFormModal({
       seats: values.seats,
       odometer_km: values.odometer_km,
       daily_rate_tnd: values.daily_rate_tnd,
+      weekly_rate_tnd: pricingSchemaReady ? values.weekly_rate_tnd : '',
+      monthly_rate_tnd: pricingSchemaReady ? values.monthly_rate_tnd : '',
       deposit_tnd: values.deposit_tnd,
       status: values.status,
       notes: values.notes,
+      insurance_expires_on: values.insurance_expires_on,
+      technical_inspection_expires_on: values.technical_inspection_expires_on,
+      vignette_expires_on: values.vignette_expires_on,
     };
 
     const validation = validateVehiclePayload(candidatePayload);
@@ -161,6 +170,12 @@ export function VehicleFormModal({
   }
 
   const parsedDailyRate = parseTndToMillimes(values.daily_rate_tnd);
+  const parsedWeeklyRate = values.weekly_rate_tnd.trim()
+    ? parseTndToMillimes(values.weekly_rate_tnd)
+    : null;
+  const parsedMonthlyRate = values.monthly_rate_tnd.trim()
+    ? parseTndToMillimes(values.monthly_rate_tnd)
+    : null;
   const parsedDeposit = parseTndToMillimes(values.deposit_tnd || '0');
   const titleId =
     mode === 'edit' ? 'edit-vehicle-modal-title' : 'create-vehicle-modal-title';
@@ -525,11 +540,29 @@ export function VehicleFormModal({
               </div>
             </fieldset>
 
-            {/* Section 3: Tarification TND */}
+            {/* Section 3: Tarification */}
             <fieldset className="space-y-4 border-t border-slate-200 pt-5 dark:border-slate-800">
-              <legend className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                Tarification ({currencyCode}, précision 3 décimales)
-              </legend>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <legend className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                  Tarification ({currencyCode}, précision 3 décimales)
+                </legend>
+                <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                  Tarifs saisonniers gérés dans la fiche véhicule
+                </span>
+              </div>
+
+              {!pricingSchemaReady ? (
+                <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900 dark:border-amber-900/70 dark:bg-amber-950/40 dark:text-amber-200">
+                  La migration Supabase{' '}
+                  <span className="font-mono">
+                    202611210005_vehicle_advanced_pricing.sql
+                  </span>{' '}
+                  doit être installée avant d’enregistrer les forfaits 7 et 30
+                  jours. Le tarif journalier et la caution restent pleinement
+                  modifiables.
+                </p>
+              ) : null}
+
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <FormField
                   id="vehicle-daily-rate"
@@ -596,10 +629,191 @@ export function VehicleFormModal({
                     )}
                   />
                 </FormField>
+
+                <FormField
+                  id="vehicle-weekly-rate"
+                  label={`Forfait 7 jours (${currencyCode})`}
+                  helperText={
+                    !pricingSchemaReady
+                      ? 'Disponible après installation de la migration 0005.'
+                      : parsedWeeklyRate !== null && parsedWeeklyRate >= 0
+                        ? `Enregistré : ${formatTndFromMillimes(parsedWeeklyRate, 'fr')} pour 7 jours`
+                        : 'Optionnel · forfait fixe pour 7 jours standards'
+                  }
+                  errorText={fieldErrors.weekly_rate_minor}
+                >
+                  <input
+                    id="vehicle-weekly-rate"
+                    type="text"
+                    inputMode="decimal"
+                    value={values.weekly_rate_tnd}
+                    onChange={(e) =>
+                      updateField(
+                        'weekly_rate_tnd',
+                        e.target.value,
+                        'weekly_rate_minor'
+                      )
+                    }
+                    placeholder="680,000"
+                    disabled={submitting || !pricingSchemaReady}
+                    className={cn(
+                      INPUT_BASE_CLASSES,
+                      'font-mono tabular-nums',
+                      getInputStateClasses(Boolean(fieldErrors.weekly_rate_minor))
+                    )}
+                  />
+                </FormField>
+
+                <FormField
+                  id="vehicle-monthly-rate"
+                  label={`Forfait 30 jours (${currencyCode})`}
+                  helperText={
+                    !pricingSchemaReady
+                      ? 'Disponible après installation de la migration 0005.'
+                      : parsedMonthlyRate !== null && parsedMonthlyRate >= 0
+                        ? `Enregistré : ${formatTndFromMillimes(parsedMonthlyRate, 'fr')} pour 30 jours`
+                        : 'Optionnel · forfait fixe pour 30 jours standards'
+                  }
+                  errorText={fieldErrors.monthly_rate_minor}
+                >
+                  <input
+                    id="vehicle-monthly-rate"
+                    type="text"
+                    inputMode="decimal"
+                    value={values.monthly_rate_tnd}
+                    onChange={(e) =>
+                      updateField(
+                        'monthly_rate_tnd',
+                        e.target.value,
+                        'monthly_rate_minor'
+                      )
+                    }
+                    placeholder="2500,000"
+                    disabled={submitting || !pricingSchemaReady}
+                    className={cn(
+                      INPUT_BASE_CLASSES,
+                      'font-mono tabular-nums',
+                      getInputStateClasses(Boolean(fieldErrors.monthly_rate_minor))
+                    )}
+                  />
+                </FormField>
               </div>
             </fieldset>
 
-            {/* Section 4: Notes */}
+            {/* Section 4: Échéances administratives */}
+            <fieldset className="space-y-4 border-t border-slate-200 pt-5 dark:border-slate-800">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <legend className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                  Échéances administratives (optionnel)
+                </legend>
+                <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                  Dates uniquement · aucun fichier requis
+                </span>
+              </div>
+
+              {!complianceSchemaReady ? (
+                <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900 dark:border-amber-900/70 dark:bg-amber-950/40 dark:text-amber-200">
+                  La migration Supabase{' '}
+                  <span className="font-mono">
+                    202611210004_vehicle_compliance_dates.sql
+                  </span>{' '}
+                  doit être appliquée avant de pouvoir enregistrer ces dates.
+                  Vous pouvez laisser ces champs vides pour enregistrer le
+                  véhicule dès maintenant.
+                </p>
+              ) : null}
+
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <FormField
+                  id="vehicle-insurance-expiry"
+                  label="Expiration assurance"
+                  errorText={fieldErrors.insurance_expires_on}
+                >
+                  <input
+                    id="vehicle-insurance-expiry"
+                    type="date"
+                    min="1980-01-01"
+                    max="2100-12-31"
+                    value={values.insurance_expires_on}
+                    onChange={(e) =>
+                      updateField(
+                        'insurance_expires_on',
+                        e.target.value,
+                        'insurance_expires_on'
+                      )
+                    }
+                    disabled={submitting}
+                    className={cn(
+                      INPUT_BASE_CLASSES,
+                      'font-mono tabular-nums',
+                      getInputStateClasses(
+                        Boolean(fieldErrors.insurance_expires_on)
+                      )
+                    )}
+                  />
+                </FormField>
+
+                <FormField
+                  id="vehicle-inspection-expiry"
+                  label="Expiration visite technique"
+                  errorText={fieldErrors.technical_inspection_expires_on}
+                >
+                  <input
+                    id="vehicle-inspection-expiry"
+                    type="date"
+                    min="1980-01-01"
+                    max="2100-12-31"
+                    value={values.technical_inspection_expires_on}
+                    onChange={(e) =>
+                      updateField(
+                        'technical_inspection_expires_on',
+                        e.target.value,
+                        'technical_inspection_expires_on'
+                      )
+                    }
+                    disabled={submitting}
+                    className={cn(
+                      INPUT_BASE_CLASSES,
+                      'font-mono tabular-nums',
+                      getInputStateClasses(
+                        Boolean(fieldErrors.technical_inspection_expires_on)
+                      )
+                    )}
+                  />
+                </FormField>
+
+                <FormField
+                  id="vehicle-vignette-expiry"
+                  label="Expiration vignette"
+                  errorText={fieldErrors.vignette_expires_on}
+                >
+                  <input
+                    id="vehicle-vignette-expiry"
+                    type="date"
+                    min="1980-01-01"
+                    max="2100-12-31"
+                    value={values.vignette_expires_on}
+                    onChange={(e) =>
+                      updateField(
+                        'vignette_expires_on',
+                        e.target.value,
+                        'vignette_expires_on'
+                      )
+                    }
+                    disabled={submitting}
+                    className={cn(
+                      INPUT_BASE_CLASSES,
+                      'font-mono tabular-nums',
+                      getInputStateClasses(
+                        Boolean(fieldErrors.vignette_expires_on)
+                      )
+                    )}
+                  />
+                </FormField>
+              </div>
+            </fieldset>
+
+            {/* Section 5: Notes */}
             <div className="border-t border-slate-200 pt-5 dark:border-slate-800">
               <FormField
                 id="vehicle-notes"

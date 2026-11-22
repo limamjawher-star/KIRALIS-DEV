@@ -1,5 +1,11 @@
 import { parseTndToMillimes } from '@/lib/currency';
 import {
+  evaluateVehicleCompliance,
+  isValidIsoCalendarDate,
+  type ComplianceEvaluationOptions,
+} from './compliance';
+import { isMissingPricingColumnError } from './pricing';
+import {
   VEHICLE_FUEL_VALUES,
   VEHICLE_STATUS_VALUES,
   VEHICLE_TRANSMISSION_VALUES,
@@ -29,6 +35,8 @@ export interface MappedVehicleDbError {
   status: number;
   message: string;
   fieldErrors?: VehicleFieldErrors;
+  missingComplianceColumns?: boolean;
+  missingPricingColumns?: boolean;
 }
 
 const MAX_ODOMETER_KM = 5_000_000;
@@ -113,8 +121,69 @@ function parseMinorAmount(
 }
 
 /**
+ * Parses an optional nullable non-negative money field (weekly/monthly package).
+ * Empty / null / undefined -> { ok: true, value: null }.
+ */
+function parseOptionalMinorAmount(
+  minorRaw: unknown,
+  tndRaw: unknown
+): { ok: true; value: number | null } | { ok: false } {
+  if (minorRaw !== undefined && minorRaw !== null && minorRaw !== '') {
+    const parsedInt = parseStrictInteger(minorRaw);
+    if (
+      parsedInt === null ||
+      parsedInt < 0 ||
+      parsedInt > MAX_MONEY_MINOR
+    ) {
+      return { ok: false };
+    }
+    return { ok: true, value: parsedInt };
+  }
+
+  if (typeof tndRaw === 'string') {
+    const trimmed = tndRaw.trim();
+    if (!trimmed) {
+      return { ok: true, value: null };
+    }
+    const parsed = parseTndToMillimes(trimmed);
+    if (parsed === null || parsed < 0 || parsed > MAX_MONEY_MINOR) {
+      return { ok: false };
+    }
+    return { ok: true, value: parsed };
+  }
+
+  if (tndRaw === undefined || tndRaw === null) {
+    return { ok: true, value: null };
+  }
+
+  return { ok: false };
+}
+
+/**
+ * Parses an optional YYYY-MM-DD PostgreSQL DATE field strictly.
+ */
+export function parseOptionalIsoDate(
+  raw: unknown
+): { ok: true; value: string | null } | { ok: false } {
+  if (raw === undefined || raw === null) {
+    return { ok: true, value: null };
+  }
+  if (typeof raw !== 'string') {
+    return { ok: false };
+  }
+  const trimmed = raw.trim();
+  if (!trimmed) {
+    return { ok: true, value: null };
+  }
+  if (!isValidIsoCalendarDate(trimmed)) {
+    return { ok: false };
+  }
+  return { ok: true, value: trimmed };
+}
+
+/**
  * Authoritative vehicle payload validator (used both on client forms and API routes).
- * Enforces every CHECK constraint defined on public.vehicles in migration 0001.
+ * Enforces every CHECK constraint defined on public.vehicles in migrations 0001 & 0004.
  */
 export function validateVehiclePayload(
   raw: Record<string, unknown>
@@ -215,6 +284,24 @@ export function validateVehiclePayload(
       'Indiquez un tarif journalier valide positif en TND (max 3 décimales).';
   }
 
+  const weeklyRate = parseOptionalMinorAmount(
+    raw.weekly_rate_minor,
+    raw.weekly_rate_tnd
+  );
+  if (!weeklyRate.ok) {
+    errors.weekly_rate_minor =
+      'Indiquez un forfait 7 jours valide positif ou nul en TND (max 3 décimales).';
+  }
+
+  const monthlyRate = parseOptionalMinorAmount(
+    raw.monthly_rate_minor,
+    raw.monthly_rate_tnd
+  );
+  if (!monthlyRate.ok) {
+    errors.monthly_rate_minor =
+      'Indiquez un forfait 30 jours valide positif ou nul en TND (max 3 décimales).';
+  }
+
   const depositMinor = parseMinorAmount(
     raw.deposit_minor,
     raw.deposit_tnd,
@@ -243,6 +330,26 @@ export function validateVehiclePayload(
     errors.notes = 'Les notes ne doivent pas dépasser 2 000 caractères.';
   }
 
+  const insuranceDate = parseOptionalIsoDate(raw.insurance_expires_on);
+  if (!insuranceDate.ok) {
+    errors.insurance_expires_on =
+      'Indiquez une date d’assurance valide au format AAAA-MM-JJ (1980–2100).';
+  }
+
+  const inspectionDate = parseOptionalIsoDate(
+    raw.technical_inspection_expires_on
+  );
+  if (!inspectionDate.ok) {
+    errors.technical_inspection_expires_on =
+      'Indiquez une date de visite technique valide au format AAAA-MM-JJ (1980–2100).';
+  }
+
+  const vignetteDate = parseOptionalIsoDate(raw.vignette_expires_on);
+  if (!vignetteDate.ok) {
+    errors.vignette_expires_on =
+      'Indiquez une date de vignette valide au format AAAA-MM-JJ (1980–2100).';
+  }
+
   if (Object.keys(errors).length > 0) {
     return { valid: false, errors };
   }
@@ -262,9 +369,16 @@ export function validateVehiclePayload(
       seats: seatsParsed!,
       odometer_km: odometerParsed!,
       daily_rate_minor: dailyRateMinor!,
+      weekly_rate_minor: weeklyRate.ok ? weeklyRate.value : null,
+      monthly_rate_minor: monthlyRate.ok ? monthlyRate.value : null,
       deposit_minor: depositMinor!,
       status,
       notes,
+      insurance_expires_on: insuranceDate.ok ? insuranceDate.value : null,
+      technical_inspection_expires_on: inspectionDate.ok
+        ? inspectionDate.value
+        : null,
+      vignette_expires_on: vignetteDate.ok ? vignetteDate.value : null,
     },
   };
 }
@@ -285,6 +399,32 @@ export function validateStatusOnlyPatch(
 }
 
 /**
+ * Detects when the optional Phase 5B.1 compliance columns have not yet been
+ * installed on the live Supabase database (PostgreSQL 42703 / PostgREST PGRST204).
+ */
+export function isMissingComplianceColumnError(error: {
+  code?: string | null;
+  message?: string | null;
+  details?: string | null;
+} | null | undefined): boolean {
+  if (!error) return false;
+  const code = error.code ?? '';
+  const combined = `${error.message ?? ''} ${error.details ?? ''}`.toLowerCase();
+  const mentionsComplianceColumn =
+    combined.includes('insurance_expires_on') ||
+    combined.includes('technical_inspection_expires_on') ||
+    combined.includes('vignette_expires_on');
+
+  return (
+    mentionsComplianceColumn &&
+    (code === '42703' ||
+      code === 'PGRST204' ||
+      combined.includes('does not exist') ||
+      combined.includes('schema cache'))
+  );
+}
+
+/**
  * Translates PostgreSQL / PostgREST errors from public.vehicles into safe French messages.
  */
 export function mapVehicleDbError(error: {
@@ -292,6 +432,24 @@ export function mapVehicleDbError(error: {
   message?: string | null;
   details?: string | null;
 }): MappedVehicleDbError {
+  if (isMissingPricingColumnError(error)) {
+    return {
+      status: 503,
+      missingPricingColumns: true,
+      message:
+        'Les colonnes de tarification avancée (forfait 7 jours et forfait 30 jours) ne sont pas encore installées dans Supabase. Appliquez la migration 202611210005_vehicle_advanced_pricing.sql puis réessayez.',
+    };
+  }
+
+  if (isMissingComplianceColumnError(error)) {
+    return {
+      status: 503,
+      missingComplianceColumns: true,
+      message:
+        'Les colonnes d’échéances (assurance, visite technique, vignette) ne sont pas encore installées dans Supabase. Appliquez la migration 202611210004_vehicle_compliance_dates.sql puis réessayez.',
+    };
+  }
+
   const code = error.code ?? '';
   const combined = `${error.message ?? ''} ${error.details ?? ''}`.toLowerCase();
 
@@ -322,7 +480,7 @@ export function mapVehicleDbError(error: {
     };
   }
 
-  if (code === '23514' || code === '22P02' || code === '22003') {
+  if (code === '23514' || code === '22P02' || code === '22003' || code === '22007') {
     return {
       status: 400,
       message:
@@ -342,13 +500,39 @@ export function mapVehicleDbError(error: {
  */
 export function filterAndSortVehicles(
   vehicles: readonly VehicleRecord[],
-  filters: VehicleFilterState
+  filters: VehicleFilterState,
+  complianceOptions?: ComplianceEvaluationOptions
 ): VehicleRecord[] {
   const needle = filters.search.trim().toLowerCase();
 
   const filtered = vehicles.filter((vehicle) => {
     if (filters.status !== 'all' && vehicle.status !== filters.status) {
       return false;
+    }
+
+    if (filters.compliance !== 'all') {
+      const compliance = evaluateVehicleCompliance(vehicle, complianceOptions);
+      if (filters.compliance === 'expired' && compliance.expiredCount === 0) {
+        return false;
+      }
+      if (
+        filters.compliance === 'expiring_soon' &&
+        compliance.expiringSoonCount === 0
+      ) {
+        return false;
+      }
+      if (
+        filters.compliance === 'valid' &&
+        compliance.overallStatus !== 'valid'
+      ) {
+        return false;
+      }
+      if (
+        filters.compliance === 'not_provided' &&
+        compliance.overallStatus !== 'not_provided'
+      ) {
+        return false;
+      }
     }
 
     if (

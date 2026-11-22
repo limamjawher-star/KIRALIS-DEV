@@ -10,7 +10,13 @@ import {
   X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { DEFAULT_TIMEZONE, formatTndFromMillimes } from '@/lib/currency';
+import { DEFAULT_TIMEZONE } from '@/lib/currency';
+import {
+  COMPLIANCE_INFORMATIONAL_NOTICE,
+  evaluateVehicleCompliance,
+  formatComplianceRelativeDays,
+  formatIsoDateFr,
+} from '@/lib/vehicles/compliance';
 import {
   getVehicleCategoryLabel,
   VEHICLE_FUEL_LABELS,
@@ -18,22 +24,27 @@ import {
   type VehicleRecord,
   type VehicleStatus,
 } from '@/lib/vehicles/types';
+import { VehicleComplianceBadge } from './vehicle-compliance-badge';
+import { VehiclePricingSection } from './vehicle-pricing-section';
 import { VehicleStatusBadge } from './vehicle-status-badge';
 
 export interface VehicleDetailDrawerProps {
   vehicle: VehicleRecord | null;
+  agencyTimeZone: string;
   canManage: boolean;
+  pricingSchemaReady: boolean;
+  onPricingSchemaDetected: (ready: boolean) => void;
   onClose: () => void;
   onEdit: (vehicle: VehicleRecord) => void;
   onStatusChanged: (vehicle: VehicleRecord) => void;
 }
 
-function formatTunisDateTime(iso: string): string {
+function formatTunisDateTime(iso: string, timeZone: string): string {
   try {
     return new Intl.DateTimeFormat('fr-TN', {
       dateStyle: 'medium',
       timeStyle: 'short',
-      timeZone: DEFAULT_TIMEZONE,
+      timeZone: timeZone || DEFAULT_TIMEZONE,
     }).format(new Date(iso));
   } catch {
     return iso;
@@ -42,7 +53,10 @@ function formatTunisDateTime(iso: string): string {
 
 export function VehicleDetailDrawer({
   vehicle,
+  agencyTimeZone,
   canManage,
+  pricingSchemaReady,
+  onPricingSchemaDetected,
   onClose,
   onEdit,
   onStatusChanged,
@@ -106,6 +120,9 @@ export function VehicleDetailDrawer({
 
   const isRetired = vehicle.status === 'retired';
   const formattedKm = new Intl.NumberFormat('fr-TN').format(vehicle.odometer_km);
+  const compliance = evaluateVehicleCompliance(vehicle, {
+    timeZone: agencyTimeZone,
+  });
 
   return (
     <div
@@ -120,7 +137,7 @@ export function VehicleDetailDrawer({
         role="dialog"
         aria-modal="true"
         aria-labelledby="vehicle-detail-title"
-        className="flex h-full w-full max-w-lg flex-col border-s border-slate-200 bg-white shadow-xl dark:border-slate-800 dark:bg-slate-900"
+        className="flex h-full w-full max-w-xl flex-col border-s border-slate-200 bg-white shadow-xl dark:border-slate-800 dark:bg-slate-900"
       >
         <div className="flex items-start justify-between gap-4 border-b border-slate-200 px-6 py-5 dark:border-slate-800">
           <div className="min-w-0 space-y-1.5">
@@ -167,25 +184,87 @@ export function VehicleDetailDrawer({
             </div>
           ) : null}
 
-          {/* Pricing summary */}
-          <div className="grid grid-cols-2 divide-x divide-slate-200 overflow-hidden rounded-xl border border-slate-200 bg-slate-50/70 dark:divide-slate-800 dark:border-slate-800 dark:bg-slate-950/50">
-            <div className="px-4 py-3.5">
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Tarif journalier
+          {/* Informational compliance warning banner */}
+          {compliance.expiredCount > 0 ? (
+            <div
+              role="status"
+              className="rounded-lg border border-red-200 bg-red-50 px-3.5 py-3 text-xs text-red-900 dark:border-red-900/70 dark:bg-red-950/40 dark:text-red-200"
+            >
+              <p className="font-semibold">
+                {compliance.expiredCount === 1
+                  ? '1 échéance administrative dépassée'
+                  : `${compliance.expiredCount} échéances administratives dépassées`}
               </p>
-              <p className="mt-1 font-mono text-lg font-semibold text-slate-950 tabular-nums dark:text-slate-50">
-                {formatTndFromMillimes(vehicle.daily_rate_minor, 'fr')}
+              <p className="mt-1 leading-relaxed text-red-800 dark:text-red-300">
+                Vérifiez les justificatifs correspondants et mettez à jour la
+                date après renouvellement. Le statut opérationnel du véhicule
+                n’est pas modifié automatiquement.
               </p>
             </div>
-            <div className="px-4 py-3.5">
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Caution
+          ) : compliance.expiringSoonCount > 0 ? (
+            <div
+              role="status"
+              className="rounded-lg border border-amber-200 bg-amber-50 px-3.5 py-3 text-xs text-amber-900 dark:border-amber-900/70 dark:bg-amber-950/40 dark:text-amber-200"
+            >
+              <p className="font-semibold">
+                {compliance.expiringSoonCount === 1
+                  ? `1 échéance arrive à terme sous ${compliance.warningThresholdDays} jours`
+                  : `${compliance.expiringSoonCount} échéances arrivent à terme sous ${compliance.warningThresholdDays} jours`}
               </p>
-              <p className="mt-1 font-mono text-lg font-semibold text-slate-950 tabular-nums dark:text-slate-50">
-                {formatTndFromMillimes(vehicle.deposit_minor, 'fr')}
+              <p className="mt-1 leading-relaxed text-amber-800 dark:text-amber-300">
+                Pensez à planifier le renouvellement avant la date limite.
               </p>
             </div>
-          </div>
+          ) : null}
+
+          {/* Tarification & rental price simulator */}
+          <VehiclePricingSection
+            vehicle={vehicle}
+            agencyTimeZone={agencyTimeZone}
+            canManage={canManage}
+            pricingSchemaReady={pricingSchemaReady}
+            onPricingSchemaDetected={onPricingSchemaDetected}
+            onEditVehicle={onEdit}
+          />
+
+          {/* Compliance & Expiry section */}
+          <section aria-label="Échéances administratives" className="space-y-3">
+            <div className="flex items-center justify-between gap-2">
+              <h3 className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                Échéances administratives
+              </h3>
+              <span className="font-mono text-[11px] text-slate-500 tabular-nums dark:text-slate-400">
+                Seuil : {compliance.warningThresholdDays} j · {compliance.timeZone}
+              </span>
+            </div>
+            <div className="divide-y divide-slate-100 rounded-xl border border-slate-200 bg-white dark:divide-slate-800/80 dark:border-slate-800 dark:bg-slate-950/40">
+              {compliance.items.map((item) => (
+                <div
+                  key={item.key}
+                  className="flex items-center justify-between gap-3 px-3.5 py-3"
+                >
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                      {item.label}
+                    </p>
+                    <p className="mt-0.5 font-mono text-xs text-slate-500 tabular-nums dark:text-slate-400">
+                      {formatIsoDateFr(item.expiresOn)}
+                      {item.daysRemaining !== null ? (
+                        <>
+                          {' '}
+                          · {formatComplianceRelativeDays(item.daysRemaining)}
+                        </>
+                      ) : null}
+                    </p>
+                  </div>
+                  <VehicleComplianceBadge status={item.status} />
+                </div>
+              ))}
+            </div>
+            <p className="text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
+              {COMPLIANCE_INFORMATIONAL_NOTICE}
+            </p>
+          </section>
 
           {/* Technical specifications */}
           <section aria-label="Caractéristiques du véhicule" className="space-y-3">
@@ -252,13 +331,13 @@ export function VehicleDetailDrawer({
               <div className="flex items-center justify-between gap-4">
                 <dt>Créé le</dt>
                 <dd className="font-mono tabular-nums text-slate-700 dark:text-slate-300">
-                  {formatTunisDateTime(vehicle.created_at)}
+                  {formatTunisDateTime(vehicle.created_at, agencyTimeZone)}
                 </dd>
               </div>
               <div className="flex items-center justify-between gap-4">
                 <dt>Dernière mise à jour</dt>
                 <dd className="font-mono tabular-nums text-slate-700 dark:text-slate-300">
-                  {formatTunisDateTime(vehicle.updated_at)}
+                  {formatTunisDateTime(vehicle.updated_at, agencyTimeZone)}
                 </dd>
               </div>
             </dl>

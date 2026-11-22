@@ -4,8 +4,10 @@ import React, { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   AlertCircle,
+  AlertTriangle,
   Car,
   CheckCircle2,
+  Clock,
   Eye,
   Pencil,
   Plus,
@@ -20,8 +22,15 @@ import { SegmentedControl } from '@/components/ui/segmented-control';
 import { StatStrip } from '@/components/ui/stat-strip';
 import { Surface } from '@/components/ui/surface';
 import type { AgencyRecord, AgencyRole } from '@/lib/agency/types';
-import { formatTndFromMillimes } from '@/lib/currency';
+import { DEFAULT_TIMEZONE, formatTndFromMillimes } from '@/lib/currency';
 import { cn } from '@/lib/utils';
+import {
+  COMPLIANCE_INFORMATIONAL_NOTICE,
+  computeFleetComplianceSummary,
+  DEFAULT_COMPLIANCE_WARNING_DAYS,
+  evaluateVehicleCompliance,
+  formatComplianceRelativeDays,
+} from '@/lib/vehicles/compliance';
 import {
   canManageVehicles,
   DEFAULT_VEHICLE_FILTERS,
@@ -33,6 +42,7 @@ import {
   VEHICLE_STATUS_LABELS,
   VEHICLE_TRANSMISSION_LABELS,
   VEHICLE_TRANSMISSION_VALUES,
+  type VehicleComplianceFilter,
   type VehicleFilterState,
   type VehicleFuelType,
   type VehicleRecord,
@@ -44,6 +54,7 @@ import {
   computeFleetSummary,
   filterAndSortVehicles,
 } from '@/lib/vehicles/validation';
+import { VehicleComplianceBadge } from './vehicle-compliance-badge';
 import { VehicleDetailDrawer } from './vehicle-detail-drawer';
 import { VehicleFormModal } from './vehicle-form-modal';
 import { VehicleStatusBadge } from './vehicle-status-badge';
@@ -53,6 +64,8 @@ export interface VehiclesWorkspaceProps {
   role: AgencyRole;
   initialVehicles: VehicleRecord[];
   initialError: string | null;
+  initialComplianceSchemaReady: boolean;
+  initialPricingSchemaReady: boolean;
 }
 
 const ROLE_LABELS: Record<AgencyRole, string> = {
@@ -77,12 +90,21 @@ export function VehiclesWorkspace({
   role,
   initialVehicles,
   initialError,
+  initialComplianceSchemaReady,
+  initialPricingSchemaReady,
 }: VehiclesWorkspaceProps) {
   const router = useRouter();
   const canManage = canManageVehicles(role);
+  const agencyTimeZone = agency.timezone || DEFAULT_TIMEZONE;
 
   const [vehicles, setVehicles] = useState<VehicleRecord[]>(initialVehicles);
   const [loadError, setLoadError] = useState<string | null>(initialError);
+  const [complianceSchemaReady, setComplianceSchemaReady] = useState<boolean>(
+    initialComplianceSchemaReady
+  );
+  const [pricingSchemaReady, setPricingSchemaReady] = useState<boolean>(
+    initialPricingSchemaReady
+  );
   const [refreshing, setRefreshing] = useState(false);
   const [feedbackBanner, setFeedbackBanner] = useState<string | null>(null);
 
@@ -105,14 +127,28 @@ export function VehiclesWorkspace({
 
   const summary = useMemo(() => computeFleetSummary(vehicles), [vehicles]);
 
+  const complianceSummary = useMemo(
+    () =>
+      computeFleetComplianceSummary(vehicles, {
+        timeZone: agencyTimeZone,
+        warningThresholdDays: DEFAULT_COMPLIANCE_WARNING_DAYS,
+      }),
+    [vehicles, agencyTimeZone]
+  );
+
   const filteredVehicles = useMemo(
-    () => filterAndSortVehicles(vehicles, filters),
-    [vehicles, filters]
+    () =>
+      filterAndSortVehicles(vehicles, filters, {
+        timeZone: agencyTimeZone,
+        warningThresholdDays: DEFAULT_COMPLIANCE_WARNING_DAYS,
+      }),
+    [vehicles, filters, agencyTimeZone]
   );
 
   const hasActiveFilters =
     filters.search.trim() !== '' ||
     filters.status !== 'all' ||
+    filters.compliance !== 'all' ||
     filters.category !== 'all' ||
     filters.transmission !== 'all' ||
     filters.fuelType !== 'all' ||
@@ -129,6 +165,8 @@ export function VehiclesWorkspace({
       const payload = (await response.json().catch(() => null)) as {
         ok?: boolean;
         vehicles?: VehicleRecord[];
+        complianceSchemaReady?: boolean;
+        pricingSchemaReady?: boolean;
         error?: string;
       } | null;
 
@@ -139,6 +177,13 @@ export function VehiclesWorkspace({
         );
         setRefreshing(false);
         return;
+      }
+
+      if (typeof payload.complianceSchemaReady === 'boolean') {
+        setComplianceSchemaReady(payload.complianceSchemaReady);
+      }
+      if (typeof payload.pricingSchemaReady === 'boolean') {
+        setPricingSchemaReady(payload.pricingSchemaReady);
       }
 
       setVehicles(payload.vehicles);
@@ -202,11 +247,18 @@ export function VehiclesWorkspace({
     setModalState({ open: true, mode: 'edit', vehicle });
   }
 
+  function toggleComplianceQuickFilter(target: 'expired' | 'expiring_soon') {
+    setFilters((prev) => ({
+      ...prev,
+      compliance: prev.compliance === target ? 'all' : target,
+    }));
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader
         title="Véhicules"
-        description="Gérez votre parc automobile, les tarifs journaliers en TND, les cautions et le cycle de vie opérationnel de chaque véhicule."
+        description="Gérez votre parc automobile, les tarifs journaliers en TND, les cautions et le suivi des échéances administratives."
         meta={`${agency.name} · ${ROLE_LABELS[role]} · ${agency.currency_code}`}
         action={
           <div className="flex flex-wrap items-center gap-2.5">
@@ -231,6 +283,58 @@ export function VehiclesWorkspace({
           </div>
         }
       />
+
+      {!complianceSchemaReady ? (
+        <div
+          role="status"
+          className="flex flex-wrap items-start justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-900 dark:border-amber-900/70 dark:bg-amber-950/40 dark:text-amber-200"
+        >
+          <div className="flex items-start gap-2.5">
+            <AlertTriangle
+              className="mt-0.5 h-4 w-4 shrink-0"
+              aria-hidden="true"
+            />
+            <p className="leading-relaxed">
+              <span className="font-semibold">
+                Migration des échéances en attente :
+              </span>{' '}
+              appliquez{' '}
+              <span className="font-mono">
+                202611210004_vehicle_compliance_dates.sql
+              </span>{' '}
+              dans Supabase SQL Editor pour activer la sauvegarde des dates
+              d’assurance, visite technique et vignette. La gestion de flotte
+              existante reste pleinement opérationnelle.
+            </p>
+          </div>
+        </div>
+      ) : null}
+
+      {!pricingSchemaReady ? (
+        <div
+          role="status"
+          className="flex flex-wrap items-start justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-900 dark:border-amber-900/70 dark:bg-amber-950/40 dark:text-amber-200"
+        >
+          <div className="flex items-start gap-2.5">
+            <AlertTriangle
+              className="mt-0.5 h-4 w-4 shrink-0"
+              aria-hidden="true"
+            />
+            <p className="leading-relaxed">
+              <span className="font-semibold">
+                Migration de tarification avancée en attente :
+              </span>{' '}
+              appliquez{' '}
+              <span className="font-mono">
+                202611210005_vehicle_advanced_pricing.sql
+              </span>{' '}
+              dans Supabase SQL Editor pour activer les forfaits 7/30 jours et
+              les tarifs saisonniers. Le tarif journalier, la gestion de flotte
+              et les échéances restent pleinement opérationnels.
+            </p>
+          </div>
+        </div>
+      ) : null}
 
       {feedbackBanner ? (
         <div
@@ -304,6 +408,84 @@ export function VehiclesWorkspace({
         ]}
       />
 
+      {/* Compliance & Expiry alert summary strip */}
+      <Surface className="divide-y divide-slate-200 dark:divide-slate-800">
+        <div className="grid grid-cols-1 divide-y divide-slate-200 sm:grid-cols-2 sm:divide-y-0 sm:divide-x dark:divide-slate-800">
+          <div className="flex items-center justify-between gap-4 px-5 py-3.5">
+            <div className="min-w-0">
+              <p className="flex items-center gap-1.5 text-xs font-medium text-slate-600 dark:text-slate-400">
+                <AlertTriangle
+                  className="h-3.5 w-3.5 text-red-600 dark:text-red-400"
+                  aria-hidden="true"
+                />
+                <span>Documents expirés</span>
+              </p>
+              <p className="mt-1 flex items-baseline gap-2">
+                <span className="font-mono text-xl font-semibold text-slate-950 tabular-nums dark:text-slate-50">
+                  {complianceSummary.expiredDocumentsCount}
+                </span>
+                <span className="text-xs text-slate-500 tabular-nums dark:text-slate-400">
+                  sur {complianceSummary.vehiclesWithExpiredCount} véhicule(s)
+                </span>
+              </p>
+            </div>
+            <Button
+              size="sm"
+              variant={filters.compliance === 'expired' ? 'primary' : 'secondary'}
+              onClick={() => toggleComplianceQuickFilter('expired')}
+              aria-pressed={filters.compliance === 'expired'}
+            >
+              {filters.compliance === 'expired'
+                ? 'Filtre actif'
+                : 'Voir les expirés'}
+            </Button>
+          </div>
+
+          <div className="flex items-center justify-between gap-4 px-5 py-3.5">
+            <div className="min-w-0">
+              <p className="flex items-center gap-1.5 text-xs font-medium text-slate-600 dark:text-slate-400">
+                <Clock
+                  className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400"
+                  aria-hidden="true"
+                />
+                <span>
+                  Expirent sous {complianceSummary.warningThresholdDays} jours
+                </span>
+              </p>
+              <p className="mt-1 flex items-baseline gap-2">
+                <span className="font-mono text-xl font-semibold text-slate-950 tabular-nums dark:text-slate-50">
+                  {complianceSummary.expiringSoonDocumentsCount}
+                </span>
+                <span className="text-xs text-slate-500 tabular-nums dark:text-slate-400">
+                  sur {complianceSummary.vehiclesWithExpiringSoonCount}{' '}
+                  véhicule(s)
+                </span>
+              </p>
+            </div>
+            <Button
+              size="sm"
+              variant={
+                filters.compliance === 'expiring_soon' ? 'primary' : 'secondary'
+              }
+              onClick={() => toggleComplianceQuickFilter('expiring_soon')}
+              aria-pressed={filters.compliance === 'expiring_soon'}
+            >
+              {filters.compliance === 'expiring_soon'
+                ? 'Filtre actif'
+                : 'Voir à renouveler'}
+            </Button>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center justify-between gap-2 bg-slate-50/70 px-5 py-2 text-[11px] text-slate-500 dark:bg-slate-950/50 dark:text-slate-400">
+          <span>{COMPLIANCE_INFORMATIONAL_NOTICE}</span>
+          <span className="font-mono whitespace-nowrap tabular-nums">
+            Réf. : {complianceSummary.referenceDate} ·{' '}
+            {complianceSummary.timeZone}
+          </span>
+        </div>
+      </Surface>
+
       {/* Inventory table surface */}
       <Surface className="overflow-hidden">
         {/* Toolbar: Search, status segmented control, secondary filters, sort */}
@@ -337,6 +519,26 @@ export function VehiclesWorkspace({
           </div>
 
           <div className="flex flex-wrap items-center gap-2.5">
+            <select
+              aria-label="Filtrer par échéances administratives"
+              value={filters.compliance}
+              onChange={(e) =>
+                setFilters((prev) => ({
+                  ...prev,
+                  compliance: e.target.value as VehicleComplianceFilter,
+                }))
+              }
+              className="h-9 rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-700 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
+            >
+              <option value="all">Toutes échéances</option>
+              <option value="expired">Documents expirés</option>
+              <option value="expiring_soon">
+                Expirent bientôt (≤ {DEFAULT_COMPLIANCE_WARNING_DAYS} j)
+              </option>
+              <option value="valid">Échéances valides</option>
+              <option value="not_provided">Dates non renseignées</option>
+            </select>
+
             <select
               aria-label="Filtrer par catégorie"
               value={filters.category}
@@ -470,6 +672,7 @@ export function VehiclesWorkspace({
                     <th className="px-4 py-3 text-start">Spécifications</th>
                     <th className="px-4 py-3 text-end">Kilométrage</th>
                     <th className="px-4 py-3 text-end">Tarif / jour</th>
+                    <th className="px-4 py-3 text-start">Échéances</th>
                     <th className="px-4 py-3 text-start">Statut</th>
                     <th className="px-4 py-3 text-end">Actions</th>
                   </tr>
@@ -479,6 +682,19 @@ export function VehiclesWorkspace({
                     const kmFormatted = new Intl.NumberFormat('fr-TN').format(
                       vehicle.odometer_km
                     );
+                    const compliance = evaluateVehicleCompliance(vehicle, {
+                      timeZone: agencyTimeZone,
+                      warningThresholdDays: DEFAULT_COMPLIANCE_WARNING_DAYS,
+                    });
+                    const urgent = compliance.mostUrgentItem;
+                    const compactLabel =
+                      compliance.expiredCount > 1
+                        ? `${compliance.expiredCount} expirés`
+                        : compliance.expiredCount === 0 &&
+                            compliance.expiringSoonCount > 1
+                          ? `${compliance.expiringSoonCount} à renouveler`
+                          : undefined;
+
                     return (
                       <tr
                         key={vehicle.id}
@@ -535,7 +751,35 @@ export function VehiclesWorkspace({
                           <p className="font-mono text-[11px] text-slate-500 tabular-nums dark:text-slate-400">
                             Caution :{' '}
                             {formatTndFromMillimes(vehicle.deposit_minor, 'fr')}
+                            {vehicle.weekly_rate_minor !== null ||
+                            vehicle.monthly_rate_minor !== null
+                              ? ` · Forfaits ${[
+                                  vehicle.weekly_rate_minor !== null ? '7j' : null,
+                                  vehicle.monthly_rate_minor !== null ? '30j' : null,
+                                ]
+                                  .filter(Boolean)
+                                  .join('/')}`
+                              : ''}
                           </p>
+                        </td>
+
+                        <td className="px-4 py-3.5">
+                          <div className="space-y-0.5">
+                            <VehicleComplianceBadge
+                              status={compliance.overallStatus}
+                              labelOverride={compactLabel}
+                            />
+                            {urgent &&
+                            (compliance.overallStatus === 'expired' ||
+                              compliance.overallStatus === 'expiring_soon') ? (
+                              <p className="text-[11px] text-slate-500 tabular-nums dark:text-slate-400">
+                                {urgent.shortLabel} ·{' '}
+                                {formatComplianceRelativeDays(
+                                  urgent.daysRemaining
+                                )}
+                              </p>
+                            ) : null}
+                          </div>
                         </td>
 
                         <td className="px-4 py-3.5">
@@ -582,6 +826,12 @@ export function VehiclesWorkspace({
                 const kmFormatted = new Intl.NumberFormat('fr-TN').format(
                   vehicle.odometer_km
                 );
+                const compliance = evaluateVehicleCompliance(vehicle, {
+                  timeZone: agencyTimeZone,
+                  warningThresholdDays: DEFAULT_COMPLIANCE_WARNING_DAYS,
+                });
+                const urgent = compliance.mostUrgentItem;
+
                 return (
                   <div key={vehicle.id} className="space-y-3 p-4">
                     <div className="flex items-start justify-between gap-3">
@@ -611,6 +861,20 @@ export function VehiclesWorkspace({
                         {formatTndFromMillimes(vehicle.daily_rate_minor, 'fr')}
                         /j
                       </span>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2 text-xs">
+                      <VehicleComplianceBadge
+                        status={compliance.overallStatus}
+                      />
+                      {urgent &&
+                      (compliance.overallStatus === 'expired' ||
+                        compliance.overallStatus === 'expiring_soon') ? (
+                        <span className="text-slate-500 tabular-nums dark:text-slate-400">
+                          {urgent.shortLabel} ·{' '}
+                          {formatComplianceRelativeDays(urgent.daysRemaining)}
+                        </span>
+                      ) : null}
                     </div>
 
                     <div className="flex items-center gap-2 pt-1">
@@ -657,7 +921,10 @@ export function VehiclesWorkspace({
       <VehicleDetailDrawer
         key={selectedVehicle?.id ?? 'drawer-closed'}
         vehicle={selectedVehicle}
+        agencyTimeZone={agencyTimeZone}
         canManage={canManage}
+        pricingSchemaReady={pricingSchemaReady}
+        onPricingSchemaDetected={setPricingSchemaReady}
         onClose={() => setSelectedVehicle(null)}
         onEdit={(v) => openEditModal(v)}
         onStatusChanged={handleStatusChanged}
@@ -670,6 +937,8 @@ export function VehiclesWorkspace({
           mode={modalState.mode}
           vehicle={modalState.vehicle}
           currencyCode={agency.currency_code || 'TND'}
+          complianceSchemaReady={complianceSchemaReady}
+          pricingSchemaReady={pricingSchemaReady}
           onClose={() =>
             setModalState({ open: false, mode: 'create', vehicle: null })
           }

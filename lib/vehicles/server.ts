@@ -10,9 +10,11 @@ import {
 } from '@/lib/agency/types';
 import { hasSupabaseEnv } from '@/lib/supabase/env';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { isMissingPricingColumnError } from './pricing';
 import type { VehicleRecord } from './types';
+import { isMissingComplianceColumnError } from './validation';
 
-export const VEHICLE_SELECT_COLUMNS = [
+export const VEHICLE_BASE_SELECT_COLUMNS = [
   'id',
   'agency_id',
   'plate_number',
@@ -34,6 +36,66 @@ export const VEHICLE_SELECT_COLUMNS = [
   'created_at',
   'updated_at',
 ].join(', ');
+
+export const VEHICLE_COMPLIANCE_SELECT_COLUMNS = [
+  VEHICLE_BASE_SELECT_COLUMNS,
+  'insurance_expires_on',
+  'technical_inspection_expires_on',
+  'vignette_expires_on',
+].join(', ');
+
+export const VEHICLE_SELECT_COLUMNS = [
+  VEHICLE_COMPLIANCE_SELECT_COLUMNS,
+  'weekly_rate_minor',
+  'monthly_rate_minor',
+].join(', ');
+
+export const SEASONAL_RATE_SELECT_COLUMNS = [
+  'id',
+  'agency_id',
+  'vehicle_id',
+  'label',
+  'start_date',
+  'end_date',
+  'daily_rate_minor',
+  'is_active',
+  'created_by',
+  'created_at',
+  'updated_at',
+].join(', ');
+
+function parseNullableNumber(value: unknown): number | null {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return Math.trunc(value);
+  }
+  if (typeof value === 'string' && /^-?\d+$/.test(value.trim())) {
+    const parsed = Number(value.trim());
+    return Number.isSafeInteger(parsed) ? parsed : null;
+  }
+  return null;
+}
+
+export function hydrateVehicleComplianceDefaults(
+  row: Record<string, unknown>
+): VehicleRecord {
+  return {
+    ...(row as unknown as VehicleRecord),
+    weekly_rate_minor: parseNullableNumber(row.weekly_rate_minor),
+    monthly_rate_minor: parseNullableNumber(row.monthly_rate_minor),
+    insurance_expires_on:
+      typeof row.insurance_expires_on === 'string'
+        ? row.insurance_expires_on
+        : null,
+    technical_inspection_expires_on:
+      typeof row.technical_inspection_expires_on === 'string'
+        ? row.technical_inspection_expires_on
+        : null,
+    vignette_expires_on:
+      typeof row.vignette_expires_on === 'string'
+        ? row.vignette_expires_on
+        : null,
+  };
+}
 
 interface RawMembershipRow {
   id: string;
@@ -173,15 +235,21 @@ export async function resolveAuthenticatedAgencyForApi(): Promise<ApiAgencyResol
 
 /**
  * Fetches all vehicles strictly scoped to the verified active agency via Supabase RLS.
+ * Safely falls back to Phase 5B.1 (compliance) or Phase 5A (base) columns when
+ * migrations 0005 or 0004 are not yet installed in the remote database.
  */
 export async function listAgencyVehicles(agencyId: string): Promise<{
   vehicles: VehicleRecord[];
   error: string | null;
+  complianceSchemaReady: boolean;
+  pricingSchemaReady: boolean;
 }> {
   if (!hasSupabaseEnv(process.env)) {
     return {
       vehicles: [],
       error: 'Configuration Supabase manquante.',
+      complianceSchemaReady: false,
+      pricingSchemaReady: false,
     };
   }
 
@@ -193,21 +261,120 @@ export async function listAgencyVehicles(agencyId: string): Promise<{
       .eq('agency_id', agencyId)
       .order('created_at', { ascending: false });
 
+    if (error && isMissingPricingColumnError(error)) {
+      const complianceFallback = await supabase
+        .from('vehicles')
+        .select(VEHICLE_COMPLIANCE_SELECT_COLUMNS)
+        .eq('agency_id', agencyId)
+        .order('created_at', { ascending: false });
+
+      if (
+        complianceFallback.error &&
+        isMissingComplianceColumnError(complianceFallback.error)
+      ) {
+        const baseFallback = await supabase
+          .from('vehicles')
+          .select(VEHICLE_BASE_SELECT_COLUMNS)
+          .eq('agency_id', agencyId)
+          .order('created_at', { ascending: false });
+
+        if (baseFallback.error) {
+          return {
+            vehicles: [],
+            error: 'Impossible de charger les véhicules de votre agence.',
+            complianceSchemaReady: false,
+            pricingSchemaReady: false,
+          };
+        }
+
+        const hydrated = (
+          (baseFallback.data as unknown as Record<string, unknown>[] | null) ??
+          []
+        ).map(hydrateVehicleComplianceDefaults);
+
+        return {
+          vehicles: hydrated,
+          error: null,
+          complianceSchemaReady: false,
+          pricingSchemaReady: false,
+        };
+      }
+
+      if (complianceFallback.error) {
+        return {
+          vehicles: [],
+          error: 'Impossible de charger les véhicules de votre agence.',
+          complianceSchemaReady: true,
+          pricingSchemaReady: false,
+        };
+      }
+
+      const hydrated = (
+        (complianceFallback.data as unknown as Record<string, unknown>[] | null) ??
+        []
+      ).map(hydrateVehicleComplianceDefaults);
+
+      return {
+        vehicles: hydrated,
+        error: null,
+        complianceSchemaReady: true,
+        pricingSchemaReady: false,
+      };
+    }
+
+    if (error && isMissingComplianceColumnError(error)) {
+      const fallback = await supabase
+        .from('vehicles')
+        .select(VEHICLE_BASE_SELECT_COLUMNS)
+        .eq('agency_id', agencyId)
+        .order('created_at', { ascending: false });
+
+      if (fallback.error) {
+        return {
+          vehicles: [],
+          error: 'Impossible de charger les véhicules de votre agence.',
+          complianceSchemaReady: false,
+          pricingSchemaReady: false,
+        };
+      }
+
+      const hydrated = (
+        (fallback.data as unknown as Record<string, unknown>[] | null) ?? []
+      ).map(hydrateVehicleComplianceDefaults);
+
+      return {
+        vehicles: hydrated,
+        error: null,
+        complianceSchemaReady: false,
+        pricingSchemaReady: false,
+      };
+    }
+
     if (error) {
       return {
         vehicles: [],
         error: 'Impossible de charger les véhicules de votre agence.',
+        complianceSchemaReady: true,
+        pricingSchemaReady: true,
       };
     }
 
+    const hydrated = (
+      (data as unknown as Record<string, unknown>[] | null) ?? []
+    ).map(hydrateVehicleComplianceDefaults);
+
     return {
-      vehicles: (data as unknown as VehicleRecord[] | null) ?? [],
+      vehicles: hydrated,
       error: null,
+      complianceSchemaReady: true,
+      pricingSchemaReady: true,
     };
   } catch {
     return {
       vehicles: [],
       error: 'Erreur réseau lors du chargement du parc automobile.',
+      complianceSchemaReady: false,
+      pricingSchemaReady: false,
     };
   }
 }

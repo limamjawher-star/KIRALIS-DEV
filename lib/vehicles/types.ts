@@ -46,10 +46,15 @@ export interface VehicleRecord {
   seats: number;
   odometer_km: number;
   daily_rate_minor: number;
+  weekly_rate_minor: number | null;
+  monthly_rate_minor: number | null;
   deposit_minor: number;
   currency_code: string;
   status: VehicleStatus;
   notes: string | null;
+  insurance_expires_on: string | null;
+  technical_inspection_expires_on: string | null;
+  vignette_expires_on: string | null;
   created_by: string | null;
   created_at: string;
   updated_at: string;
@@ -67,9 +72,14 @@ export interface VehicleFormValues {
   seats: string;
   odometer_km: string;
   daily_rate_tnd: string;
+  weekly_rate_tnd: string;
+  monthly_rate_tnd: string;
   deposit_tnd: string;
   status: VehicleStatus;
   notes: string;
+  insurance_expires_on: string;
+  technical_inspection_expires_on: string;
+  vignette_expires_on: string;
 }
 
 export type VehicleFieldName =
@@ -84,9 +94,14 @@ export type VehicleFieldName =
   | 'seats'
   | 'odometer_km'
   | 'daily_rate_minor'
+  | 'weekly_rate_minor'
+  | 'monthly_rate_minor'
   | 'deposit_minor'
   | 'status'
-  | 'notes';
+  | 'notes'
+  | 'insurance_expires_on'
+  | 'technical_inspection_expires_on'
+  | 'vignette_expires_on';
 
 export type VehicleFieldErrors = Partial<Record<VehicleFieldName, string>>;
 
@@ -102,14 +117,27 @@ export interface ValidatedVehiclePayload {
   seats: number;
   odometer_km: number;
   daily_rate_minor: number;
+  weekly_rate_minor: number | null;
+  monthly_rate_minor: number | null;
   deposit_minor: number;
   status: VehicleStatus;
   notes: string | null;
+  insurance_expires_on: string | null;
+  technical_inspection_expires_on: string | null;
+  vignette_expires_on: string | null;
 }
+
+export type VehicleComplianceFilter =
+  | 'all'
+  | 'expired'
+  | 'expiring_soon'
+  | 'valid'
+  | 'not_provided';
 
 export interface VehicleFilterState {
   search: string;
   status: 'all' | VehicleStatus;
+  compliance: VehicleComplianceFilter;
   category: 'all' | string;
   transmission: 'all' | VehicleTransmission;
   fuelType: 'all' | VehicleFuelType;
@@ -194,6 +222,7 @@ export const VEHICLE_SORT_OPTIONS: readonly {
 export const DEFAULT_VEHICLE_FILTERS: VehicleFilterState = {
   search: '',
   status: 'all',
+  compliance: 'all',
   category: 'all',
   transmission: 'all',
   fuelType: 'all',
@@ -243,9 +272,14 @@ export function createEmptyVehicleFormValues(): VehicleFormValues {
     seats: '5',
     odometer_km: '0',
     daily_rate_tnd: '',
+    weekly_rate_tnd: '',
+    monthly_rate_tnd: '',
     deposit_tnd: '0,000',
     status: 'available',
     notes: '',
+    insurance_expires_on: '',
+    technical_inspection_expires_on: '',
+    vignette_expires_on: '',
   };
 }
 
@@ -264,8 +298,20 @@ export function vehicleRecordToFormValues(
     seats: String(vehicle.seats),
     odometer_km: String(vehicle.odometer_km),
     daily_rate_tnd: formatMinorToEditableTnd(vehicle.daily_rate_minor),
+    weekly_rate_tnd:
+      vehicle.weekly_rate_minor !== null
+        ? formatMinorToEditableTnd(vehicle.weekly_rate_minor)
+        : '',
+    monthly_rate_tnd:
+      vehicle.monthly_rate_minor !== null
+        ? formatMinorToEditableTnd(vehicle.monthly_rate_minor)
+        : '',
     deposit_tnd: formatMinorToEditableTnd(vehicle.deposit_minor),
     status: vehicle.status,
     notes: vehicle.notes ?? '',
+    insurance_expires_on: vehicle.insurance_expires_on ?? '',
+    technical_inspection_expires_on:
+      vehicle.technical_inspection_expires_on ?? '',
+    vignette_expires_on: vehicle.vignette_expires_on ?? '',
   };
 }

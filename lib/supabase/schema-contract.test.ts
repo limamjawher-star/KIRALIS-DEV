@@ -209,3 +209,147 @@ test('migration 0003 records the exact non-destructive security lockdown and pre
   );
 });
 
+test('migration 0004 adds nullable compliance DATE columns non-destructively with column-level authenticated UPDATE grants', () => {
+  const migration0004 = fs.readFileSync(
+    path.join(ROOT, 'supabase/migrations/202611210004_vehicle_compliance_dates.sql'),
+    'utf8'
+  );
+  const exec0004 = stripSqlComments(migration0004);
+
+  // Additive & non-destructive
+  assert.doesNotMatch(exec0004, /\bDROP\s+TABLE\b/i);
+  assert.doesNotMatch(exec0004, /\bDROP\s+COLUMN\b/i);
+  assert.doesNotMatch(exec0004, /\bDROP\s+POLICY\b/i);
+  assert.doesNotMatch(exec0004, /\bTRUNCATE\b/i);
+  assert.doesNotMatch(migration0004, /service_role/i);
+  assert.doesNotMatch(exec0004, /\bTO\s+(anon|PUBLIC)\b/i);
+
+  // Three exact nullable PostgreSQL DATE columns on public.vehicles
+  assert.match(exec0004, /ALTER TABLE public\.vehicles/);
+  assert.match(exec0004, /ADD COLUMN IF NOT EXISTS insurance_expires_on date\b/);
+  assert.match(
+    exec0004,
+    /ADD COLUMN IF NOT EXISTS technical_inspection_expires_on date\b/
+  );
+  assert.match(exec0004, /ADD COLUMN IF NOT EXISTS vignette_expires_on date\b/);
+
+  // Explicit column-level UPDATE grant to authenticated (required by migration 0002)
+  assert.match(
+    exec0004,
+    /GRANT UPDATE \(\s*insurance_expires_on,\s*technical_inspection_expires_on,\s*vignette_expires_on\s*\) ON TABLE public\.vehicles TO authenticated;/
+  );
+});
+
+test('migration 0005 adds weekly/monthly vehicle rates, tenant-safe seasonal rates with GiST non-overlap, RLS, and trusted audit trigger', () => {
+  const migration0005 = fs.readFileSync(
+    path.join(
+      ROOT,
+      'supabase/migrations/202611210005_vehicle_advanced_pricing.sql'
+    ),
+    'utf8'
+  );
+  const exec0005 = stripSqlComments(migration0005);
+
+  // Additive & non-destructive; never weakens audit_logs or exposes service_role / anon
+  assert.doesNotMatch(exec0005, /\bDROP\s+TABLE\b/i);
+  assert.doesNotMatch(exec0005, /\bDROP\s+COLUMN\b/i);
+  assert.doesNotMatch(exec0005, /\bTRUNCATE\b/i);
+  assert.doesNotMatch(migration0005, /service_role/i);
+  assert.doesNotMatch(exec0005, /GRANT[^;]*ON TABLE public\.audit_logs/i);
+  assert.doesNotMatch(exec0005, /GRANT[^;]*DELETE[^;]*ON TABLE public\.vehicle_seasonal_rates/i);
+  assert.doesNotMatch(exec0005, /\bTO\s+(anon|PUBLIC)\b/i);
+
+  // Part A: nullable weekly_rate_minor & monthly_rate_minor + non-negative CHECK + column UPDATE grant
+  assert.match(exec0005, /ADD COLUMN IF NOT EXISTS weekly_rate_minor bigint/);
+  assert.match(exec0005, /ADD COLUMN IF NOT EXISTS monthly_rate_minor bigint/);
+  assert.match(exec0005, /CHECK \(weekly_rate_minor IS NULL OR weekly_rate_minor >= 0\)/);
+  assert.match(exec0005, /CHECK \(monthly_rate_minor IS NULL OR monthly_rate_minor >= 0\)/);
+  assert.match(
+    exec0005,
+    /GRANT UPDATE \(\s*weekly_rate_minor,\s*monthly_rate_minor\s*\) ON TABLE public\.vehicles TO authenticated;/
+  );
+
+  // Part B & C: vehicle_seasonal_rates table, same-agency composite FK, valid range CHECK, GiST exclusion
+  assert.match(exec0005, /CREATE TABLE IF NOT EXISTS public\.vehicle_seasonal_rates/);
+  assert.match(
+    exec0005,
+    /FOREIGN KEY \(agency_id, vehicle_id\)\s+REFERENCES public\.vehicles \(agency_id, id\)/
+  );
+  assert.match(exec0005, /CHECK \(end_date >= start_date\)/);
+  assert.match(
+    exec0005,
+    /EXCLUDE USING gist\s*\(\s*agency_id WITH =,\s*vehicle_id WITH =,\s*daterange\(start_date, end_date, '\[\]'\)\s+WITH &&\s*\)\s*WHERE \(is_active\)/
+  );
+
+  // Forced RLS + owner/manager write + active member read
+  assert.match(exec0005, /ALTER TABLE public\.vehicle_seasonal_rates ENABLE ROW LEVEL SECURITY;/);
+  assert.match(exec0005, /ALTER TABLE public\.vehicle_seasonal_rates FORCE ROW LEVEL SECURITY;/);
+  assert.match(exec0005, /CREATE POLICY vehicle_seasonal_rates_select_active_member/);
+  assert.match(exec0005, /CREATE POLICY vehicle_seasonal_rates_insert_owner_manager/);
+  assert.match(exec0005, /CREATE POLICY vehicle_seasonal_rates_update_owner_manager/);
+
+  // Part D: SECURITY DEFINER + locked search_path audit trigger, revoked from client roles
+  assert.match(
+    exec0005,
+    /CREATE OR REPLACE FUNCTION public\.audit_vehicle_pricing_change\(\)[\s\S]*SECURITY DEFINER[\s\S]*SET search_path = ''/
+  );
+  assert.match(
+    exec0005,
+    /REVOKE ALL ON FUNCTION public\.audit_vehicle_pricing_change\(\) FROM PUBLIC, anon, authenticated;/
+  );
+  assert.match(
+    exec0005,
+    /REVOKE ALL ON FUNCTION public\.guard_vehicle_seasonal_rate_integrity\(\) FROM PUBLIC, anon, authenticated;/
+  );
+});
+
+test('migration 0005 safely supports auth.users ON DELETE SET NULL on created_by and explicit btree_gist transaction search_path', () => {
+  const migration0005 = fs.readFileSync(
+    path.join(
+      ROOT,
+      'supabase/migrations/202611210005_vehicle_advanced_pricing.sql'
+    ),
+    'utf8'
+  );
+  const exec0005 = stripSqlComments(migration0005);
+
+  // Explicit BEGIN / COMMIT atomic transaction
+  assert.match(exec0005, /^\s*BEGIN;/);
+  assert.match(exec0005, /COMMIT;\s*$/);
+
+  // Issue 2: Verify existing btree_gist extension and set transaction-local search_path with pg_catalog first
+  assert.match(exec0005, /FROM pg_catalog\.pg_extension e[\s\S]*WHERE e\.extname = 'btree_gist'/);
+  assert.match(exec0005, /SET LOCAL search_path = pg_catalog, %I/);
+  assert.doesNotMatch(exec0005, /\bCREATE\s+EXTENSION\b/i);
+  assert.doesNotMatch(exec0005, /\bALTER\s+EXTENSION\b/i);
+
+  // Issue 1: created_by must remain non-updatable by authenticated users
+  const updateGrantMatch = exec0005.match(
+    /GRANT UPDATE \(([^)]*)\) ON TABLE public\.vehicle_seasonal_rates TO authenticated;/
+  );
+  assert.ok(updateGrantMatch, 'Expected column-level UPDATE grant on public.vehicle_seasonal_rates');
+  assert.doesNotMatch(updateGrantMatch[1], /\bcreated_by\b/);
+  assert.doesNotMatch(updateGrantMatch[1], /\bagency_id\b/);
+  assert.doesNotMatch(updateGrantMatch[1], /\bvehicle_id\b/);
+  assert.doesNotMatch(updateGrantMatch[1], /\bcreated_at\b/);
+
+  // Guard trigger allows ONLY nested FK nullification (non-null -> NULL, non-client role, no other fields changed)
+  assert.match(
+    exec0005,
+    /OLD\.created_by IS NOT NULL[\s\S]*AND NEW\.created_by IS NULL[\s\S]*AND pg_catalog\.pg_trigger_depth\(\) > 1[\s\S]*AND current_user NOT IN \('anon', 'authenticated'\)/
+  );
+  // Still locks agency_id, vehicle_id, and created_at unconditionally
+  assert.match(exec0005, /Changing agency_id on an existing seasonal rate is forbidden/);
+  assert.match(exec0005, /Changing vehicle_id on an existing seasonal rate is forbidden/);
+  assert.match(exec0005, /Changing created_at on an existing seasonal rate is forbidden/);
+
+  // Audit trigger skips pure created_by FK nullification so deleting an auth user never fails or logs bogus updates
+  const auditFnMatch = exec0005.match(
+    /CREATE OR REPLACE FUNCTION public\.audit_vehicle_pricing_change\(\)[\s\S]*?\$\$;/
+  );
+  assert.ok(auditFnMatch, 'Expected audit_vehicle_pricing_change function definition');
+  assert.match(
+    auditFnMatch[0],
+    /OLD\.created_by IS NOT NULL[\s\S]*AND NEW\.created_by IS NULL[\s\S]*RETURN NULL;/
+  );
+});
