@@ -233,28 +233,29 @@ export async function resolveAuthenticatedAgencyForApi(): Promise<ApiAgencyResol
   };
 }
 
-/**
- * Fetches all vehicles strictly scoped to the verified active agency via Supabase RLS.
- * Safely falls back to Phase 5B.1 (compliance) or Phase 5A (base) columns when
- * migrations 0005 or 0004 are not yet installed in the remote database.
- */
-export async function listAgencyVehicles(agencyId: string): Promise<{
+export type SchemaAvailabilityStatus = 'ready' | 'missing' | 'unverified';
+
+export interface ListAgencyVehiclesResult {
   vehicles: VehicleRecord[];
   error: string | null;
   complianceSchemaReady: boolean;
   pricingSchemaReady: boolean;
-}> {
-  if (!hasSupabaseEnv(process.env)) {
-    return {
-      vehicles: [],
-      error: 'Configuration Supabase manquante.',
-      complianceSchemaReady: false,
-      pricingSchemaReady: false,
-    };
-  }
+  complianceSchemaStatus: SchemaAvailabilityStatus;
+  pricingSchemaStatus: SchemaAvailabilityStatus;
+}
 
+/**
+ * Executes the vehicle list query with safe pre-migration fallbacks using an
+ * injected Supabase client. Only reports pricingSchemaReady/complianceSchemaReady
+ * as true when the corresponding columns were actually confirmed by a successful
+ * query, distinguishing missing-schema errors ('missing') from unrelated database
+ * failures ('unverified').
+ */
+export async function listAgencyVehiclesWithClient(
+  supabase: Pick<SupabaseClient, 'from'>,
+  agencyId: string
+): Promise<ListAgencyVehiclesResult> {
   try {
-    const supabase = await createSupabaseServerClient();
     const { data, error } = await supabase
       .from('vehicles')
       .select(VEHICLE_SELECT_COLUMNS)
@@ -284,6 +285,8 @@ export async function listAgencyVehicles(agencyId: string): Promise<{
             error: 'Impossible de charger les véhicules de votre agence.',
             complianceSchemaReady: false,
             pricingSchemaReady: false,
+            complianceSchemaStatus: 'missing',
+            pricingSchemaStatus: 'missing',
           };
         }
 
@@ -297,6 +300,8 @@ export async function listAgencyVehicles(agencyId: string): Promise<{
           error: null,
           complianceSchemaReady: false,
           pricingSchemaReady: false,
+          complianceSchemaStatus: 'missing',
+          pricingSchemaStatus: 'missing',
         };
       }
 
@@ -304,8 +309,10 @@ export async function listAgencyVehicles(agencyId: string): Promise<{
         return {
           vehicles: [],
           error: 'Impossible de charger les véhicules de votre agence.',
-          complianceSchemaReady: true,
+          complianceSchemaReady: false,
           pricingSchemaReady: false,
+          complianceSchemaStatus: 'unverified',
+          pricingSchemaStatus: 'missing',
         };
       }
 
@@ -319,6 +326,8 @@ export async function listAgencyVehicles(agencyId: string): Promise<{
         error: null,
         complianceSchemaReady: true,
         pricingSchemaReady: false,
+        complianceSchemaStatus: 'ready',
+        pricingSchemaStatus: 'missing',
       };
     }
 
@@ -335,6 +344,8 @@ export async function listAgencyVehicles(agencyId: string): Promise<{
           error: 'Impossible de charger les véhicules de votre agence.',
           complianceSchemaReady: false,
           pricingSchemaReady: false,
+          complianceSchemaStatus: 'missing',
+          pricingSchemaStatus: 'unverified',
         };
       }
 
@@ -347,6 +358,8 @@ export async function listAgencyVehicles(agencyId: string): Promise<{
         error: null,
         complianceSchemaReady: false,
         pricingSchemaReady: false,
+        complianceSchemaStatus: 'missing',
+        pricingSchemaStatus: 'unverified',
       };
     }
 
@@ -354,8 +367,10 @@ export async function listAgencyVehicles(agencyId: string): Promise<{
       return {
         vehicles: [],
         error: 'Impossible de charger les véhicules de votre agence.',
-        complianceSchemaReady: true,
-        pricingSchemaReady: true,
+        complianceSchemaReady: false,
+        pricingSchemaReady: false,
+        complianceSchemaStatus: 'unverified',
+        pricingSchemaStatus: 'unverified',
       };
     }
 
@@ -368,6 +383,8 @@ export async function listAgencyVehicles(agencyId: string): Promise<{
       error: null,
       complianceSchemaReady: true,
       pricingSchemaReady: true,
+      complianceSchemaStatus: 'ready',
+      pricingSchemaStatus: 'ready',
     };
   } catch {
     return {
@@ -375,6 +392,42 @@ export async function listAgencyVehicles(agencyId: string): Promise<{
       error: 'Erreur réseau lors du chargement du parc automobile.',
       complianceSchemaReady: false,
       pricingSchemaReady: false,
+      complianceSchemaStatus: 'unverified',
+      pricingSchemaStatus: 'unverified',
+    };
+  }
+}
+
+/**
+ * Fetches all vehicles strictly scoped to the verified active agency via Supabase RLS.
+ * Safely falls back to Phase 5B.1 (compliance) or Phase 5A (base) columns when
+ * migrations 0005 or 0004 are not yet installed in the remote database.
+ */
+export async function listAgencyVehicles(
+  agencyId: string
+): Promise<ListAgencyVehiclesResult> {
+  if (!hasSupabaseEnv(process.env)) {
+    return {
+      vehicles: [],
+      error: 'Configuration Supabase manquante.',
+      complianceSchemaReady: false,
+      pricingSchemaReady: false,
+      complianceSchemaStatus: 'unverified',
+      pricingSchemaStatus: 'unverified',
+    };
+  }
+
+  try {
+    const supabase = await createSupabaseServerClient();
+    return await listAgencyVehiclesWithClient(supabase, agencyId);
+  } catch {
+    return {
+      vehicles: [],
+      error: 'Erreur réseau lors du chargement du parc automobile.',
+      complianceSchemaReady: false,
+      pricingSchemaReady: false,
+      complianceSchemaStatus: 'unverified',
+      pricingSchemaStatus: 'unverified',
     };
   }
 }

@@ -15,6 +15,13 @@ import {
   type SeasonalRateRuleInput,
   type VehiclePricingInput,
 } from './pricing';
+import { reduceSeasonalToggleUiState } from '@/components/vehicles/vehicle-pricing-section';
+import {
+  listAgencyVehiclesWithClient,
+  VEHICLE_BASE_SELECT_COLUMNS,
+  VEHICLE_COMPLIANCE_SELECT_COLUMNS,
+  VEHICLE_SELECT_COLUMNS,
+} from './server';
 import {
   canManageVehicles,
   vehicleRecordToFormValues,
@@ -719,3 +726,249 @@ test('16. Regression: existing vehicle CRUD validation, form conversion, and com
   assert.equal(compliance.overallStatus, 'valid');
   assert.equal(compliance.validCount, 1);
 });
+
+test('17. Regression (Issue 1): seasonal toggle clears stale loadError on retry and success while preserving HTTP 409 error display', () => {
+  const overlapError = mapSeasonalRateDbError({
+    code: '23P01',
+    message:
+      'conflicting key value violates exclusion constraint "vehicle_seasonal_rates_no_overlap_active"',
+  });
+  assert.equal(overlapError.status, 409);
+
+  let state = {
+    togglingId: null as string | null,
+    loadError: null as string | null,
+    formError: null as string | null,
+    feedback: null as string | null,
+  };
+
+  // 1. Start reactivation attempt
+  state = reduceSeasonalToggleUiState(state, {
+    type: 'start',
+    rateId: 'rate-1',
+  });
+  assert.equal(state.togglingId, 'rate-1');
+  assert.equal(state.loadError, null);
+  assert.equal(state.feedback, null);
+
+  // 2. Reactivation fails with HTTP 409 overlap message
+  state = reduceSeasonalToggleUiState(state, {
+    type: 'failure',
+    error: overlapError.message,
+  });
+  assert.equal(state.togglingId, null);
+  assert.equal(state.loadError, overlapError.message);
+  assert.equal(state.feedback, null);
+
+  // 3. Next toggle attempt immediately clears stale loadError
+  state = reduceSeasonalToggleUiState(state, {
+    type: 'start',
+    rateId: 'rate-2',
+  });
+  assert.equal(state.togglingId, 'rate-2');
+  assert.equal(state.loadError, null);
+
+  // 4. Subsequent success keeps loadError cleared and shows French feedback
+  state = reduceSeasonalToggleUiState(state, {
+    type: 'success',
+    isActive: false,
+  });
+  assert.equal(state.togglingId, null);
+  assert.equal(state.loadError, null);
+  assert.equal(state.feedback, 'Tarif saisonnier désactivé.');
+
+  // 5. Direct success even from an errored state also clears stale loadError
+  const recovered = reduceSeasonalToggleUiState(
+    {
+      togglingId: 'rate-1',
+      loadError: overlapError.message,
+      formError: null,
+      feedback: null,
+    },
+    { type: 'success', isActive: true }
+  );
+  assert.equal(recovered.loadError, null);
+  assert.equal(recovered.togglingId, null);
+  assert.equal(recovered.feedback, 'Tarif saisonnier réactivé.');
+
+  // Verify VehiclePricingSection uses applyToggleUiAction / reduceSeasonalToggleUiState
+  const componentSrc = fs.readFileSync(
+    path.join(process.cwd(), 'components/vehicles/vehicle-pricing-section.tsx'),
+    'utf8'
+  );
+  assert.match(componentSrc, /applyToggleUiAction\(\{\s*type:\s*'start'/);
+  assert.match(componentSrc, /applyToggleUiAction\(\{\s*type:\s*'failure'/);
+  assert.match(componentSrc, /applyToggleUiAction\(\{\s*type:\s*'success'/);
+});
+
+test('18. Regression (Issue 2): listAgencyVehiclesWithClient distinguishes confirmed schema, missing schema, and unexpected DB errors', async () => {
+  type QueryResult = {
+    data: Record<string, unknown>[] | null;
+    error: { code?: string; message?: string } | null;
+  };
+
+  function makeStubClient(
+    responder: (selectColumns: string) => QueryResult
+  ): Parameters<typeof listAgencyVehiclesWithClient>[0] {
+    return {
+      from() {
+        return {
+          select(columns: string) {
+            return {
+              eq() {
+                return {
+                  order: async () => responder(columns),
+                };
+              },
+            };
+          },
+        };
+      },
+    } as unknown as Parameters<typeof listAgencyVehiclesWithClient>[0];
+  }
+
+  const sampleRow: Record<string, unknown> = {
+    id: '11111111-1111-4111-8111-111111111111',
+    agency_id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+    plate_number: '214 TU 4821',
+    vin: null,
+    brand: 'Peugeot',
+    model: '208',
+    model_year: 2024,
+    category: 'compact',
+    transmission: 'manual',
+    fuel_type: 'petrol',
+    seats: 5,
+    odometer_km: 12000,
+    daily_rate_minor: 110_000,
+    weekly_rate_minor: 680_000,
+    monthly_rate_minor: 2_500_000,
+    deposit_minor: 1_500_000,
+    currency_code: 'TND',
+    status: 'available',
+    notes: null,
+    insurance_expires_on: '2027-06-01',
+    technical_inspection_expires_on: null,
+    vignette_expires_on: null,
+    created_by: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+    created_at: '2026-11-20T10:00:00.000Z',
+    updated_at: '2026-11-20T10:00:00.000Z',
+  };
+
+  // Case A: Confirmed migration 0005 schema -> pricingSchemaReady = true
+  const readyRes = await listAgencyVehiclesWithClient(
+    makeStubClient((cols) => {
+      assert.equal(cols, VEHICLE_SELECT_COLUMNS);
+      return { data: [sampleRow], error: null };
+    }),
+    'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
+  );
+  assert.equal(readyRes.error, null);
+  assert.equal(readyRes.pricingSchemaReady, true);
+  assert.equal(readyRes.pricingSchemaStatus, 'ready');
+  assert.equal(readyRes.complianceSchemaReady, true);
+  assert.equal(readyRes.complianceSchemaStatus, 'ready');
+  assert.equal(readyRes.vehicles.length, 1);
+
+  // Case B: Unrelated database error -> MUST NOT report pricingSchemaReady = true and MUST preserve error
+  const genericErrRes = await listAgencyVehiclesWithClient(
+    makeStubClient(() => ({
+      data: null,
+      error: { code: '57014', message: 'canceling statement due to statement timeout' },
+    })),
+    'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
+  );
+  assert.ok(genericErrRes.error);
+  assert.equal(genericErrRes.pricingSchemaReady, false);
+  assert.equal(genericErrRes.pricingSchemaStatus, 'unverified');
+  assert.equal(genericErrRes.complianceSchemaReady, false);
+  assert.equal(genericErrRes.complianceSchemaStatus, 'unverified');
+  assert.deepEqual(genericErrRes.vehicles, []);
+
+  // Case C: Missing migration 0005 columns -> falls back cleanly to compliance columns with status = 'missing'
+  const missing0005Res = await listAgencyVehiclesWithClient(
+    makeStubClient((cols) => {
+      if (cols === VEHICLE_SELECT_COLUMNS) {
+        return {
+          data: null,
+          error: {
+            code: '42703',
+            message: 'column vehicles.weekly_rate_minor does not exist',
+          },
+        };
+      }
+      assert.equal(cols, VEHICLE_COMPLIANCE_SELECT_COLUMNS);
+      const { weekly_rate_minor: _w, monthly_rate_minor: _m, ...complianceRow } = sampleRow;
+      void _w;
+      void _m;
+      return { data: [complianceRow], error: null };
+    }),
+    'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
+  );
+  assert.equal(missing0005Res.error, null);
+  assert.equal(missing0005Res.pricingSchemaReady, false);
+  assert.equal(missing0005Res.pricingSchemaStatus, 'missing');
+  assert.equal(missing0005Res.complianceSchemaReady, true);
+  assert.equal(missing0005Res.complianceSchemaStatus, 'ready');
+  assert.equal(missing0005Res.vehicles.length, 1);
+  assert.equal(missing0005Res.vehicles[0].weekly_rate_minor, null);
+
+  // Case D: Missing migration 0005 followed by unexpected DB error on compliance fallback
+  const fallbackErrRes = await listAgencyVehiclesWithClient(
+    makeStubClient((cols) => {
+      if (cols === VEHICLE_SELECT_COLUMNS) {
+        return {
+          data: null,
+          error: {
+            code: '42703',
+            message: 'column vehicles.weekly_rate_minor does not exist',
+          },
+        };
+      }
+      return {
+        data: null,
+        error: { code: '42501', message: 'permission denied for table vehicles' },
+      };
+    }),
+    'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
+  );
+  assert.ok(fallbackErrRes.error);
+  assert.equal(fallbackErrRes.pricingSchemaReady, false);
+  assert.equal(fallbackErrRes.pricingSchemaStatus, 'missing');
+  assert.equal(fallbackErrRes.complianceSchemaReady, false);
+  assert.equal(fallbackErrRes.complianceSchemaStatus, 'unverified');
+
+  // Case E: Missing both 0005 and 0004 -> falls back cleanly to base columns
+  const missingBothRes = await listAgencyVehiclesWithClient(
+    makeStubClient((cols) => {
+      if (cols === VEHICLE_SELECT_COLUMNS) {
+        return {
+          data: null,
+          error: {
+            code: '42703',
+            message: 'column vehicles.weekly_rate_minor does not exist',
+          },
+        };
+      }
+      if (cols === VEHICLE_COMPLIANCE_SELECT_COLUMNS) {
+        return {
+          data: null,
+          error: {
+            code: '42703',
+            message: 'column vehicles.insurance_expires_on does not exist',
+          },
+        };
+      }
+      assert.equal(cols, VEHICLE_BASE_SELECT_COLUMNS);
+      return { data: [sampleRow], error: null };
+    }),
+    'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
+  );
+  assert.equal(missingBothRes.error, null);
+  assert.equal(missingBothRes.pricingSchemaReady, false);
+  assert.equal(missingBothRes.pricingSchemaStatus, 'missing');
+  assert.equal(missingBothRes.complianceSchemaReady, false);
+  assert.equal(missingBothRes.complianceSchemaStatus, 'missing');
+  assert.equal(missingBothRes.vehicles.length, 1);
+});
+

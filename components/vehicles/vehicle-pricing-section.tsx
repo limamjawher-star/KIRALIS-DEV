@@ -77,6 +77,53 @@ function sortSeasonalRates(
   });
 }
 
+export interface SeasonalToggleUiState {
+  togglingId: string | null;
+  loadError: string | null;
+  formError: string | null;
+  feedback: string | null;
+}
+
+export type SeasonalToggleAction =
+  | { type: 'start'; rateId: string }
+  | { type: 'failure'; error: string }
+  | { type: 'success'; isActive: boolean };
+
+/**
+ * Pure state transition for seasonal-rate activation/deactivation so any prior
+ * failure (e.g. HTTP 409 overlap) is cleared on retry and on subsequent success.
+ */
+export function reduceSeasonalToggleUiState(
+  _prev: SeasonalToggleUiState,
+  action: SeasonalToggleAction
+): SeasonalToggleUiState {
+  switch (action.type) {
+    case 'start':
+      return {
+        togglingId: action.rateId,
+        loadError: null,
+        formError: null,
+        feedback: null,
+      };
+    case 'failure':
+      return {
+        togglingId: null,
+        loadError: action.error,
+        formError: null,
+        feedback: null,
+      };
+    case 'success':
+      return {
+        togglingId: null,
+        loadError: null,
+        formError: null,
+        feedback: action.isActive
+          ? 'Tarif saisonnier réactivé.'
+          : 'Tarif saisonnier désactivé.',
+      };
+  }
+}
+
 export function VehiclePricingSection({
   vehicle,
   agencyTimeZone,
@@ -137,6 +184,7 @@ export function VehiclePricingSection({
           onPricingSchemaDetected(payload.pricingSchemaReady);
         }
 
+        setLoadError(null);
         setRates(sortSeasonalRates(payload.rates ?? []));
         setLoadingRates(false);
       } catch {
@@ -214,6 +262,7 @@ export function VehiclePricingSection({
 
     setSaving(true);
     setFieldErrors({});
+    setLoadError(null);
     setFormError(null);
     setFeedback(null);
 
@@ -274,11 +323,20 @@ export function VehiclePricingSection({
     }
   }
 
+  function applyToggleUiAction(action: SeasonalToggleAction) {
+    const next = reduceSeasonalToggleUiState(
+      { togglingId, loadError, formError, feedback },
+      action
+    );
+    setTogglingId(next.togglingId);
+    setLoadError(next.loadError);
+    setFormError(next.formError);
+    setFeedback(next.feedback);
+  }
+
   async function handleToggleActive(rate: VehicleSeasonalRateRecord) {
     if (togglingId || !schemaReady) return;
-    setTogglingId(rate.id);
-    setFormError(null);
-    setFeedback(null);
+    applyToggleUiAction({ type: 'start', rateId: rate.id });
 
     try {
       const response = await fetch(
@@ -306,11 +364,12 @@ export function VehiclePricingSection({
       }
 
       if (!response.ok || !payload?.ok || !payload.rate) {
-        setLoadError(
-          payload?.error ??
-            'Impossible de modifier l’état de ce tarif saisonnier.'
-        );
-        setTogglingId(null);
+        applyToggleUiAction({
+          type: 'failure',
+          error:
+            payload?.error ??
+            'Impossible de modifier l’état de ce tarif saisonnier.',
+        });
         return;
       }
 
@@ -320,15 +379,12 @@ export function VehiclePricingSection({
           prev.map((r) => (r.id === updatedRate.id ? updatedRate : r))
         )
       );
-      setFeedback(
-        updatedRate.is_active
-          ? 'Tarif saisonnier réactivé.'
-          : 'Tarif saisonnier désactivé.'
-      );
-      setTogglingId(null);
+      applyToggleUiAction({ type: 'success', isActive: updatedRate.is_active });
     } catch {
-      setLoadError('Erreur réseau lors de la mise à jour du tarif saisonnier.');
-      setTogglingId(null);
+      applyToggleUiAction({
+        type: 'failure',
+        error: 'Erreur réseau lors de la mise à jour du tarif saisonnier.',
+      });
     }
   }
 
