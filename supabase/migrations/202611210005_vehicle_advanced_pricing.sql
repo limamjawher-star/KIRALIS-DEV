@@ -371,4 +371,12 @@ CREATE POLICY vehicle_seasonal_rates_update_owner_manager
   USING (public.has_agency_role(agency_id, ARRAY['owner', 'manager']::public.agency_role[]))
   WITH CHECK (public.has_agency_role(agency_id, ARRAY['owner', 'manager']::public.agency_role[]));
 
+-- -----------------------------------------------------------------------------
+-- 5. Lock Down Direct Vehicle DELETE (use status = 'retired' to preserve
+--    historical seasonal pricing records and fleet auditability)
+-- -----------------------------------------------------------------------------
+REVOKE DELETE ON TABLE public.vehicles FROM PUBLIC, anon, authenticated;
+
+DROP POLICY IF EXISTS vehicles_delete_owner_only ON public.vehicles;
+
 COMMIT;

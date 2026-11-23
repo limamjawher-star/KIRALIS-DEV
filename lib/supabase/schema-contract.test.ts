@@ -352,4 +352,10 @@ test('migration 0005 safely supports auth.users ON DELETE SET NULL on created_by
     auditFnMatch[0],
     /OLD\.created_by IS NOT NULL[\s\S]*AND NEW\.created_by IS NULL[\s\S]*RETURN NULL;/
   );
+
+  // Direct DELETE on public.vehicles is revoked and owner delete policy removed before COMMIT
+  assert.match(
+    exec0005,
+    /REVOKE DELETE ON TABLE public\.vehicles FROM PUBLIC, anon, authenticated;\s*DROP POLICY IF EXISTS vehicles_delete_owner_only ON public\.vehicles;\s*COMMIT;\s*$/
+  );
 });
