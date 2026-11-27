@@ -2,21 +2,22 @@
 
 import React, { useEffect, useState } from 'react';
 import {
-  AlertCircle,
-  AlertTriangle,
+  Banknote,
   CalendarRange,
-  CheckCircle2,
   Loader2,
   Pencil,
   Plus,
   Power,
 } from 'lucide-react';
+import { motion } from 'motion/react';
+import { AlertBanner } from '@/components/ui/alert-banner';
 import { Button } from '@/components/ui/button';
 import {
   FormField,
   getInputStateClasses,
   INPUT_BASE_CLASSES,
 } from '@/components/ui/form-field';
+import { Skeleton } from '@/components/ui/skeleton';
 import { formatTndFromMillimes, parseTndToMillimes } from '@/lib/currency';
 import { cn } from '@/lib/utils';
 import { formatIsoDateFr } from '@/lib/vehicles/compliance';
@@ -379,7 +380,10 @@ export function VehiclePricingSection({
           prev.map((r) => (r.id === updatedRate.id ? updatedRate : r))
         )
       );
-      applyToggleUiAction({ type: 'success', isActive: updatedRate.is_active });
+      applyToggleUiAction({
+        type: 'success',
+        isActive: updatedRate.is_active,
+      });
     } catch {
       applyToggleUiAction({
         type: 'failure',
@@ -394,8 +398,9 @@ export function VehiclePricingSection({
   return (
     <section aria-label="Tarification" className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-          Tarification
+        <h3 className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-500 dark:text-slate-400">
+          <Banknote className="h-3.5 w-3.5" aria-hidden="true" />
+          <span>Tarification</span>
         </h3>
         {canManage ? (
           <button
@@ -410,16 +415,16 @@ export function VehiclePricingSection({
       </div>
 
       {/* Standard pricing summary grid */}
-      <div className="grid grid-cols-2 divide-x divide-y divide-slate-200 overflow-hidden rounded-xl border border-slate-200 bg-slate-50/70 dark:divide-slate-800 dark:border-slate-800 dark:bg-slate-950/50">
-        <div className="px-4 py-3">
+      <div className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-slate-200/90 bg-slate-200/80 dark:border-slate-800 dark:bg-slate-800/80">
+        <div className="bg-slate-50/70 px-4 py-3 dark:bg-slate-950/60">
           <p className="text-[11px] text-slate-500 dark:text-slate-400">
             Tarif journalier
           </p>
-          <p className="mt-1 font-mono text-base font-semibold text-slate-950 tabular-nums dark:text-slate-50">
+          <p className="mt-1 font-mono text-base font-semibold text-blue-700 tabular-nums dark:text-blue-400">
             {formatTndFromMillimes(vehicle.daily_rate_minor, 'fr')}
           </p>
         </div>
-        <div className="px-4 py-3">
+        <div className="bg-slate-50/70 px-4 py-3 dark:bg-slate-950/60">
           <p className="text-[11px] text-slate-500 dark:text-slate-400">
             Caution
           </p>
@@ -427,50 +432,50 @@ export function VehiclePricingSection({
             {formatTndFromMillimes(vehicle.deposit_minor, 'fr')}
           </p>
         </div>
-        <div className="px-4 py-3">
+        <div className="bg-white px-4 py-3 dark:bg-slate-900/70">
           <p className="text-[11px] text-slate-500 dark:text-slate-400">
             Forfait 7 jours
           </p>
           <p className="mt-1 font-mono text-sm font-semibold text-slate-900 tabular-nums dark:text-slate-100">
-            {vehicle.weekly_rate_minor !== null
-              ? formatTndFromMillimes(vehicle.weekly_rate_minor, 'fr')
-              : 'Non défini'}
+            {vehicle.weekly_rate_minor !== null ? (
+              formatTndFromMillimes(vehicle.weekly_rate_minor, 'fr')
+            ) : (
+              <span className="font-sans text-xs font-normal text-slate-400 dark:text-slate-500">
+                Non défini
+              </span>
+            )}
           </p>
         </div>
-        <div className="px-4 py-3">
+        <div className="bg-white px-4 py-3 dark:bg-slate-900/70">
           <p className="text-[11px] text-slate-500 dark:text-slate-400">
             Forfait 30 jours
           </p>
           <p className="mt-1 font-mono text-sm font-semibold text-slate-900 tabular-nums dark:text-slate-100">
-            {vehicle.monthly_rate_minor !== null
-              ? formatTndFromMillimes(vehicle.monthly_rate_minor, 'fr')
-              : 'Non défini'}
+            {vehicle.monthly_rate_minor !== null ? (
+              formatTndFromMillimes(vehicle.monthly_rate_minor, 'fr')
+            ) : (
+              <span className="font-sans text-xs font-normal text-slate-400 dark:text-slate-500">
+                Non défini
+              </span>
+            )}
           </p>
         </div>
       </div>
 
       {/* Pending migration 0005 honest notice */}
       {!schemaReady ? (
-        <div
-          role="status"
-          className="flex items-start gap-2.5 rounded-lg border border-amber-200 bg-amber-50 px-3.5 py-2.5 text-xs text-amber-900 dark:border-amber-900/70 dark:bg-amber-950/40 dark:text-amber-200"
+        <AlertBanner
+          variant="warning"
+          compact
+          title="Tarification avancée désactivée"
         >
-          <AlertTriangle
-            className="mt-0.5 h-3.5 w-3.5 shrink-0"
-            aria-hidden="true"
-          />
-          <p className="leading-relaxed">
-            <span className="font-semibold">
-              Tarification avancée désactivée :
-            </span>{' '}
-            installez la migration{' '}
-            <span className="font-mono">
-              202611210005_vehicle_advanced_pricing.sql
-            </span>{' '}
-            dans Supabase pour enregistrer des forfaits 7/30 jours et des tarifs
-            saisonniers. Le tarif journalier existant reste pleinement actif.
-          </p>
-        </div>
+          Installez la migration{' '}
+          <span className="font-mono">
+            202611210005_vehicle_advanced_pricing.sql
+          </span>{' '}
+          dans Supabase pour enregistrer des forfaits 7/30 jours et des tarifs
+          saisonniers. Le tarif journalier existant reste pleinement actif.
+        </AlertBanner>
       ) : null}
 
       {/* Seasonal pricing rules block */}
@@ -481,16 +486,17 @@ export function VehiclePricingSection({
               className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400"
               aria-hidden="true"
             />
-            <h4 className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+            <h4 className="text-xs font-semibold text-slate-800 dark:text-slate-200">
               Tarifs saisonniers
             </h4>
           </div>
           {canManage ? (
             <Button
-              size="sm"
+              size="xs"
               variant="secondary"
               disabled={!schemaReady || formOpen}
               onClick={openCreateForm}
+              className="min-h-9 sm:min-h-8"
               title={
                 !schemaReady
                   ? 'Installez la migration 0005 dans Supabase pour activer cette action.'
@@ -504,58 +510,42 @@ export function VehiclePricingSection({
         </div>
 
         {feedback ? (
-          <div
-            role="status"
-            className="flex items-center justify-between gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-900 dark:border-emerald-900/70 dark:bg-emerald-950/40 dark:text-emerald-200"
+          <AlertBanner
+            variant="success"
+            compact
+            onDismiss={() => setFeedback(null)}
+            dismissLabel="Fermer"
           >
-            <span className="flex items-center gap-1.5">
-              <CheckCircle2 className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-              {feedback}
-            </span>
-            <button
-              type="button"
-              onClick={() => setFeedback(null)}
-              className="font-medium underline underline-offset-2 cursor-pointer"
-            >
-              Fermer
-            </button>
-          </div>
+            {feedback}
+          </AlertBanner>
         ) : null}
 
         {loadError ? (
-          <div
-            role="alert"
-            className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-xs text-red-800 dark:border-red-900/70 dark:bg-red-950/40 dark:text-red-300"
-          >
-            <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-            <span>{loadError}</span>
-          </div>
+          <AlertBanner variant="error" compact>
+            {loadError}
+          </AlertBanner>
         ) : null}
 
         {/* Inline create / edit seasonal rule form (Owner / Manager only) */}
         {canManage && formOpen && schemaReady ? (
-          <form
+          <motion.form
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
             onSubmit={handleSaveRule}
             noValidate
-            className="space-y-3 rounded-xl border border-slate-200 bg-slate-50/80 p-3.5 dark:border-slate-800 dark:bg-slate-950/60"
+            className="space-y-3 rounded-2xl border border-blue-200/90 bg-blue-50/35 p-4 dark:border-blue-900/60 dark:bg-blue-950/20"
           >
-            <p className="text-xs font-semibold text-slate-900 dark:text-slate-100">
+            <p className="text-xs font-semibold text-slate-950 dark:text-slate-100">
               {editingRate
                 ? 'Modifier le tarif saisonnier'
                 : 'Nouveau tarif saisonnier'}
             </p>
 
             {formError ? (
-              <div
-                role="alert"
-                className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-800 dark:border-red-900/70 dark:bg-red-950/40 dark:text-red-300"
-              >
-                <AlertCircle
-                  className="mt-0.5 h-3.5 w-3.5 shrink-0"
-                  aria-hidden="true"
-                />
-                <span>{formError}</span>
-              </div>
+              <AlertBanner variant="error" compact>
+                {formError}
+              </AlertBanner>
             ) : null}
 
             <FormField
@@ -666,7 +656,7 @@ export function VehiclePricingSection({
               />
             </FormField>
 
-            <div className="flex items-center justify-end gap-2 pt-1">
+            <div className="flex items-center justify-end gap-2 border-t border-blue-200/60 pt-3 dark:border-blue-900/50">
               <Button
                 type="button"
                 size="sm"
@@ -676,7 +666,12 @@ export function VehiclePricingSection({
               >
                 Annuler
               </Button>
-              <Button type="submit" size="sm" variant="primary" disabled={saving}>
+              <Button
+                type="submit"
+                size="sm"
+                variant="primary"
+                disabled={saving}
+              >
                 {saving ? (
                   <>
                     <Loader2
@@ -692,21 +687,21 @@ export function VehiclePricingSection({
                 )}
               </Button>
             </div>
-          </form>
+          </motion.form>
         ) : null}
 
         {/* List of seasonal pricing rules */}
         {loadingRates ? (
-          <div className="flex items-center gap-2 rounded-xl border border-slate-200 px-3.5 py-3 text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400">
-            <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
-            <span>Chargement des tarifs saisonniers...</span>
+          <div className="space-y-2 rounded-2xl border border-slate-200/90 p-3.5 dark:border-slate-800">
+            <Skeleton className="h-4 w-40" />
+            <Skeleton className="h-3 w-28" />
           </div>
         ) : rates.length === 0 ? (
-          <div className="rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-xs text-slate-500 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-400">
+          <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 px-4 py-3.5 text-xs text-slate-500 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-400">
             Aucun tarif saisonnier configuré pour ce véhicule.
           </div>
         ) : (
-          <div className="divide-y divide-slate-100 rounded-xl border border-slate-200 bg-white dark:divide-slate-800/80 dark:border-slate-800 dark:bg-slate-950/40">
+          <div className="divide-y divide-slate-100 rounded-2xl border border-slate-200/90 bg-white dark:divide-slate-800/80 dark:border-slate-800 dark:bg-slate-950/40">
             {rates.map((rate) => {
               const delta = rate.daily_rate_minor - vehicle.daily_rate_minor;
               const isBusy = togglingId === rate.id;
@@ -715,21 +710,24 @@ export function VehiclePricingSection({
                 <div
                   key={rate.id}
                   className={cn(
-                    'flex flex-wrap items-center justify-between gap-2 px-3.5 py-3',
+                    'flex flex-wrap items-center justify-between gap-2 px-4 py-3',
                     !rate.is_active && 'opacity-65'
                   )}
                 >
                   <div className="min-w-0">
-                    <p className="flex flex-wrap items-center gap-1.5 text-xs font-medium text-slate-900 dark:text-slate-100">
+                    <p className="flex flex-wrap items-center gap-1.5 text-xs font-semibold text-slate-900 dark:text-slate-100">
                       <span>{rate.label || 'Période saisonnière'}</span>
-                      <span aria-hidden="true" className="text-slate-300 dark:text-slate-700">
+                      <span
+                        aria-hidden="true"
+                        className="text-slate-300 dark:text-slate-700"
+                      >
                         ·
                       </span>
                       <span
                         className={
                           rate.is_active
-                            ? 'text-emerald-700 dark:text-emerald-400'
-                            : 'text-slate-500 dark:text-slate-400'
+                            ? 'font-medium text-emerald-700 dark:text-emerald-400'
+                            : 'font-medium text-slate-500 dark:text-slate-400'
                         }
                       >
                         {rate.is_active ? 'Actif' : 'Inactif'}
@@ -761,7 +759,7 @@ export function VehiclePricingSection({
                           onClick={() => openEditForm(rate)}
                           disabled={isBusy}
                           aria-label={`Modifier le tarif saisonnier ${rate.label || rate.start_date}`}
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100 cursor-pointer"
+                          className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600/30 sm:h-8 sm:w-8 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100 cursor-pointer"
                         >
                           <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
                         </button>
@@ -775,7 +773,7 @@ export function VehiclePricingSection({
                               : `Réactiver le tarif saisonnier ${rate.label || rate.start_date}`
                           }
                           title={rate.is_active ? 'Désactiver' : 'Réactiver'}
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100 cursor-pointer"
+                          className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600/30 sm:h-8 sm:w-8 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100 cursor-pointer"
                         >
                           {isBusy ? (
                             <Loader2

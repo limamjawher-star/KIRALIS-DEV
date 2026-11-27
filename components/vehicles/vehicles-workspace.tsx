@@ -3,10 +3,8 @@
 import React, { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  AlertCircle,
   AlertTriangle,
   Car,
-  CheckCircle2,
   Clock,
   Eye,
   Pencil,
@@ -15,6 +13,7 @@ import {
   RotateCcw,
   Search,
 } from 'lucide-react';
+import { AlertBanner } from '@/components/ui/alert-banner';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { PageHeader } from '@/components/ui/page-header';
@@ -84,6 +83,9 @@ const STATUS_FILTER_OPTIONS: readonly {
   { value: 'maintenance', label: VEHICLE_STATUS_LABELS.maintenance },
   { value: 'retired', label: VEHICLE_STATUS_LABELS.retired },
 ];
+
+const FILTER_SELECT_CLASSES =
+  'h-10 sm:h-9 rounded-xl border border-slate-200/90 bg-white px-3 text-xs font-medium text-slate-700 transition-colors hover:border-slate-300 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20 dark:border-slate-700/90 dark:bg-slate-950 dark:text-slate-200 dark:hover:border-slate-600 dark:focus:border-blue-400';
 
 export function VehiclesWorkspace({
   agency,
@@ -255,13 +257,13 @@ export function VehiclesWorkspace({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 sm:space-y-6">
       <PageHeader
         title="Véhicules"
         description="Gérez votre parc automobile, les tarifs journaliers en TND, les cautions et le suivi des échéances administratives."
         meta={`${agency.name} · ${ROLE_LABELS[role]} · ${agency.currency_code}`}
         action={
-          <div className="flex flex-wrap items-center gap-2.5">
+          <div className="flex flex-wrap items-center gap-2">
             <Button
               variant="secondary"
               onClick={refreshVehicles}
@@ -285,94 +287,63 @@ export function VehiclesWorkspace({
       />
 
       {!complianceSchemaReady ? (
-        <div
-          role="status"
-          className="flex flex-wrap items-start justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-900 dark:border-amber-900/70 dark:bg-amber-950/40 dark:text-amber-200"
+        <AlertBanner
+          variant="warning"
+          compact
+          title="Migration des échéances en attente"
         >
-          <div className="flex items-start gap-2.5">
-            <AlertTriangle
-              className="mt-0.5 h-4 w-4 shrink-0"
-              aria-hidden="true"
-            />
-            <p className="leading-relaxed">
-              <span className="font-semibold">
-                Migration des échéances en attente :
-              </span>{' '}
-              appliquez{' '}
-              <span className="font-mono">
-                202611210004_vehicle_compliance_dates.sql
-              </span>{' '}
-              dans Supabase SQL Editor pour activer la sauvegarde des dates
-              d’assurance, visite technique et vignette. La gestion de flotte
-              existante reste pleinement opérationnelle.
-            </p>
-          </div>
-        </div>
+          Appliquez{' '}
+          <span className="font-mono">
+            202611210004_vehicle_compliance_dates.sql
+          </span>{' '}
+          dans Supabase SQL Editor pour activer la sauvegarde des dates
+          d’assurance, visite technique et vignette. La gestion de flotte
+          existante reste pleinement opérationnelle.
+        </AlertBanner>
       ) : null}
 
       {!pricingSchemaReady ? (
-        <div
-          role="status"
-          className="flex flex-wrap items-start justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-900 dark:border-amber-900/70 dark:bg-amber-950/40 dark:text-amber-200"
+        <AlertBanner
+          variant="warning"
+          compact
+          title="Migration de tarification avancée en attente"
         >
-          <div className="flex items-start gap-2.5">
-            <AlertTriangle
-              className="mt-0.5 h-4 w-4 shrink-0"
-              aria-hidden="true"
-            />
-            <p className="leading-relaxed">
-              <span className="font-semibold">
-                Migration de tarification avancée en attente :
-              </span>{' '}
-              appliquez{' '}
-              <span className="font-mono">
-                202611210005_vehicle_advanced_pricing.sql
-              </span>{' '}
-              dans Supabase SQL Editor pour activer les forfaits 7/30 jours et
-              les tarifs saisonniers. Le tarif journalier, la gestion de flotte
-              et les échéances restent pleinement opérationnels.
-            </p>
-          </div>
-        </div>
+          Appliquez{' '}
+          <span className="font-mono">
+            202611210005_vehicle_advanced_pricing.sql
+          </span>{' '}
+          dans Supabase SQL Editor pour activer les forfaits 7/30 jours et les
+          tarifs saisonniers. Le tarif journalier, la gestion de flotte et les
+          échéances restent pleinement opérationnels.
+        </AlertBanner>
       ) : null}
 
       {feedbackBanner ? (
-        <div
-          role="status"
-          className="flex items-center justify-between gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900 dark:border-emerald-900/70 dark:bg-emerald-950/40 dark:text-emerald-200"
+        <AlertBanner
+          variant="success"
+          onDismiss={() => setFeedbackBanner(null)}
+          dismissLabel="Fermer"
         >
-          <div className="flex items-center gap-2.5">
-            <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden="true" />
-            <span>{feedbackBanner}</span>
-          </div>
-          <button
-            type="button"
-            onClick={() => setFeedbackBanner(null)}
-            className="text-xs font-medium underline underline-offset-2 hover:opacity-80 cursor-pointer"
-          >
-            Fermer
-          </button>
-        </div>
+          {feedbackBanner}
+        </AlertBanner>
       ) : null}
 
       {loadError ? (
-        <div
-          role="alert"
-          className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900 dark:border-red-900/70 dark:bg-red-950/40 dark:text-red-200"
+        <AlertBanner
+          variant="error"
+          action={
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={refreshVehicles}
+              disabled={refreshing}
+            >
+              Réessayer
+            </Button>
+          }
         >
-          <div className="flex items-center gap-2.5">
-            <AlertCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
-            <span>{loadError}</span>
-          </div>
-          <Button
-            size="sm"
-            variant="secondary"
-            onClick={refreshVehicles}
-            disabled={refreshing}
-          >
-            Réessayer
-          </Button>
-        </div>
+          {loadError}
+        </AlertBanner>
       ) : null}
 
       {/* Real fleet KPI summary strip (exact Supabase counts) */}
@@ -392,36 +363,45 @@ export function VehiclesWorkspace({
             label: 'Disponibles',
             value: String(summary.availableCount),
             note: 'Prêts à la location',
+            tone: summary.availableCount > 0 ? 'success' : 'default',
           },
           {
             id: 'rented',
             label: 'En location',
             value: String(summary.rentedCount),
             note: 'Actuellement en circulation',
+            tone: summary.rentedCount > 0 ? 'brand' : 'default',
           },
           {
             id: 'maintenance',
             label: 'Maintenance',
             value: String(summary.maintenanceCount),
             note: 'Immobilisés pour entretien',
+            tone: summary.maintenanceCount > 0 ? 'warning' : 'default',
           },
         ]}
       />
 
       {/* Compliance & Expiry alert summary strip */}
-      <Surface className="divide-y divide-slate-200 dark:divide-slate-800">
-        <div className="grid grid-cols-1 divide-y divide-slate-200 sm:grid-cols-2 sm:divide-y-0 sm:divide-x dark:divide-slate-800">
-          <div className="flex items-center justify-between gap-4 px-5 py-3.5">
+      <Surface className="overflow-hidden divide-y divide-slate-200/80 dark:divide-slate-800/80">
+        <div className="grid grid-cols-1 divide-y divide-slate-200/80 sm:grid-cols-2 sm:divide-y-0 sm:divide-x dark:divide-slate-800/80">
+          <div className="flex items-center justify-between gap-4 px-4 py-3.5 sm:px-5">
             <div className="min-w-0">
               <p className="flex items-center gap-1.5 text-xs font-medium text-slate-600 dark:text-slate-400">
-                <AlertTriangle
-                  className="h-3.5 w-3.5 text-red-600 dark:text-red-400"
-                  aria-hidden="true"
-                />
+                <span className="flex h-5 w-5 items-center justify-center rounded-md bg-red-50 text-red-600 dark:bg-red-950/60 dark:text-red-400">
+                  <AlertTriangle className="h-3.5 w-3.5" aria-hidden="true" />
+                </span>
                 <span>Documents expirés</span>
               </p>
-              <p className="mt-1 flex items-baseline gap-2">
-                <span className="font-mono text-xl font-semibold text-slate-950 tabular-nums dark:text-slate-50">
+              <p className="mt-1.5 flex items-baseline gap-2">
+                <span
+                  className={cn(
+                    'font-mono text-xl font-semibold tabular-nums',
+                    complianceSummary.expiredDocumentsCount > 0
+                      ? 'text-red-700 dark:text-red-300'
+                      : 'text-slate-950 dark:text-slate-50'
+                  )}
+                >
                   {complianceSummary.expiredDocumentsCount}
                 </span>
                 <span className="text-xs text-slate-500 tabular-nums dark:text-slate-400">
@@ -431,7 +411,9 @@ export function VehiclesWorkspace({
             </div>
             <Button
               size="sm"
-              variant={filters.compliance === 'expired' ? 'primary' : 'secondary'}
+              variant={
+                filters.compliance === 'expired' ? 'primary' : 'secondary'
+              }
               onClick={() => toggleComplianceQuickFilter('expired')}
               aria-pressed={filters.compliance === 'expired'}
             >
@@ -441,19 +423,25 @@ export function VehiclesWorkspace({
             </Button>
           </div>
 
-          <div className="flex items-center justify-between gap-4 px-5 py-3.5">
+          <div className="flex items-center justify-between gap-4 px-4 py-3.5 sm:px-5">
             <div className="min-w-0">
               <p className="flex items-center gap-1.5 text-xs font-medium text-slate-600 dark:text-slate-400">
-                <Clock
-                  className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400"
-                  aria-hidden="true"
-                />
+                <span className="flex h-5 w-5 items-center justify-center rounded-md bg-amber-50 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400">
+                  <Clock className="h-3.5 w-3.5" aria-hidden="true" />
+                </span>
                 <span>
                   Expirent sous {complianceSummary.warningThresholdDays} jours
                 </span>
               </p>
-              <p className="mt-1 flex items-baseline gap-2">
-                <span className="font-mono text-xl font-semibold text-slate-950 tabular-nums dark:text-slate-50">
+              <p className="mt-1.5 flex items-baseline gap-2">
+                <span
+                  className={cn(
+                    'font-mono text-xl font-semibold tabular-nums',
+                    complianceSummary.expiringSoonDocumentsCount > 0
+                      ? 'text-amber-700 dark:text-amber-300'
+                      : 'text-slate-950 dark:text-slate-50'
+                  )}
+                >
                   {complianceSummary.expiringSoonDocumentsCount}
                 </span>
                 <span className="text-xs text-slate-500 tabular-nums dark:text-slate-400">
@@ -477,7 +465,7 @@ export function VehiclesWorkspace({
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-2 bg-slate-50/70 px-5 py-2 text-[11px] text-slate-500 dark:bg-slate-950/50 dark:text-slate-400">
+        <div className="flex flex-wrap items-center justify-between gap-2 bg-slate-50/75 px-4 py-2 text-[11px] text-slate-500 sm:px-5 dark:bg-slate-950/50 dark:text-slate-400">
           <span>{COMPLIANCE_INFORMATIONAL_NOTICE}</span>
           <span className="font-mono whitespace-nowrap tabular-nums">
             Réf. : {complianceSummary.referenceDate} ·{' '}
@@ -489,11 +477,11 @@ export function VehiclesWorkspace({
       {/* Inventory table surface */}
       <Surface className="overflow-hidden">
         {/* Toolbar: Search, status segmented control, secondary filters, sort */}
-        <div className="space-y-3 border-b border-slate-200 p-4 dark:border-slate-800">
+        <div className="space-y-3 border-b border-slate-200/80 p-4 dark:border-slate-800/80">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="relative w-full lg:max-w-sm">
               <Search
-                className="pointer-events-none absolute top-1/2 start-3 h-4 w-4 -translate-y-1/2 text-slate-400"
+                className="pointer-events-none absolute top-1/2 start-3.5 h-4 w-4 -translate-y-1/2 text-slate-400"
                 aria-hidden="true"
               />
               <input
@@ -504,7 +492,7 @@ export function VehiclesWorkspace({
                 }
                 placeholder="Rechercher par immatriculation, marque, modèle..."
                 aria-label="Rechercher dans la flotte"
-                className="h-9 w-full rounded-lg border border-slate-200 bg-white ps-9 pe-3 text-sm text-slate-900 placeholder:text-slate-400 transition-colors focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-blue-400"
+                className="h-11 w-full rounded-xl border border-slate-200/90 bg-white ps-10 pe-3.5 text-sm text-slate-900 placeholder:text-slate-400 transition-colors hover:border-slate-300 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20 sm:h-10 dark:border-slate-700/90 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:hover:border-slate-600 dark:focus:border-blue-400"
               />
             </div>
 
@@ -518,7 +506,7 @@ export function VehiclesWorkspace({
             />
           </div>
 
-          <div className="flex flex-wrap items-center gap-2.5">
+          <div className="flex flex-wrap items-center gap-2">
             <select
               aria-label="Filtrer par échéances administratives"
               value={filters.compliance}
@@ -528,7 +516,7 @@ export function VehiclesWorkspace({
                   compliance: e.target.value as VehicleComplianceFilter,
                 }))
               }
-              className="h-9 rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-700 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
+              className={FILTER_SELECT_CLASSES}
             >
               <option value="all">Toutes échéances</option>
               <option value="expired">Documents expirés</option>
@@ -545,7 +533,7 @@ export function VehiclesWorkspace({
               onChange={(e) =>
                 setFilters((prev) => ({ ...prev, category: e.target.value }))
               }
-              className="h-9 rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-700 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
+              className={FILTER_SELECT_CLASSES}
             >
               <option value="all">Toutes catégories</option>
               {VEHICLE_CATEGORY_OPTIONS.map((opt) => (
@@ -564,7 +552,7 @@ export function VehiclesWorkspace({
                   transmission: e.target.value as 'all' | VehicleTransmission,
                 }))
               }
-              className="h-9 rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-700 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
+              className={FILTER_SELECT_CLASSES}
             >
               <option value="all">Toutes transmissions</option>
               {VEHICLE_TRANSMISSION_VALUES.map((tr) => (
@@ -583,7 +571,7 @@ export function VehiclesWorkspace({
                   fuelType: e.target.value as 'all' | VehicleFuelType,
                 }))
               }
-              className="h-9 rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-700 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
+              className={FILTER_SELECT_CLASSES}
             >
               <option value="all">Tous carburants</option>
               {VEHICLE_FUEL_VALUES.map((fuel) => (
@@ -614,7 +602,7 @@ export function VehiclesWorkspace({
                     sortBy: e.target.value as VehicleSortKey,
                   }))
                 }
-                className="h-9 rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-700 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
+                className={FILTER_SELECT_CLASSES}
               >
                 {VEHICLE_SORT_OPTIONS.map((opt) => (
                   <option key={opt.value} value={opt.value}>
@@ -666,7 +654,7 @@ export function VehiclesWorkspace({
             <div className="hidden overflow-x-auto md:block">
               <table className="w-full border-collapse text-sm">
                 <thead>
-                  <tr className="border-b border-slate-200 bg-slate-50/80 text-xs font-medium text-slate-500 dark:border-slate-800 dark:bg-slate-950/60 dark:text-slate-400">
+                  <tr className="border-b border-slate-200/80 bg-slate-50/80 text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-500 dark:border-slate-800/80 dark:bg-slate-950/60 dark:text-slate-400">
                     <th className="px-4 py-3 text-start">Véhicule</th>
                     <th className="px-4 py-3 text-start">Immatriculation</th>
                     <th className="px-4 py-3 text-start">Spécifications</th>
@@ -677,7 +665,7 @@ export function VehiclesWorkspace({
                     <th className="px-4 py-3 text-end">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
+                <tbody className="divide-y divide-slate-200/80 dark:divide-slate-800/80">
                   {filteredVehicles.map((vehicle) => {
                     const kmFormatted = new Intl.NumberFormat('fr-TN').format(
                       vehicle.odometer_km
@@ -698,7 +686,7 @@ export function VehiclesWorkspace({
                     return (
                       <tr
                         key={vehicle.id}
-                        className="transition-colors hover:bg-slate-50/80 dark:hover:bg-slate-800/40"
+                        className="group transition-colors hover:bg-slate-50/90 dark:hover:bg-slate-800/40"
                       >
                         <td className="px-4 py-3.5">
                           <button
@@ -706,7 +694,7 @@ export function VehiclesWorkspace({
                             onClick={() => setSelectedVehicle(vehicle)}
                             className="text-start focus-visible:outline-none focus-visible:underline cursor-pointer"
                           >
-                            <p className="font-medium text-slate-950 hover:text-blue-700 dark:text-slate-100 dark:hover:text-blue-400">
+                            <p className="font-semibold text-slate-950 transition-colors group-hover:text-blue-700 dark:text-slate-100 dark:group-hover:text-blue-400">
                               {vehicle.brand} {vehicle.model}
                               {vehicle.model_year ? (
                                 <span className="ms-1.5 font-mono text-xs font-normal text-slate-500 tabular-nums dark:text-slate-400">
@@ -720,19 +708,21 @@ export function VehiclesWorkspace({
                           </button>
                         </td>
 
-                        <td className="px-4 py-3.5 font-mono text-xs font-medium text-slate-800 dark:text-slate-200">
-                          {vehicle.plate_number}
+                        <td className="px-4 py-3.5">
+                          <span className="inline-flex rounded-md border border-slate-200/80 bg-slate-50 px-2 py-0.5 font-mono text-xs font-medium text-slate-800 dark:border-slate-700/80 dark:bg-slate-950/70 dark:text-slate-200">
+                            {vehicle.plate_number}
+                          </span>
                         </td>
 
                         <td className="px-4 py-3.5 text-xs text-slate-600 dark:text-slate-400">
                           <span>
                             {VEHICLE_TRANSMISSION_LABELS[vehicle.transmission]}
                           </span>
-                          <span aria-hidden="true" className="mx-1.5">
+                          <span aria-hidden="true" className="mx-1.5 text-slate-300 dark:text-slate-700">
                             ·
                           </span>
                           <span>{VEHICLE_FUEL_LABELS[vehicle.fuel_type]}</span>
-                          <span aria-hidden="true" className="mx-1.5">
+                          <span aria-hidden="true" className="mx-1.5 text-slate-300 dark:text-slate-700">
                             ·
                           </span>
                           <span className="tabular-nums">
@@ -745,7 +735,7 @@ export function VehiclesWorkspace({
                         </td>
 
                         <td className="px-4 py-3.5 text-end">
-                          <p className="font-mono text-sm font-medium text-slate-950 tabular-nums dark:text-slate-100">
+                          <p className="font-mono text-sm font-semibold text-slate-950 tabular-nums dark:text-slate-100">
                             {formatTndFromMillimes(vehicle.daily_rate_minor, 'fr')}
                           </p>
                           <p className="font-mono text-[11px] text-slate-500 tabular-nums dark:text-slate-400">
@@ -820,8 +810,8 @@ export function VehiclesWorkspace({
               </table>
             </div>
 
-            {/* Mobile responsive list */}
-            <div className="divide-y divide-slate-200 md:hidden dark:divide-slate-800">
+            {/* Mobile responsive card list */}
+            <div className="divide-y divide-slate-200/80 md:hidden dark:divide-slate-800/80">
               {filteredVehicles.map((vehicle) => {
                 const kmFormatted = new Intl.NumberFormat('fr-TN').format(
                   vehicle.odometer_km
@@ -835,20 +825,31 @@ export function VehiclesWorkspace({
                 return (
                   <div key={vehicle.id} className="space-y-3 p-4">
                     <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedVehicle(vehicle)}
+                        className="min-w-0 flex-1 text-start cursor-pointer"
+                      >
                         <p className="font-semibold text-slate-950 dark:text-slate-50">
                           {vehicle.brand} {vehicle.model}
-                          {vehicle.model_year ? ` (${vehicle.model_year})` : ''}
+                          {vehicle.model_year ? (
+                            <span className="ms-1.5 font-mono text-xs font-normal text-slate-500 tabular-nums dark:text-slate-400">
+                              {vehicle.model_year}
+                            </span>
+                          ) : null}
                         </p>
-                        <p className="mt-0.5 font-mono text-xs text-slate-600 dark:text-slate-400">
-                          {vehicle.plate_number} ·{' '}
-                          {getVehicleCategoryLabel(vehicle.category)}
+                        <p className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400">
+                          <span className="rounded border border-slate-200/80 bg-slate-50 px-1.5 py-0.5 font-mono text-[11px] font-medium text-slate-800 dark:border-slate-700/80 dark:bg-slate-950/70 dark:text-slate-200">
+                            {vehicle.plate_number}
+                          </span>
+                          <span aria-hidden="true">·</span>
+                          <span>{getVehicleCategoryLabel(vehicle.category)}</span>
                         </p>
-                      </div>
+                      </button>
                       <VehicleStatusBadge status={vehicle.status} />
                     </div>
 
-                    <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-600 dark:text-slate-400">
+                    <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-slate-50/80 px-3 py-2 text-xs text-slate-600 dark:bg-slate-950/45 dark:text-slate-400">
                       <span>
                         {VEHICLE_TRANSMISSION_LABELS[vehicle.transmission]} ·{' '}
                         {VEHICLE_FUEL_LABELS[vehicle.fuel_type]} ·{' '}
@@ -859,7 +860,9 @@ export function VehiclesWorkspace({
                       </span>
                       <span className="font-mono text-sm font-semibold text-slate-950 tabular-nums dark:text-slate-100">
                         {formatTndFromMillimes(vehicle.daily_rate_minor, 'fr')}
-                        /j
+                        <span className="text-[11px] font-normal text-slate-500 dark:text-slate-400">
+                          /j
+                        </span>
                       </span>
                     </div>
 
@@ -877,24 +880,24 @@ export function VehiclesWorkspace({
                       ) : null}
                     </div>
 
-                    <div className="flex items-center gap-2 pt-1">
+                    <div className="flex items-center gap-2 pt-0.5">
                       <Button
-                        size="sm"
+                        size="md"
                         variant="secondary"
                         className="flex-1"
                         onClick={() => setSelectedVehicle(vehicle)}
                       >
-                        <Eye className="h-3.5 w-3.5" aria-hidden="true" />
+                        <Eye className="h-4 w-4" aria-hidden="true" />
                         <span>Détails</span>
                       </Button>
                       {canManage ? (
                         <Button
-                          size="sm"
+                          size="md"
                           variant="primary"
                           className="flex-1"
                           onClick={() => openEditModal(vehicle)}
                         >
-                          <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
+                          <Pencil className="h-4 w-4" aria-hidden="true" />
                           <span>Modifier</span>
                         </Button>
                       ) : null}
@@ -905,7 +908,7 @@ export function VehiclesWorkspace({
             </div>
 
             {/* Quiet footer count */}
-            <div className="flex items-center justify-between border-t border-slate-200 bg-slate-50/70 px-4 py-2.5 text-xs text-slate-500 dark:border-slate-800 dark:bg-slate-950/60 dark:text-slate-400">
+            <div className="flex items-center justify-between border-t border-slate-200/80 bg-slate-50/75 px-4 py-2.5 text-xs text-slate-500 dark:border-slate-800/80 dark:bg-slate-950/60 dark:text-slate-400">
               <span className="tabular-nums">
                 {filteredVehicles.length} sur {vehicles.length} véhicule(s)
                 affiché(s)
@@ -919,7 +922,6 @@ export function VehiclesWorkspace({
       </Surface>
 
       <VehicleDetailDrawer
-        key={selectedVehicle?.id ?? 'drawer-closed'}
         vehicle={selectedVehicle}
         agencyTimeZone={agencyTimeZone}
         canManage={canManage}
@@ -930,9 +932,9 @@ export function VehiclesWorkspace({
         onStatusChanged={handleStatusChanged}
       />
 
-      {canManage && modalState.open ? (
+      {canManage ? (
         <VehicleFormModal
-          key={`${modalState.mode}-${modalState.vehicle?.id ?? 'new'}`}
+          key={`${modalState.mode}-${modalState.vehicle?.id ?? 'new'}-${modalState.open ? 'open' : 'closed'}`}
           open={modalState.open}
           mode={modalState.mode}
           vehicle={modalState.vehicle}

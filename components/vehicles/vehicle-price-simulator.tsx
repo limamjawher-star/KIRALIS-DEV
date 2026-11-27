@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useMemo, useState } from 'react';
-import { AlertCircle, Calculator, Info } from 'lucide-react';
+import { Calculator, Info } from 'lucide-react';
+import { AlertBanner } from '@/components/ui/alert-banner';
 import { formatTndFromMillimes } from '@/lib/currency';
 import {
   formatIsoDateFr,
@@ -52,14 +53,16 @@ export function VehiclePriceSimulator({
   );
 
   return (
-    <div className="space-y-3.5 rounded-xl border border-slate-200 bg-slate-50/70 p-4 dark:border-slate-800 dark:bg-slate-950/50">
+    <div className="space-y-3.5 rounded-2xl border border-slate-200/90 bg-slate-50/75 p-4 dark:border-slate-800 dark:bg-slate-950/50">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <Calculator
-            className="h-4 w-4 text-slate-600 dark:text-slate-400"
+          <span
             aria-hidden="true"
-          />
-          <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+            className="flex h-6 w-6 items-center justify-center rounded-lg bg-blue-100/90 text-blue-700 dark:bg-blue-950/70 dark:text-blue-300"
+          >
+            <Calculator className="h-3.5 w-3.5" />
+          </span>
+          <h4 className="text-sm font-semibold text-slate-950 dark:text-slate-50">
             Simulateur de tarif
           </h4>
         </div>
@@ -84,7 +87,7 @@ export function VehiclePriceSimulator({
             max="2100-12-31"
             value={pickupDate}
             onChange={(e) => setPickupDate(e.target.value)}
-            className="h-9 w-full rounded-lg border border-slate-200 bg-white px-2.5 font-mono text-xs text-slate-900 tabular-nums focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-blue-400"
+            className="h-11 w-full rounded-xl border border-slate-200/90 bg-white px-3 font-mono text-xs text-slate-900 tabular-nums transition-colors hover:border-slate-300 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20 sm:h-10 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:border-slate-600 dark:focus:border-blue-400"
           />
         </div>
 
@@ -102,23 +105,19 @@ export function VehiclePriceSimulator({
             max="2100-12-31"
             value={returnDate}
             onChange={(e) => setReturnDate(e.target.value)}
-            className="h-9 w-full rounded-lg border border-slate-200 bg-white px-2.5 font-mono text-xs text-slate-900 tabular-nums focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-blue-400"
+            className="h-11 w-full rounded-xl border border-slate-200/90 bg-white px-3 font-mono text-xs text-slate-900 tabular-nums transition-colors hover:border-slate-300 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20 sm:h-10 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:border-slate-600 dark:focus:border-blue-400"
           />
         </div>
       </div>
 
       {!preview.ok ? (
-        <div
-          role="alert"
-          className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-xs text-red-800 dark:border-red-900/70 dark:bg-red-950/40 dark:text-red-300"
-        >
-          <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-          <span>{preview.error}</span>
-        </div>
+        <AlertBanner variant="error" compact>
+          {preview.error}
+        </AlertBanner>
       ) : (
         <div className="space-y-3">
           {/* Summary metrics row */}
-          <div className="grid grid-cols-3 divide-x divide-slate-200 rounded-lg border border-slate-200 bg-white dark:divide-slate-800 dark:border-slate-800 dark:bg-slate-900">
+          <div className="grid grid-cols-3 divide-x divide-slate-200/80 overflow-hidden rounded-xl border border-slate-200/90 bg-white dark:divide-slate-800/80 dark:border-slate-800 dark:bg-slate-900">
             <div className="px-3 py-2.5">
               <p className="text-[11px] text-slate-500 dark:text-slate-400">
                 Durée facturée
@@ -143,9 +142,9 @@ export function VehiclePriceSimulator({
               <p
                 className={
                   preview.differenceVsStandardDailyMinor < 0
-                    ? 'mt-0.5 font-mono text-sm font-medium text-emerald-700 tabular-nums dark:text-emerald-400'
+                    ? 'mt-0.5 font-mono text-sm font-semibold text-emerald-700 tabular-nums dark:text-emerald-400'
                     : preview.differenceVsStandardDailyMinor > 0
-                      ? 'mt-0.5 font-mono text-sm font-medium text-amber-700 tabular-nums dark:text-amber-400'
+                      ? 'mt-0.5 font-mono text-sm font-semibold text-amber-700 tabular-nums dark:text-amber-400'
                       : 'mt-0.5 font-mono text-sm font-medium text-slate-600 tabular-nums dark:text-slate-400'
                 }
               >
@@ -155,11 +154,11 @@ export function VehiclePriceSimulator({
           </div>
 
           {/* Itemized calculation */}
-          <div className="divide-y divide-slate-100 rounded-lg border border-slate-200 bg-white dark:divide-slate-800/80 dark:border-slate-800 dark:bg-slate-900">
+          <div className="divide-y divide-slate-100 overflow-hidden rounded-xl border border-slate-200/90 bg-white dark:divide-slate-800/80 dark:border-slate-800 dark:bg-slate-900">
             {preview.lineItems.map((item, idx) => (
               <div
                 key={`${item.kind}-${item.periodStart}-${item.ruleId ?? idx}`}
-                className="flex items-start justify-between gap-3 px-3 py-2.5 text-xs"
+                className="flex items-start justify-between gap-3 px-3.5 py-2.5 text-xs"
               >
                 <div className="min-w-0">
                   <p className="font-medium text-slate-900 dark:text-slate-100">
@@ -169,7 +168,8 @@ export function VehiclePriceSimulator({
                     {formatIsoDateFr(item.periodStart)} →{' '}
                     {formatIsoDateFr(item.periodEndInclusive)} ·{' '}
                     {formatTndFromMillimes(item.unitRateMinor, 'fr')}
-                    {item.kind === 'daily_seasonal' || item.kind === 'daily_standard'
+                    {item.kind === 'daily_seasonal' ||
+                    item.kind === 'daily_standard'
                       ? ' / j'
                       : ' / forfait'}
                     {item.deltaVsStandardMinor !== 0
@@ -184,14 +184,14 @@ export function VehiclePriceSimulator({
             ))}
 
             {/* Final indicative subtotal */}
-            <div className="flex items-center justify-between gap-3 bg-slate-50/90 px-3 py-3 dark:bg-slate-950/60">
+            <div className="flex items-center justify-between gap-3 bg-blue-50/60 px-3.5 py-3 dark:bg-blue-950/30">
               <span className="text-xs font-semibold text-slate-900 dark:text-slate-100">
                 Sous-total indicatif ({preview.chargedDays}{' '}
                 {preview.chargedDays > 1 ? 'jours' : 'jour'})
               </span>
               <span
                 data-testid="simulator-subtotal"
-                className="font-mono text-base font-semibold text-slate-950 tabular-nums dark:text-slate-50"
+                className="font-mono text-base font-semibold text-blue-700 tabular-nums dark:text-blue-300"
               >
                 {preview.totalFormattedTnd}
               </span>
@@ -214,7 +214,7 @@ export function VehiclePriceSimulator({
       )}
 
       {/* Mandatory exact disclaimer */}
-      <p className="border-t border-slate-200 pt-2.5 text-[11px] font-medium text-slate-600 dark:border-slate-800 dark:text-slate-400">
+      <p className="border-t border-slate-200/80 pt-2.5 text-[11px] font-medium text-slate-600 dark:border-slate-800 dark:text-slate-400">
         {PRICING_SIMULATOR_DISCLAIMER}
       </p>
     </div>

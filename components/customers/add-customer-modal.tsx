@@ -1,13 +1,16 @@
 'use client';
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { AlertCircle, Loader2, X } from 'lucide-react';
+import { Loader2, X } from 'lucide-react';
+import { motion } from 'motion/react';
 import { useAppPreferences } from '@/components/providers/app-preferences-provider';
+import { AlertBanner } from '@/components/ui/alert-banner';
 import { Button } from '@/components/ui/button';
 import {
   FormField,
   getInputStateClasses,
   INPUT_BASE_CLASSES,
+  TEXTAREA_BASE_CLASSES,
 } from '@/components/ui/form-field';
 import { SegmentedControl } from '@/components/ui/segmented-control';
 import {
@@ -143,25 +146,36 @@ export function AddCustomerModal({
   const titleId = 'add-customer-modal-title';
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-[2px]"
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.15 }}
+      className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/50 backdrop-blur-[2px] sm:items-center sm:p-4"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget && !submitting) {
           onClose();
         }
       }}
     >
-      <div
+      <motion.div
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl dark:border-slate-800 dark:bg-slate-900"
+        initial={{ opacity: 0, y: 20, scale: 0.99 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+        className="flex max-h-[92dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-3xl border border-slate-200/90 bg-white shadow-2xl sm:max-h-[90vh] sm:rounded-2xl dark:border-slate-800 dark:bg-slate-900"
       >
-        <div className="flex items-start justify-between gap-4 border-b border-slate-200 px-6 py-4 dark:border-slate-800">
+        {/* Mobile grabber */}
+        <div className="flex justify-center pt-2.5 pb-1 sm:hidden" aria-hidden="true">
+          <span className="h-1 w-10 rounded-full bg-slate-300 dark:bg-slate-700" />
+        </div>
+
+        <div className="flex items-start justify-between gap-4 border-b border-slate-200/90 px-5 py-4 sm:px-6 dark:border-slate-800">
           <div className="min-w-0">
             <h2
               id={titleId}
-              className="text-lg font-semibold tracking-tight text-slate-950 dark:text-slate-50"
+              className="font-display text-lg font-bold tracking-tight text-slate-950 dark:text-slate-50"
             >
               {modalCopy.title}
             </h2>
@@ -174,7 +188,7 @@ export function AddCustomerModal({
             onClick={onClose}
             disabled={submitting}
             aria-label={modalCopy.closeAriaLabel}
-            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600/80 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
           >
             <X className="h-4 w-4" aria-hidden="true" />
           </button>
@@ -185,28 +199,21 @@ export function AddCustomerModal({
           noValidate
           className="flex flex-1 flex-col overflow-hidden"
         >
-          <div className="flex-1 space-y-6 overflow-y-auto px-6 py-5">
+          <div className="flex-1 space-y-6 overflow-y-auto px-5 py-5 sm:px-6">
             {formError ? (
-              <div
-                role="alert"
-                className="flex items-start gap-2.5 rounded-lg border border-red-200 bg-red-50 px-3.5 py-3 text-sm text-red-800 dark:border-red-900/70 dark:bg-red-950/40 dark:text-red-300"
-              >
-                <AlertCircle
-                  className="mt-0.5 h-4 w-4 shrink-0"
-                  aria-hidden="true"
-                />
-                <span>{formError}</span>
-              </div>
+              <AlertBanner variant="error" compact>
+                {formError}
+              </AlertBanner>
             ) : null}
 
             {/* Identity */}
             <fieldset className="space-y-4">
-              <legend className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+              <legend className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400 dark:text-slate-500">
                 {modalCopy.sectionIdentity}
               </legend>
 
               <div className="space-y-1.5">
-                <span className="block text-sm font-medium text-slate-800 dark:text-slate-200">
+                <span className="block text-[13px] font-medium text-slate-800 dark:text-slate-200">
                   {modalCopy.customerTypeLabel}
                 </span>
                 <SegmentedControl
@@ -297,8 +304,8 @@ export function AddCustomerModal({
             </fieldset>
 
             {/* Contact */}
-            <fieldset className="space-y-4">
-              <legend className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+            <fieldset className="space-y-4 border-t border-slate-200/80 pt-5 dark:border-slate-800/80">
+              <legend className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400 dark:text-slate-500">
                 {modalCopy.sectionContact}
               </legend>
 
@@ -364,8 +371,8 @@ export function AddCustomerModal({
             </fieldset>
 
             {/* Address */}
-            <fieldset className="space-y-4">
-              <legend className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+            <fieldset className="space-y-4 border-t border-slate-200/80 pt-5 dark:border-slate-800/80">
+              <legend className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400 dark:text-slate-500">
                 {modalCopy.sectionAddress}
               </legend>
 
@@ -456,8 +463,8 @@ export function AddCustomerModal({
             </fieldset>
 
             {/* Internal Notes */}
-            <fieldset className="space-y-4">
-              <legend className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+            <fieldset className="space-y-4 border-t border-slate-200/80 pt-5 dark:border-slate-800/80">
+              <legend className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400 dark:text-slate-500">
                 {modalCopy.sectionNotes}
               </legend>
 
@@ -479,7 +486,7 @@ export function AddCustomerModal({
                     fieldErrors.notes ? 'customer-notes-error' : undefined
                   }
                   className={cn(
-                    'w-full rounded-lg border bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 transition-colors focus:outline-none focus:ring-2 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-500 dark:disabled:bg-slate-900 dark:disabled:text-slate-400',
+                    TEXTAREA_BASE_CLASSES,
                     getInputStateClasses(Boolean(fieldErrors.notes))
                   )}
                 />
@@ -487,7 +494,7 @@ export function AddCustomerModal({
             </fieldset>
           </div>
 
-          <div className="flex flex-wrap items-center justify-end gap-2.5 border-t border-slate-200 bg-slate-50/70 px-6 py-4 dark:border-slate-800 dark:bg-slate-950/60">
+          <div className="pb-safe flex flex-wrap items-center justify-end gap-2.5 border-t border-slate-200/90 bg-slate-50/80 px-5 py-3.5 sm:px-6 sm:py-4 dark:border-slate-800 dark:bg-slate-950/70">
             <Button
               type="button"
               variant="secondary"
@@ -511,7 +518,7 @@ export function AddCustomerModal({
             </Button>
           </div>
         </form>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }

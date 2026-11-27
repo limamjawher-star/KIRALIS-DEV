@@ -8,11 +8,11 @@ import {
 
 const COMPLIANCE_STYLES: Record<ComplianceStatus, string> = {
   valid:
-    'border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900/70 dark:bg-emerald-950/50 dark:text-emerald-300',
+    'border-emerald-200/90 bg-emerald-50 text-emerald-800 dark:border-emerald-900/70 dark:bg-emerald-950/50 dark:text-emerald-300',
   expiring_soon:
-    'border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-900/70 dark:bg-amber-950/50 dark:text-amber-300',
+    'border-amber-200/90 bg-amber-50 text-amber-800 dark:border-amber-900/70 dark:bg-amber-950/50 dark:text-amber-300',
   expired:
-    'border-red-200 bg-red-50 text-red-800 dark:border-red-900/70 dark:bg-red-950/50 dark:text-red-300',
+    'border-red-200/90 bg-red-50 text-red-800 dark:border-red-900/70 dark:bg-red-950/50 dark:text-red-300',
   not_provided:
     'border-transparent bg-transparent px-0 text-slate-500 dark:text-slate-400',
 };
@@ -33,7 +33,7 @@ export function VehicleComplianceBadge({
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-medium whitespace-nowrap',
+        'inline-flex items-center gap-1 rounded-lg border px-2 py-0.5 text-xs font-medium whitespace-nowrap',
         COMPLIANCE_STYLES[status],
         className
       )}

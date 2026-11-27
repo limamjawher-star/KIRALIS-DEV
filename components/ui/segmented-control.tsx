@@ -1,6 +1,7 @@
 'use client';
 
-import React from 'react';
+import React, { useId } from 'react';
+import { motion } from 'motion/react';
 import { cn } from '@/lib/utils';
 
 export interface SegmentedOption<T extends string> {
@@ -23,12 +24,14 @@ export function SegmentedControl<T extends string>({
   ariaLabel,
   className,
 }: SegmentedControlProps<T>) {
+  const layoutId = useId();
+
   return (
     <div
       role="group"
       aria-label={ariaLabel}
       className={cn(
-        'inline-flex max-w-full items-center gap-1 overflow-x-auto rounded-lg border border-slate-200 bg-slate-100 p-1 dark:border-slate-800 dark:bg-slate-900',
+        'no-scrollbar inline-flex max-w-full items-center gap-0.5 overflow-x-auto rounded-xl border border-slate-200/90 bg-slate-100/90 p-1 dark:border-slate-800 dark:bg-slate-950/80',
         className
       )}
     >
@@ -41,13 +44,20 @@ export function SegmentedControl<T extends string>({
             aria-pressed={isActive}
             onClick={() => onChange(option.value)}
             className={cn(
-              'h-8 rounded-md px-3 text-xs font-medium whitespace-nowrap shrink-0 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 dark:focus-visible:ring-blue-400 cursor-pointer',
+              'relative z-10 inline-flex h-8 items-center justify-center rounded-lg px-3 text-xs font-medium whitespace-nowrap shrink-0 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600/80 dark:focus-visible:ring-blue-400 cursor-pointer select-none',
               isActive
-                ? 'bg-white text-slate-950 shadow-xs dark:bg-slate-800 dark:text-slate-50'
+                ? 'text-slate-950 dark:text-slate-50'
                 : 'text-slate-600 hover:text-slate-950 dark:text-slate-400 dark:hover:text-slate-100'
             )}
           >
-            {option.label}
+            {isActive ? (
+              <motion.span
+                layoutId={`segmented-pill-${layoutId}`}
+                transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+                className="absolute inset-0 -z-10 rounded-lg bg-white shadow-[0_1px_2px_rgba(15,23,42,0.08)] ring-1 ring-slate-900/[0.04] dark:bg-slate-800 dark:ring-white/[0.06]"
+              />
+            ) : null}
+            <span>{option.label}</span>
           </button>
         );
       })}

@@ -8,19 +8,37 @@
 }
 
 @layer base {
+  :root {
+    --kiralis-canvas: #f6f7f9;
+    --kiralis-surface: #ffffff;
+    --kiralis-surface-subtle: #f8fafc;
+    --kiralis-brand: #1d4ed8;
+    --kiralis-brand-hover: #1e40af;
+    --kiralis-border: #e2e8f0;
+  }
+
   html {
     color-scheme: light;
     scroll-behavior: smooth;
+    -webkit-tap-highlight-color: transparent;
   }
 
   html.dark {
     color-scheme: dark;
+    --kiralis-canvas: #090d16;
+    --kiralis-surface: #0f172a;
+    --kiralis-surface-subtle: #111b2e;
+    --kiralis-brand: #2563eb;
+    --kiralis-brand-hover: #3b82f6;
+    --kiralis-border: #1e293b;
   }
 
   body {
     font-family: var(--font-sans);
+    background-color: var(--kiralis-canvas);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    overflow-x: clip;
   }
 
   h1, h2, h3, h4 {
@@ -31,6 +49,30 @@
   .tabular-nums {
     font-variant-numeric: tabular-nums;
   }
+
+  /* Subtle, refined scrollbars for tables and drawers */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(148, 163, 184, 0.35) transparent;
+  }
+
+  html.dark * {
+    scrollbar-color: rgba(71, 85, 105, 0.55) transparent;
+  }
+}
+
+/* Mobile bottom safe-area helper */
+.pb-safe {
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+}
+
+/* Hide scrollbar for compact mobile segmented filter tracks */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 @media (prefers-reduced-motion: reduce) {

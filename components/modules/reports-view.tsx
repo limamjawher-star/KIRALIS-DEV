@@ -57,7 +57,7 @@ export function ReportsView() {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 sm:space-y-6">
       <PageHeader
         title={moduleCopy.title}
         description={moduleCopy.description}
@@ -97,13 +97,13 @@ export function ReportsView() {
         <div className="overflow-x-auto">
           <table className="w-full min-w-[680px] border-collapse text-start">
             <thead>
-              <tr className="border-b border-slate-200 bg-slate-50/80 dark:border-slate-800 dark:bg-slate-950/60">
+              <tr className="border-b border-slate-200/80 bg-slate-50/80 dark:border-slate-800/80 dark:bg-slate-950/60">
                 {reportCopy.columns.map((col, idx) => (
                   <th
                     key={col}
                     scope="col"
                     className={cn(
-                      'h-10 px-4 text-xs font-medium text-slate-500 whitespace-nowrap dark:text-slate-400',
+                      'h-10 px-4 text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-500 whitespace-nowrap dark:text-slate-400',
                       idx >= 1 ? 'text-end' : 'text-start'
                     )}
                   >

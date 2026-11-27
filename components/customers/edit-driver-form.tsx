@@ -1,8 +1,10 @@
 'use client';
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { AlertCircle, AlertTriangle, Loader2, X } from 'lucide-react';
+import { Loader2, Pencil, X } from 'lucide-react';
+import { motion } from 'motion/react';
 import { useAppPreferences } from '@/components/providers/app-preferences-provider';
+import { AlertBanner } from '@/components/ui/alert-banner';
 import { Button } from '@/components/ui/button';
 import {
   FormField,
@@ -190,23 +192,34 @@ export function EditDriverForm({
   const formIdPrefix = `edit-driver-${driver.id}`;
 
   return (
-    <form
+    <motion.form
+      initial={{ opacity: 0, y: -4 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
       onSubmit={handleSubmit}
       noValidate
       aria-labelledby={`${formIdPrefix}-title`}
-      className="space-y-3"
+      className="space-y-3.5"
     >
       <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h4
-            id={`${formIdPrefix}-title`}
-            className="text-sm font-semibold text-slate-900 dark:text-slate-100"
+        <div className="flex min-w-0 items-start gap-2.5">
+          <span
+            aria-hidden="true"
+            className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-blue-100/90 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300"
           >
-            {editCopy.title}
-          </h4>
-          <p className="mt-0.5 text-xs leading-relaxed text-slate-600 dark:text-slate-400">
-            {editCopy.subtitle}
-          </p>
+            <Pencil className="h-3.5 w-3.5" />
+          </span>
+          <div className="min-w-0">
+            <h4
+              id={`${formIdPrefix}-title`}
+              className="text-sm font-semibold text-slate-950 dark:text-slate-50"
+            >
+              {editCopy.title}
+            </h4>
+            <p className="mt-0.5 text-xs leading-relaxed text-slate-600 dark:text-slate-400">
+              {editCopy.subtitle}
+            </p>
+          </div>
         </div>
 
         <button
@@ -214,37 +227,22 @@ export function EditDriverForm({
           onClick={onCancel}
           disabled={submitting}
           aria-label={editCopy.cancelLabel}
-          className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-slate-500 transition-colors hover:bg-slate-200/70 hover:text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600/30 disabled:opacity-50 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+          className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-200/70 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600/30 disabled:opacity-50 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100 cursor-pointer"
         >
           <X className="h-4 w-4" aria-hidden="true" />
         </button>
       </div>
 
       {showVerifiedLicenceWarning ? (
-        <div
-          role="status"
-          aria-live="polite"
-          className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50/90 px-3 py-2 text-xs leading-relaxed text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-200"
-        >
-          <AlertTriangle
-            className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-600 dark:text-amber-400"
-            aria-hidden="true"
-          />
-          <span>{editCopy.verifiedLicenceChangeWarning}</span>
-        </div>
+        <AlertBanner variant="warning" compact>
+          {editCopy.verifiedLicenceChangeWarning}
+        </AlertBanner>
       ) : null}
 
       {formError ? (
-        <div
-          role="alert"
-          className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-800 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-200"
-        >
-          <AlertCircle
-            className="mt-0.5 h-3.5 w-3.5 shrink-0 text-red-600 dark:text-red-400"
-            aria-hidden="true"
-          />
-          <span>{formError}</span>
-        </div>
+        <AlertBanner variant="error" compact>
+          {formError}
+        </AlertBanner>
       ) : null}
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -380,7 +378,7 @@ export function EditDriverForm({
         </FormField>
       </div>
 
-      <div className="flex flex-wrap items-center justify-end gap-2 pt-1">
+      <div className="flex flex-wrap items-center justify-end gap-2 border-t border-blue-200/60 pt-3 dark:border-blue-900/50">
         <Button
           type="button"
           variant="secondary"
@@ -406,6 +404,6 @@ export function EditDriverForm({
           )}
         </Button>
       </div>
-    </form>
+    </motion.form>
   );
 }

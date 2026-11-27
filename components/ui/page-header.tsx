@@ -21,9 +21,9 @@ export function PageHeader({
   const { dict } = useAppPreferences();
 
   return (
-    <header className="flex flex-col gap-4 pb-6 border-b border-slate-200 dark:border-slate-800 sm:flex-row sm:items-end sm:justify-between">
+    <header className="flex flex-col gap-4 border-b border-slate-200/90 pb-5 dark:border-slate-800/90 sm:flex-row sm:items-end sm:justify-between">
       <div className="min-w-0 space-y-1.5">
-        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500 dark:text-slate-400">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-medium text-slate-500 dark:text-slate-400">
           {meta ? (
             <span>{meta}</span>
           ) : (
@@ -31,25 +31,33 @@ export function PageHeader({
               <span>{dict.common.phase1Label}</span>
               {plannedPhase ? (
                 <>
-                  <span aria-hidden="true">·</span>
+                  <span aria-hidden="true" className="text-slate-300 dark:text-slate-700">
+                    ·
+                  </span>
                   <span>
                     {dict.common.plannedFor} {plannedPhase}
                   </span>
                 </>
               ) : null}
-              <span aria-hidden="true">·</span>
+              <span aria-hidden="true" className="text-slate-300 dark:text-slate-700">
+                ·
+              </span>
               <span>{dict.common.noDatabaseConnected}</span>
             </>
           )}
         </div>
-        <h1 className="text-2xl font-semibold tracking-tight text-slate-950 dark:text-slate-50 sm:text-[26px]">
+        <h1 className="font-display text-2xl font-bold tracking-[-0.025em] text-slate-950 dark:text-slate-50 sm:text-[28px] sm:leading-tight">
           {title}
         </h1>
         <p className="max-w-2xl text-sm leading-relaxed text-slate-600 dark:text-slate-400">
           {description}
         </p>
       </div>
-      {action ? <div className="shrink-0">{action}</div> : null}
+      {action ? (
+        <div className="flex shrink-0 flex-wrap items-center gap-2 sm:justify-end">
+          {action}
+        </div>
+      ) : null}
     </header>
   );
 }

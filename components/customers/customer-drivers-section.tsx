@@ -16,10 +16,12 @@ import {
   UserPlus,
   UserX,
   Users,
-  X,
 } from 'lucide-react';
+import { motion } from 'motion/react';
 import { useAppPreferences } from '@/components/providers/app-preferences-provider';
+import { AlertBanner } from '@/components/ui/alert-banner';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { getCustomerCountryLabel } from '@/lib/customers/types';
 import {
   createCustomerDriversController,
@@ -46,17 +48,27 @@ export interface CustomerDriversSectionProps {
   role: AgencyRole;
 }
 
+function getDriverInitials(name: string): string {
+  const parts = name
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+  if (parts.length === 0) return 'DR';
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+}
+
 function getVerificationBadgeClasses(status: DriverVerificationStatus): string {
   switch (status) {
     case 'verified':
-      return 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300';
+      return 'border-emerald-200/90 bg-emerald-50 text-emerald-800 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300';
     case 'pending':
-      return 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-300';
+      return 'border-amber-200/90 bg-amber-50 text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-300';
     case 'rejected':
-      return 'border-red-200 bg-red-50 text-red-700 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-300';
+      return 'border-red-200/90 bg-red-50 text-red-800 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-300';
     case 'unverified':
     default:
-      return 'border-slate-200 bg-slate-100 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300';
+      return 'border-slate-200/90 bg-slate-100/90 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300';
   }
 }
 
@@ -65,24 +77,24 @@ function getEligibilityBadgeClasses(
 ): string {
   switch (status) {
     case 'blocked':
-      return 'border-red-200 bg-red-50 text-red-700 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-300';
+      return 'border-red-200/90 bg-red-50 text-red-800 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-300';
     case 'attention_required':
-      return 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-300';
+      return 'border-amber-200/90 bg-amber-50 text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-300';
     case 'checks_passed_manual_review_required':
     default:
-      return 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300';
+      return 'border-emerald-200/90 bg-emerald-50 text-emerald-800 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300';
   }
 }
 
 function getFlagRowClasses(severity: DriverEligibilitySeverity): string {
   switch (severity) {
     case 'blocking':
-      return 'border-red-200 bg-red-50/80 text-red-800 dark:border-red-900/60 dark:bg-red-950/35 dark:text-red-200';
+      return 'border-red-200/90 bg-red-50/80 text-red-900 dark:border-red-900/60 dark:bg-red-950/35 dark:text-red-200';
     case 'warning':
-      return 'border-amber-200 bg-amber-50/80 text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/35 dark:text-amber-200';
+      return 'border-amber-200/90 bg-amber-50/80 text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/35 dark:text-amber-200';
     case 'info':
     default:
-      return 'border-sky-200 bg-sky-50/70 text-sky-900 dark:border-sky-900/60 dark:bg-sky-950/35 dark:text-sky-200';
+      return 'border-sky-200/90 bg-sky-50/75 text-sky-900 dark:border-sky-900/60 dark:bg-sky-950/35 dark:text-sky-200';
   }
 }
 
@@ -458,14 +470,18 @@ export function CustomerDriversSection({
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
+          <Users
+            className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500"
+            aria-hidden="true"
+          />
           <h3
             id="customer-authorized-drivers-heading"
-            className="text-xs font-semibold text-slate-500 dark:text-slate-400"
+            className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-500 dark:text-slate-400"
           >
             {driversCopy.sectionTitle}
           </h3>
           {effectiveStatus === 'ready' ? (
-            <span className="inline-flex items-center rounded-md border border-slate-200 bg-slate-100 px-2 py-0.5 font-mono text-[11px] font-medium text-slate-700 tabular-nums dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+            <span className="inline-flex items-center rounded-md border border-slate-200/90 bg-slate-100/90 px-2 py-0.5 font-mono text-[11px] font-medium text-slate-700 tabular-nums dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
               {driverCountLabel}
             </span>
           ) : null}
@@ -476,9 +492,9 @@ export function CustomerDriversSection({
             <Button
               type="button"
               variant="secondary"
-              size="sm"
+              size="xs"
               onClick={handleOpenAddForm}
-              className="h-7 px-2.5 text-xs"
+              className="min-h-9 sm:min-h-8"
             >
               <UserPlus className="h-3.5 w-3.5" aria-hidden="true" />
               <span>{addCopy.addButtonLabel}</span>
@@ -488,11 +504,11 @@ export function CustomerDriversSection({
           <Button
             type="button"
             variant="ghost"
-            size="sm"
+            size="xs"
             onClick={handleRefresh}
             disabled={effectiveStatus === 'loading'}
             aria-label={driversCopy.refreshAriaLabel}
-            className="h-7 px-2 text-xs"
+            className="min-h-9 sm:min-h-8"
           >
             <RefreshCw
               className={`h-3.5 w-3.5 ${
@@ -506,51 +522,15 @@ export function CustomerDriversSection({
       </div>
 
       {visibleBanner ? (
-        <div
-          role={visibleBanner.tone === 'error' ? 'alert' : 'status'}
-          aria-live="polite"
-          className={`mt-3 flex items-center justify-between gap-2 rounded-lg border px-3 py-2 text-xs ${
-            visibleBanner.tone === 'error'
-              ? 'border-red-200 bg-red-50/90 text-red-800 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-200'
-              : visibleBanner.tone === 'warning'
-                ? 'border-amber-200 bg-amber-50/90 text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-200'
-                : 'border-emerald-200 bg-emerald-50/90 text-emerald-800 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-200'
-          }`}
+        <AlertBanner
+          variant={visibleBanner.tone}
+          compact
+          onDismiss={() => setStatusBanner(null)}
+          dismissLabel={addCopy.dismissBannerLabel}
+          className="mt-3"
         >
-          <div className="flex items-start gap-2">
-            {visibleBanner.tone === 'error' ? (
-              <AlertCircle
-                className="mt-0.5 h-3.5 w-3.5 shrink-0 text-red-600 dark:text-red-400"
-                aria-hidden="true"
-              />
-            ) : visibleBanner.tone === 'warning' ? (
-              <AlertTriangle
-                className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-600 dark:text-amber-400"
-                aria-hidden="true"
-              />
-            ) : (
-              <CheckCircle2
-                className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-600 dark:text-emerald-400"
-                aria-hidden="true"
-              />
-            )}
-            <span>{visibleBanner.message}</span>
-          </div>
-          <button
-            type="button"
-            onClick={() => setStatusBanner(null)}
-            aria-label={addCopy.dismissBannerLabel}
-            className={`inline-flex h-6 w-6 shrink-0 items-center justify-center rounded ${
-              visibleBanner.tone === 'error'
-                ? 'text-red-700 hover:bg-red-100 dark:text-red-300 dark:hover:bg-red-900/50'
-                : visibleBanner.tone === 'warning'
-                  ? 'text-amber-700 hover:bg-amber-100 dark:text-amber-300 dark:hover:bg-amber-900/50'
-                  : 'text-emerald-700 hover:bg-emerald-100 dark:text-emerald-300 dark:hover:bg-emerald-900/50'
-            }`}
-          >
-            <X className="h-3.5 w-3.5" aria-hidden="true" />
-          </button>
-        </div>
+          {visibleBanner.message}
+        </AlertBanner>
       ) : null}
 
       {isAddFormOpen ? (
@@ -573,15 +553,18 @@ export function CustomerDriversSection({
           {[0, 1].map((item) => (
             <div
               key={item}
-              className="rounded-xl border border-slate-200 bg-slate-50/70 p-3.5 dark:border-slate-800 dark:bg-slate-900/50"
+              className="rounded-xl border border-slate-200/90 bg-slate-50/70 p-4 dark:border-slate-800 dark:bg-slate-900/50"
             >
               <div className="flex items-center justify-between gap-3">
-                <div className="h-4 w-36 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
-                <div className="h-5 w-20 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
+                <div className="flex items-center gap-2.5">
+                  <Skeleton rounded="lg" className="h-8 w-8 shrink-0" />
+                  <Skeleton className="h-4 w-36" />
+                </div>
+                <Skeleton className="h-5 w-24" />
               </div>
               <div className="mt-3 grid grid-cols-2 gap-2.5">
-                <div className="h-8 animate-pulse rounded bg-slate-100 dark:bg-slate-800/80" />
-                <div className="h-8 animate-pulse rounded bg-slate-100 dark:bg-slate-800/80" />
+                <Skeleton className="h-9" />
+                <Skeleton className="h-9" />
               </div>
             </div>
           ))}
@@ -589,50 +572,36 @@ export function CustomerDriversSection({
       ) : null}
 
       {effectiveStatus === 'error' ? (
-        <div
-          role="alert"
-          className="mt-3 rounded-xl border border-red-200 bg-red-50/80 p-3.5 dark:border-red-900/60 dark:bg-red-950/35"
+        <AlertBanner
+          variant="error"
+          title={driversCopy.errorTitle}
+          compact
+          className="mt-3"
+          action={
+            <Button
+              type="button"
+              variant="secondary"
+              size="xs"
+              onClick={handleRefresh}
+            >
+              <RefreshCw className="h-3.5 w-3.5" aria-hidden="true" />
+              <span>{driversCopy.retryLabel}</span>
+            </Button>
+          }
         >
-          <div className="flex items-start gap-2.5">
-            <AlertCircle
-              className="mt-0.5 h-4 w-4 shrink-0 text-red-600 dark:text-red-400"
-              aria-hidden="true"
-            />
-            <div className="min-w-0 flex-1">
-              <p className="text-xs font-semibold text-red-900 dark:text-red-200">
-                {driversCopy.errorTitle}
-              </p>
-              {state.error ? (
-                <p className="mt-1 text-xs leading-relaxed text-red-700 dark:text-red-300">
-                  {state.error}
-                </p>
-              ) : null}
-              <div className="mt-2.5">
-                <Button
-                  type="button"
-                  variant="secondary"
-                  size="sm"
-                  onClick={handleRefresh}
-                >
-                  <RefreshCw className="h-3.5 w-3.5" aria-hidden="true" />
-                  <span>{driversCopy.retryLabel}</span>
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
+          {state.error ?? driversCopy.errorTitle}
+        </AlertBanner>
       ) : null}
 
       {effectiveStatus === 'ready' && drivers.length === 0 ? (
-        <div className="mt-3 rounded-xl border border-dashed border-slate-200 bg-slate-50/60 px-4 py-5 text-center dark:border-slate-800 dark:bg-slate-900/40">
-          <Users
-            className="mx-auto h-5 w-5 text-slate-400 dark:text-slate-500"
-            aria-hidden="true"
-          />
-          <p className="mt-2 text-xs font-semibold text-slate-800 dark:text-slate-200">
+        <div className="mt-3 rounded-2xl border border-dashed border-slate-200 bg-slate-50/60 px-4 py-6 text-center dark:border-slate-800 dark:bg-slate-900/40">
+          <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200/90 bg-white text-slate-400 shadow-xs dark:border-slate-800 dark:bg-slate-900 dark:text-slate-500">
+            <Users className="h-4 w-4" aria-hidden="true" />
+          </div>
+          <p className="mt-3 text-xs font-semibold text-slate-900 dark:text-slate-100">
             {driversCopy.emptyTitle}
           </p>
-          <p className="mt-1 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+          <p className="mx-auto mt-1 max-w-xs text-xs leading-relaxed text-slate-500 dark:text-slate-400">
             {driversCopy.emptyDescription}
           </p>
         </div>
@@ -640,10 +609,7 @@ export function CustomerDriversSection({
 
       {effectiveStatus === 'ready' && drivers.length > 0 ? (
         <div className="mt-3 space-y-3">
-          <ul
-            aria-label={driversCopy.sectionTitle}
-            className="space-y-3"
-          >
+          <ul aria-label={driversCopy.sectionTitle} className="space-y-3">
             {drivers.map((driver) => {
               const formattedExpiry = formatDriverExpiryDate(
                 driver.licence_expires_on,
@@ -655,7 +621,7 @@ export function CustomerDriversSection({
                   ? 'font-mono text-xs font-semibold text-red-700 tabular-nums dark:text-red-300'
                   : expiryStatus === 'expiring_soon'
                     ? 'font-mono text-xs font-semibold text-amber-700 tabular-nums dark:text-amber-300'
-                    : 'font-mono text-xs text-slate-900 tabular-nums dark:text-slate-100';
+                    : 'font-mono text-xs font-medium text-slate-900 tabular-nums dark:text-slate-100';
 
               const internalNotes =
                 canManageDrivers &&
@@ -676,11 +642,11 @@ export function CustomerDriversSection({
               return (
                 <li
                   key={driver.id}
-                  className={`rounded-xl border p-3.5 transition-colors ${
+                  className={`rounded-2xl border p-4 transition-colors ${
                     isInlinePanelActive
-                      ? 'border-blue-200/80 bg-blue-50/35 dark:border-blue-900/60 dark:bg-blue-950/20'
+                      ? 'border-blue-300/80 bg-blue-50/35 shadow-xs dark:border-blue-900/70 dark:bg-blue-950/20'
                       : driver.is_active
-                        ? 'border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900/70'
+                        ? 'border-slate-200/90 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.03)] dark:border-slate-800 dark:bg-slate-900/70'
                         : 'border-slate-200/80 bg-slate-50/80 dark:border-slate-800/80 dark:bg-slate-900/35'
                   }`}
                 >
@@ -702,79 +668,83 @@ export function CustomerDriversSection({
                     />
                   ) : (
                     <>
-                      {/* Driver Header: Full Name + Active/Inactive + Operational Eligibility */}
-                      <div className="flex flex-wrap items-start justify-between gap-2">
-                        <div className="min-w-0 flex-1">
-                          <p
-                            className={`truncate text-sm font-semibold ${
+                      {/* Driver Header: Monogram + Name + Active state & Operational Eligibility */}
+                      <div className="flex flex-wrap items-start justify-between gap-2.5">
+                        <div className="flex min-w-0 flex-1 items-center gap-2.5">
+                          <span
+                            aria-hidden="true"
+                            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-xs font-semibold ${
                               driver.is_active
-                                ? 'text-slate-900 dark:text-slate-100'
-                                : 'text-slate-600 dark:text-slate-400'
+                                ? 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200'
+                                : 'bg-slate-200/70 text-slate-500 dark:bg-slate-800/70 dark:text-slate-400'
                             }`}
                           >
-                            {driver.full_name}
-                          </p>
+                            {getDriverInitials(driver.full_name)}
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <p
+                              className={`truncate text-sm font-semibold ${
+                                driver.is_active
+                                  ? 'text-slate-950 dark:text-slate-50'
+                                  : 'text-slate-600 dark:text-slate-400'
+                              }`}
+                            >
+                              {driver.full_name}
+                            </p>
+                            <p className="mt-0.5 flex items-center gap-1.5 text-[11px] font-medium">
+                              <span
+                                aria-hidden="true"
+                                className={`h-1.5 w-1.5 rounded-full ${
+                                  driver.is_active
+                                    ? 'bg-emerald-500'
+                                    : 'bg-slate-400 dark:bg-slate-500'
+                                }`}
+                              />
+                              <span
+                                className={
+                                  driver.is_active
+                                    ? 'text-emerald-700 dark:text-emerald-400'
+                                    : 'text-slate-500 dark:text-slate-400'
+                                }
+                              >
+                                {driver.is_active
+                                  ? driversCopy.statusActive
+                                  : driversCopy.statusInactive}
+                              </span>
+                            </p>
+                          </div>
                         </div>
 
-                        <div className="flex flex-wrap items-center gap-1.5">
-                          <span
-                            className={`inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[11px] font-medium ${
-                              driver.is_active
-                                ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300'
-                                : 'border-slate-200 bg-slate-100 text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400'
-                            }`}
-                          >
-                            {driver.is_active ? (
-                              <UserCheck
-                                className="h-3 w-3 shrink-0"
-                                aria-hidden="true"
-                              />
-                            ) : (
-                              <UserX
-                                className="h-3 w-3 shrink-0"
-                                aria-hidden="true"
-                              />
-                            )}
-                            <span>
-                              {driver.is_active
-                                ? driversCopy.statusActive
-                                : driversCopy.statusInactive}
-                            </span>
+                        <span
+                          className={`inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-[11px] font-medium ${getEligibilityBadgeClasses(
+                            driver.eligibility.status
+                          )}`}
+                        >
+                          <EligibilityIcon status={driver.eligibility.status} />
+                          <span>
+                            {
+                              driversCopy.eligibilityStatuses[
+                                driver.eligibility.status
+                              ]
+                            }
                           </span>
-
-                          <span
-                            className={`inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[11px] font-medium ${getEligibilityBadgeClasses(
-                              driver.eligibility.status
-                            )}`}
-                          >
-                            <EligibilityIcon
-                              status={driver.eligibility.status}
-                            />
-                            <span>
-                              {
-                                driversCopy.eligibilityStatuses[
-                                  driver.eligibility.status
-                                ]
-                              }
-                            </span>
-                          </span>
-                        </div>
+                        </span>
                       </div>
 
                       {/* Owner & Manager Management Controls (hidden from Agents) */}
                       {canManageDrivers ? (
-                        <div className="mt-2.5 flex flex-wrap items-center gap-1.5 border-b border-slate-100 pb-2.5 dark:border-slate-800/80">
+                        <div className="mt-3 flex flex-wrap items-center gap-1.5 border-y border-slate-100 py-2 dark:border-slate-800/80">
                           <Button
                             type="button"
                             variant="ghost"
-                            size="sm"
+                            size="xs"
                             disabled={isTogglingThisDriver}
                             onClick={() => handleOpenEditForm(driver.id)}
                             aria-label={`${editCopy.editButtonAriaPrefix} ${driver.full_name}`}
-                            className="h-7 px-2 text-xs"
+                            className="min-h-9 sm:min-h-8"
                           >
                             <Pencil
-                              className="h-3 w-3 shrink-0"
+                              className="h-3.5 w-3.5 shrink-0"
                               aria-hidden="true"
                             />
                             <span>{editCopy.editButtonLabel}</span>
@@ -783,14 +753,14 @@ export function CustomerDriversSection({
                           <Button
                             type="button"
                             variant="ghost"
-                            size="sm"
+                            size="xs"
                             disabled={isTogglingThisDriver}
                             onClick={() => handleOpenVerifyForm(driver.id)}
                             aria-label={`${verifyCopy.buttonAriaPrefix} ${driver.full_name}`}
-                            className="h-7 px-2 text-xs"
+                            className="min-h-9 sm:min-h-8"
                           >
                             <ShieldCheck
-                              className="h-3 w-3 shrink-0"
+                              className="h-3.5 w-3.5 shrink-0"
                               aria-hidden="true"
                             />
                             <span>{verifyCopy.buttonLabel}</span>
@@ -800,16 +770,16 @@ export function CustomerDriversSection({
                             <Button
                               type="button"
                               variant="ghost"
-                              size="sm"
+                              size="xs"
                               disabled={
                                 isTogglingThisDriver || isConfirmingDeactivate
                               }
                               onClick={() => handleRequestDeactivate(driver.id)}
                               aria-label={`${activationCopy.deactivateAriaPrefix} ${driver.full_name}`}
-                              className="h-7 px-2 text-xs text-red-700 hover:bg-red-50 hover:text-red-800 dark:text-red-400 dark:hover:bg-red-950/40 dark:hover:text-red-300"
+                              className="min-h-9 text-red-700 hover:bg-red-50 hover:text-red-800 sm:min-h-8 dark:text-red-400 dark:hover:bg-red-950/40 dark:hover:text-red-300"
                             >
                               <UserX
-                                className="h-3 w-3 shrink-0"
+                                className="h-3.5 w-3.5 shrink-0"
                                 aria-hidden="true"
                               />
                               <span>{activationCopy.deactivateButtonLabel}</span>
@@ -818,18 +788,18 @@ export function CustomerDriversSection({
                             <Button
                               type="button"
                               variant="ghost"
-                              size="sm"
+                              size="xs"
                               disabled={isTogglingThisDriver}
                               onClick={() =>
                                 void handleToggleActive(driver, true)
                               }
                               aria-label={`${activationCopy.reactivateAriaPrefix} ${driver.full_name}`}
-                              className="h-7 px-2 text-xs text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800 dark:text-emerald-400 dark:hover:bg-emerald-950/40 dark:hover:text-emerald-300"
+                              className="min-h-9 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800 sm:min-h-8 dark:text-emerald-400 dark:hover:bg-emerald-950/40 dark:hover:text-emerald-300"
                             >
                               {isTogglingThisDriver ? (
                                 <>
                                   <Loader2
-                                    className="h-3 w-3 shrink-0 animate-spin"
+                                    className="h-3.5 w-3.5 shrink-0 animate-spin"
                                     aria-hidden="true"
                                   />
                                   <span>{activationCopy.updatingLabel}</span>
@@ -837,7 +807,7 @@ export function CustomerDriversSection({
                               ) : (
                                 <>
                                   <UserCheck
-                                    className="h-3 w-3 shrink-0"
+                                    className="h-3.5 w-3.5 shrink-0"
                                     aria-hidden="true"
                                   />
                                   <span>
@@ -852,25 +822,28 @@ export function CustomerDriversSection({
 
                       {/* Explicit Deactivation Confirmation Panel (Owner/Manager only) */}
                       {isConfirmingDeactivate ? (
-                        <div
+                        <motion.div
+                          initial={{ opacity: 0, y: -4 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
                           role="alertdialog"
                           aria-labelledby={`confirm-deactivate-${driver.id}-title`}
                           aria-describedby={`confirm-deactivate-${driver.id}-body`}
-                          className="mt-3 rounded-lg border border-red-200 bg-red-50/90 p-3 dark:border-red-900/60 dark:bg-red-950/35"
+                          className="mt-3 rounded-xl border border-red-200/90 bg-red-50/90 p-3.5 dark:border-red-900/60 dark:bg-red-950/35"
                         >
                           <p
                             id={`confirm-deactivate-${driver.id}-title`}
-                            className="text-xs font-semibold text-red-900 dark:text-red-200"
+                            className="text-xs font-semibold text-red-950 dark:text-red-100"
                           >
                             {activationCopy.confirmDeactivateTitle}
                           </p>
                           <p
                             id={`confirm-deactivate-${driver.id}-body`}
-                            className="mt-1 text-xs leading-relaxed text-red-800 dark:text-red-300"
+                            className="mt-1 text-xs leading-relaxed text-red-800 dark:text-red-200"
                           >
                             {activationCopy.confirmDeactivateBody}
                           </p>
-                          <div className="mt-2.5 flex flex-wrap items-center justify-end gap-2">
+                          <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
                             <Button
                               type="button"
                               variant="secondary"
@@ -882,13 +855,12 @@ export function CustomerDriversSection({
                             </Button>
                             <Button
                               type="button"
-                              variant="primary"
+                              variant="danger"
                               size="sm"
                               disabled={isTogglingThisDriver}
                               onClick={() =>
                                 void handleToggleActive(driver, false)
                               }
-                              className="bg-red-600 text-white hover:bg-red-700 focus-visible:ring-red-500/30 dark:bg-red-600 dark:hover:bg-red-500"
                             >
                               {isTogglingThisDriver ? (
                                 <>
@@ -905,124 +877,124 @@ export function CustomerDriversSection({
                               )}
                             </Button>
                           </div>
+                        </motion.div>
+                      ) : null}
+
+                      {/* Licence & Verification Metadata */}
+                      <dl className="mt-3 grid grid-cols-1 gap-x-4 gap-y-2.5 rounded-xl bg-slate-50/75 p-3 sm:grid-cols-2 dark:bg-slate-950/45">
+                        <div>
+                          <dt className="text-[11px] text-slate-500 dark:text-slate-400">
+                            {driversCopy.issuingCountryLabel}
+                          </dt>
+                          <dd className="mt-0.5 text-xs font-medium text-slate-900 dark:text-slate-100">
+                            {driver.licence_issuing_country ? (
+                              getCustomerCountryLabel(
+                                driver.licence_issuing_country
+                              )
+                            ) : (
+                              <span className="font-normal text-slate-400 dark:text-slate-500">
+                                {notProvided}
+                              </span>
+                            )}
+                          </dd>
+                        </div>
+
+                        <div>
+                          <dt className="text-[11px] text-slate-500 dark:text-slate-400">
+                            {driversCopy.licenceCategoryLabel}
+                          </dt>
+                          <dd className="mt-0.5 text-xs text-slate-900 dark:text-slate-100">
+                            {driver.licence_category ? (
+                              <span
+                                dir="ltr"
+                                className="inline-block font-mono font-semibold"
+                              >
+                                {driver.licence_category}
+                              </span>
+                            ) : (
+                              <span className="text-slate-400 dark:text-slate-500">
+                                {notProvided}
+                              </span>
+                            )}
+                          </dd>
+                        </div>
+
+                        <div>
+                          <dt className="text-[11px] text-slate-500 dark:text-slate-400">
+                            {driversCopy.licenceExpiresOnLabel}
+                          </dt>
+                          <dd className="mt-0.5">
+                            {formattedExpiry ? (
+                              <span dir="ltr" className={expiryValueClasses}>
+                                {formattedExpiry}
+                              </span>
+                            ) : (
+                              <span className="text-xs text-slate-400 dark:text-slate-500">
+                                {notProvided}
+                              </span>
+                            )}
+                          </dd>
+                        </div>
+
+                        <div>
+                          <dt className="text-[11px] text-slate-500 dark:text-slate-400">
+                            {driversCopy.verificationStatusLabel}
+                          </dt>
+                          <dd className="mt-0.5">
+                            <span
+                              className={`inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[11px] font-medium ${getVerificationBadgeClasses(
+                                driver.verification_status
+                              )}`}
+                            >
+                              <VerificationIcon
+                                status={driver.verification_status}
+                              />
+                              <span>
+                                {
+                                  driversCopy.verificationStatuses[
+                                    driver.verification_status
+                                  ]
+                                }
+                              </span>
+                            </span>
+                          </dd>
+                        </div>
+                      </dl>
+
+                      {/* Operational Eligibility Warnings */}
+                      {driver.eligibility.flags.length > 0 ? (
+                        <div className="mt-3">
+                          <p className="sr-only">{driversCopy.warningsLabel}</p>
+                          <ul className="space-y-1.5">
+                            {driver.eligibility.flags.map((flag) => (
+                              <li
+                                key={flag.code}
+                                className={`flex items-start gap-2 rounded-xl border px-3 py-2 text-xs leading-relaxed ${getFlagRowClasses(
+                                  flag.severity
+                                )}`}
+                              >
+                                <FlagSeverityIcon severity={flag.severity} />
+                                <span>
+                                  {driversCopy.flagMessages[flag.code] ??
+                                    flag.message}
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
                         </div>
                       ) : null}
 
-                  {/* Licence & Verification Metadata */}
-                  <dl className="mt-3 grid grid-cols-1 gap-x-4 gap-y-2.5 sm:grid-cols-2">
-                    <div>
-                      <dt className="text-[11px] text-slate-500 dark:text-slate-400">
-                        {driversCopy.issuingCountryLabel}
-                      </dt>
-                      <dd className="mt-0.5 text-xs text-slate-900 dark:text-slate-100">
-                        {driver.licence_issuing_country ? (
-                          getCustomerCountryLabel(
-                            driver.licence_issuing_country
-                          )
-                        ) : (
-                          <span className="text-slate-400 dark:text-slate-500">
-                            {notProvided}
-                          </span>
-                        )}
-                      </dd>
-                    </div>
-
-                    <div>
-                      <dt className="text-[11px] text-slate-500 dark:text-slate-400">
-                        {driversCopy.licenceCategoryLabel}
-                      </dt>
-                      <dd className="mt-0.5 text-xs text-slate-900 dark:text-slate-100">
-                        {driver.licence_category ? (
-                          <span
-                            dir="ltr"
-                            className="inline-block font-mono font-semibold"
-                          >
-                            {driver.licence_category}
-                          </span>
-                        ) : (
-                          <span className="text-slate-400 dark:text-slate-500">
-                            {notProvided}
-                          </span>
-                        )}
-                      </dd>
-                    </div>
-
-                    <div>
-                      <dt className="text-[11px] text-slate-500 dark:text-slate-400">
-                        {driversCopy.licenceExpiresOnLabel}
-                      </dt>
-                      <dd className="mt-0.5">
-                        {formattedExpiry ? (
-                          <span dir="ltr" className={expiryValueClasses}>
-                            {formattedExpiry}
-                          </span>
-                        ) : (
-                          <span className="text-xs text-slate-400 dark:text-slate-500">
-                            {notProvided}
-                          </span>
-                        )}
-                      </dd>
-                    </div>
-
-                    <div>
-                      <dt className="text-[11px] text-slate-500 dark:text-slate-400">
-                        {driversCopy.verificationStatusLabel}
-                      </dt>
-                      <dd className="mt-0.5">
-                        <span
-                          className={`inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[11px] font-medium ${getVerificationBadgeClasses(
-                            driver.verification_status
-                          )}`}
-                        >
-                          <VerificationIcon
-                            status={driver.verification_status}
-                          />
-                          <span>
-                            {
-                              driversCopy.verificationStatuses[
-                                driver.verification_status
-                              ]
-                            }
-                          </span>
-                        </span>
-                      </dd>
-                    </div>
-                  </dl>
-
-                  {/* Operational Eligibility Warnings */}
-                  {driver.eligibility.flags.length > 0 ? (
-                    <div className="mt-3">
-                      <p className="sr-only">{driversCopy.warningsLabel}</p>
-                      <ul className="space-y-1.5">
-                        {driver.eligibility.flags.map((flag) => (
-                          <li
-                            key={flag.code}
-                            className={`flex items-start gap-2 rounded-lg border px-2.5 py-1.5 text-xs leading-relaxed ${getFlagRowClasses(
-                              flag.severity
-                            )}`}
-                          >
-                            <FlagSeverityIcon severity={flag.severity} />
-                            <span>
-                              {driversCopy.flagMessages[flag.code] ??
-                                flag.message}
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  ) : null}
-
-                  {/* Internal Verification Notes — strictly Owner/Manager only */}
-                  {internalNotes ? (
-                    <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50/80 px-2.5 py-2 dark:border-slate-800 dark:bg-slate-950/40">
-                      <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                        {driversCopy.verificationNotesLabel}
-                      </p>
-                      <p className="mt-0.5 whitespace-pre-wrap break-words text-xs leading-relaxed text-slate-700 dark:text-slate-300">
-                        {internalNotes}
-                      </p>
-                    </div>
-                  ) : null}
+                      {/* Internal Verification Notes — strictly Owner/Manager only */}
+                      {internalNotes ? (
+                        <div className="mt-3 rounded-xl border border-slate-200/80 bg-slate-50/75 px-3 py-2.5 dark:border-slate-800 dark:bg-slate-950/45">
+                          <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                            {driversCopy.verificationNotesLabel}
+                          </p>
+                          <p className="mt-0.5 whitespace-pre-wrap break-words text-xs leading-relaxed text-slate-700 dark:text-slate-300">
+                            {internalNotes}
+                          </p>
+                        </div>
+                      ) : null}
                     </>
                   )}
                 </li>
@@ -1031,7 +1003,7 @@ export function CustomerDriversSection({
           </ul>
 
           {/* Explicit Operational Pre-Check Legal Disclaimer */}
-          <div className="flex items-start gap-2 rounded-lg border border-slate-200 bg-slate-50/80 px-3 py-2 text-[11px] leading-relaxed text-slate-600 dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-400">
+          <div className="flex items-start gap-2 rounded-xl border border-slate-200/80 bg-slate-50/75 px-3.5 py-2.5 text-[11px] leading-relaxed text-slate-600 dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-400">
             <Info
               className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400 dark:text-slate-500"
               aria-hidden="true"

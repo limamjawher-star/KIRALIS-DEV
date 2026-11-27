@@ -1,8 +1,10 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import { AlertCircle, Loader2, X } from 'lucide-react';
+import { Loader2, UserPlus, X } from 'lucide-react';
+import { motion } from 'motion/react';
 import { useAppPreferences } from '@/components/providers/app-preferences-provider';
+import { AlertBanner } from '@/components/ui/alert-banner';
 import { Button } from '@/components/ui/button';
 import {
   FormField,
@@ -143,23 +145,34 @@ export function AddDriverForm({
   }
 
   return (
-    <form
+    <motion.form
+      initial={{ opacity: 0, y: -4 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
       onSubmit={handleSubmit}
       noValidate
       aria-labelledby="add-driver-form-title"
-      className="mt-3 rounded-xl border border-blue-200/80 bg-blue-50/35 p-4 dark:border-blue-900/60 dark:bg-blue-950/20"
+      className="mt-3 rounded-2xl border border-blue-200/90 bg-blue-50/35 p-4 shadow-xs dark:border-blue-900/60 dark:bg-blue-950/20"
     >
       <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h4
-            id="add-driver-form-title"
-            className="text-sm font-semibold text-slate-900 dark:text-slate-100"
+        <div className="flex min-w-0 items-start gap-2.5">
+          <span
+            aria-hidden="true"
+            className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-blue-100/90 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300"
           >
-            {addCopy.title}
-          </h4>
-          <p className="mt-0.5 text-xs leading-relaxed text-slate-600 dark:text-slate-400">
-            {addCopy.subtitle}
-          </p>
+            <UserPlus className="h-3.5 w-3.5" />
+          </span>
+          <div className="min-w-0">
+            <h4
+              id="add-driver-form-title"
+              className="text-sm font-semibold text-slate-950 dark:text-slate-50"
+            >
+              {addCopy.title}
+            </h4>
+            <p className="mt-0.5 text-xs leading-relaxed text-slate-600 dark:text-slate-400">
+              {addCopy.subtitle}
+            </p>
+          </div>
         </div>
 
         <button
@@ -167,26 +180,19 @@ export function AddDriverForm({
           onClick={onCancel}
           disabled={submitting}
           aria-label={addCopy.cancelLabel}
-          className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-slate-500 transition-colors hover:bg-slate-200/70 hover:text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600/30 disabled:opacity-50 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+          className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-200/70 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600/30 disabled:opacity-50 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100 cursor-pointer"
         >
           <X className="h-4 w-4" aria-hidden="true" />
         </button>
       </div>
 
       {formError ? (
-        <div
-          role="alert"
-          className="mt-3 flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-800 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-200"
-        >
-          <AlertCircle
-            className="mt-0.5 h-3.5 w-3.5 shrink-0 text-red-600 dark:text-red-400"
-            aria-hidden="true"
-          />
-          <span>{formError}</span>
-        </div>
+        <AlertBanner variant="error" compact className="mt-3">
+          {formError}
+        </AlertBanner>
       ) : null}
 
-      <div className="mt-3.5 grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
         <FormField
           id="driver-full-name"
           label={addCopy.fullNameLabel}
@@ -317,7 +323,7 @@ export function AddDriverForm({
         </FormField>
       </div>
 
-      <div className="mt-4 flex flex-wrap items-center justify-end gap-2">
+      <div className="mt-4 flex flex-wrap items-center justify-end gap-2 border-t border-blue-200/60 pt-3 dark:border-blue-900/50">
         <Button
           type="button"
           variant="secondary"
@@ -343,6 +349,6 @@ export function AddDriverForm({
           )}
         </Button>
       </div>
-    </form>
+    </motion.form>
   );
 }

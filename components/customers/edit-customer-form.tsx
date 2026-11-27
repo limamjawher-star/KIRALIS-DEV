@@ -1,13 +1,15 @@
 'use client';
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { AlertCircle, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { useAppPreferences } from '@/components/providers/app-preferences-provider';
+import { AlertBanner } from '@/components/ui/alert-banner';
 import { Button } from '@/components/ui/button';
 import {
   FormField,
   getInputStateClasses,
   INPUT_BASE_CLASSES,
+  TEXTAREA_BASE_CLASSES,
 } from '@/components/ui/form-field';
 import { SegmentedControl } from '@/components/ui/segmented-control';
 import {
@@ -167,28 +169,21 @@ export function EditCustomerForm({
       noValidate
       className="flex flex-1 flex-col overflow-hidden"
     >
-      <div className="flex-1 space-y-6 overflow-y-auto px-6 py-5">
+      <div className="flex-1 space-y-6 overflow-y-auto px-5 py-5 sm:px-6">
         {formError ? (
-          <div
-            role="alert"
-            className="flex items-start gap-2.5 rounded-lg border border-red-200 bg-red-50 px-3.5 py-3 text-sm text-red-800 dark:border-red-900/70 dark:bg-red-950/40 dark:text-red-300"
-          >
-            <AlertCircle
-              className="mt-0.5 h-4 w-4 shrink-0"
-              aria-hidden="true"
-            />
-            <span>{formError}</span>
-          </div>
+          <AlertBanner variant="error" compact>
+            {formError}
+          </AlertBanner>
         ) : null}
 
         {/* Identity */}
         <fieldset className="space-y-4">
-          <legend className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+          <legend className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400 dark:text-slate-500">
             {modalCopy.sectionIdentity}
           </legend>
 
           <div className="space-y-1.5">
-            <span className="block text-sm font-medium text-slate-800 dark:text-slate-200">
+            <span className="block text-[13px] font-medium text-slate-800 dark:text-slate-200">
               {modalCopy.customerTypeLabel}
             </span>
             <SegmentedControl
@@ -277,8 +272,8 @@ export function EditCustomerForm({
         </fieldset>
 
         {/* Contact */}
-        <fieldset className="space-y-4">
-          <legend className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+        <fieldset className="space-y-4 border-t border-slate-200/80 pt-5 dark:border-slate-800/80">
+          <legend className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400 dark:text-slate-500">
             {modalCopy.sectionContact}
           </legend>
 
@@ -344,8 +339,8 @@ export function EditCustomerForm({
         </fieldset>
 
         {/* Address & Country */}
-        <fieldset className="space-y-4">
-          <legend className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+        <fieldset className="space-y-4 border-t border-slate-200/80 pt-5 dark:border-slate-800/80">
+          <legend className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400 dark:text-slate-500">
             {modalCopy.sectionAddress}
           </legend>
 
@@ -436,8 +431,8 @@ export function EditCustomerForm({
         </fieldset>
 
         {/* Internal Notes */}
-        <fieldset className="space-y-4">
-          <legend className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+        <fieldset className="space-y-4 border-t border-slate-200/80 pt-5 dark:border-slate-800/80">
+          <legend className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400 dark:text-slate-500">
             {modalCopy.sectionNotes}
           </legend>
 
@@ -459,7 +454,7 @@ export function EditCustomerForm({
                 fieldErrors.notes ? 'edit-customer-notes-error' : undefined
               }
               className={cn(
-                'w-full rounded-lg border bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 transition-colors focus:outline-none focus:ring-2 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-500 dark:disabled:bg-slate-900 dark:disabled:text-slate-400',
+                TEXTAREA_BASE_CLASSES,
                 getInputStateClasses(Boolean(fieldErrors.notes))
               )}
             />
@@ -467,8 +462,8 @@ export function EditCustomerForm({
         </fieldset>
       </div>
 
-      {/* Form Footer */}
-      <div className="flex flex-wrap items-center justify-end gap-2.5 border-t border-slate-200 bg-slate-50/70 px-6 py-4 dark:border-slate-800 dark:bg-slate-950/60">
+      {/* Sticky Form Footer */}
+      <div className="pb-safe flex flex-wrap items-center justify-end gap-2.5 border-t border-slate-200/90 bg-slate-50/80 px-5 py-3.5 sm:px-6 sm:py-4 dark:border-slate-800 dark:bg-slate-950/70">
         <Button
           type="button"
           variant="secondary"

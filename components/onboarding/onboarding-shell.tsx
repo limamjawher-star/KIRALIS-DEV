@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Loader2, LogOut, Moon, Sun, User } from 'lucide-react';
 import { motion } from 'motion/react';
+import { KiralisLogo } from '@/components/brand/kiralis-logo';
 import { useAppPreferences } from '@/components/providers/app-preferences-provider';
 import { performLogout } from '@/lib/auth/actions';
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser';
@@ -45,21 +46,11 @@ export function OnboardingShell({
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50 text-slate-950 dark:bg-slate-950 dark:text-slate-100">
-      <header className="sticky top-0 z-30 flex h-[60px] shrink-0 items-center justify-between gap-4 border-b border-slate-200 bg-white/95 px-4 backdrop-blur-sm sm:px-6 lg:px-8 dark:border-slate-800 dark:bg-slate-950/95">
+    <div className="flex min-h-screen flex-col bg-[#F6F7F9] text-slate-950 dark:bg-[#090D16] dark:text-slate-100">
+      <header className="sticky top-0 z-30 flex h-[56px] sm:h-[60px] shrink-0 items-center justify-between gap-4 border-b border-slate-200/90 bg-white/92 px-4 backdrop-blur-md sm:px-6 lg:px-8 dark:border-slate-800/90 dark:bg-slate-950/92">
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2.5">
-            <span
-              aria-hidden="true"
-              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-blue-700 text-xs font-bold tracking-tight text-white dark:bg-blue-600"
-            >
-              K
-            </span>
-            <span className="font-display text-base font-bold tracking-tight text-slate-950 dark:text-slate-50">
-              KIRALIS
-            </span>
-          </div>
-          <span className="hidden text-xs text-slate-400 sm:inline dark:text-slate-500">
+          <KiralisLogo variant="compact" size="md" />
+          <span className="hidden text-xs font-medium text-slate-400 sm:inline dark:text-slate-500">
             · Configuration initiale de l’agence
           </span>
         </div>
@@ -68,9 +59,12 @@ export function OnboardingShell({
           {hasExistingAgency ? (
             <Link
               href="/"
-              className="inline-flex h-10 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-50 hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 dark:hover:text-white"
+              className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-slate-200/90 bg-white px-3 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-50 hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600/80 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 dark:hover:text-white"
             >
-              <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
+              <ArrowLeft
+                className="h-3.5 w-3.5 rtl:rotate-180"
+                aria-hidden="true"
+              />
               <span className="hidden sm:inline">Tableau de bord</span>
             </Link>
           ) : null}
@@ -83,7 +77,7 @@ export function OnboardingShell({
                 ? 'Activer le thème clair'
                 : 'Activer le thème sombre'
             }
-            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 transition-colors hover:bg-slate-50 hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 dark:hover:text-white cursor-pointer"
+            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-200/90 bg-white text-slate-700 transition-colors hover:bg-slate-50 hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600/80 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 dark:hover:text-white cursor-pointer"
           >
             {theme === 'dark' ? (
               <Sun className="h-4 w-4" aria-hidden="true" />
@@ -93,7 +87,7 @@ export function OnboardingShell({
           </button>
 
           {userEmail ? (
-            <div className="hidden items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs text-slate-700 md:inline-flex dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">
+            <div className="hidden items-center gap-2 rounded-xl border border-slate-200/90 bg-slate-50 px-2.5 py-1.5 text-xs text-slate-700 md:inline-flex dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">
               <User
                 className="h-3.5 w-3.5 shrink-0 text-slate-400"
                 aria-hidden="true"
@@ -109,7 +103,7 @@ export function OnboardingShell({
             onClick={handleSignOut}
             disabled={signingOut}
             aria-label="Se déconnecter"
-            className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-xs font-medium text-slate-700 whitespace-nowrap transition-colors hover:bg-slate-50 hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 dark:hover:text-white cursor-pointer"
+            className="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-xl border border-slate-200/90 bg-white px-3 text-xs font-medium text-slate-700 whitespace-nowrap transition-colors hover:bg-slate-50 hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600/80 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 dark:hover:text-white cursor-pointer"
           >
             {signingOut ? (
               <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
@@ -128,13 +122,13 @@ export function OnboardingShell({
           transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
           className="space-y-6"
         >
-          <div className="space-y-2 border-b border-slate-200 pb-6 dark:border-slate-800">
-            <p className="text-xs font-medium uppercase tracking-wider text-blue-700 dark:text-blue-400">
+          <div className="space-y-2 border-b border-slate-200/90 pb-6 dark:border-slate-800/90">
+            <p className="text-xs font-semibold uppercase tracking-[0.06em] text-[#1D4ED8] dark:text-blue-400">
               {hasExistingAgency
                 ? 'Nouvelle agence KIRALIS'
                 : 'Étape unique · Création de votre agence'}
             </p>
-            <h1 className="font-display text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl dark:text-slate-50">
+            <h1 className="font-display text-2xl font-bold tracking-[-0.025em] text-slate-950 sm:text-3xl dark:text-slate-50">
               {hasExistingAgency
                 ? 'Ajouter une nouvelle agence'
                 : 'Configurez votre agence de location'}

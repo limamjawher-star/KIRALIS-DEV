@@ -8,6 +8,7 @@ import { isOnboardingPath, type AgencySummary } from '@/lib/agency/types';
 import { isPublicAuthPath } from '@/lib/auth/validation';
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser';
 import type { SupabasePublicEnv } from '@/lib/supabase/env';
+import { MobileBottomNav } from './mobile-bottom-nav';
 import { Sidebar } from './sidebar';
 import { Topbar } from './topbar';
 
@@ -60,7 +61,7 @@ export function AppShell({
   }
 
   return (
-    <div className="flex min-h-screen w-full bg-slate-50 text-slate-950 dark:bg-slate-950 dark:text-slate-100">
+    <div className="flex min-h-screen w-full bg-[#F6F7F9] text-slate-950 dark:bg-[#090D16] dark:text-slate-100">
       <Sidebar
         collapsed={sidebarCollapsed}
         onToggleCollapse={() => setSidebarCollapsed((prev) => !prev)}
@@ -68,7 +69,7 @@ export function AppShell({
         onCloseMobile={() => setMobileMenuOpen(false)}
       />
 
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-w-0 flex-1 flex-col pb-[72px] lg:pb-0">
         <Topbar
           onOpenMobileMenu={() => setMobileMenuOpen(true)}
           userEmail={userEmail}
@@ -77,7 +78,7 @@ export function AppShell({
           agencies={agencies}
         />
 
-        <main className="mx-auto w-full max-w-[1360px] flex-1 px-4 py-6 sm:px-6 lg:px-8">
+        <main className="mx-auto w-full max-w-[1380px] flex-1 px-4 py-5 sm:px-6 sm:py-6 lg:px-8">
           <motion.div
             key={pathname}
             initial={{ opacity: 0, y: 4 }}
@@ -90,8 +91,8 @@ export function AppShell({
         </main>
 
         <footer className="mt-auto border-t border-slate-200/80 px-4 py-3.5 text-xs text-slate-500 sm:px-6 lg:px-8 dark:border-slate-800/80 dark:text-slate-400">
-          <div className="mx-auto flex max-w-[1360px] flex-wrap items-center justify-between gap-2">
-            <span>
+          <div className="mx-auto flex max-w-[1380px] flex-wrap items-center justify-between gap-2">
+            <span className="font-medium">
               KIRALIS · {activeAgency ? activeAgency.name : dict.brandSubtitle}
             </span>
             <span className="font-mono text-[11px] tabular-nums">
@@ -100,6 +101,11 @@ export function AppShell({
           </div>
         </footer>
       </div>
+
+      <MobileBottomNav
+        onOpenMenu={() => setMobileMenuOpen(true)}
+        menuOpen={mobileMenuOpen}
+      />
     </div>
   );
 }

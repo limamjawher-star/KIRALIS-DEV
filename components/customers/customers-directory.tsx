@@ -3,9 +3,11 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  AlertCircle,
-  CheckCircle2,
+  Building2,
   ChevronRight,
+  Mail,
+  MapPin,
+  Phone,
   Plus,
   RefreshCw,
   RotateCcw,
@@ -13,10 +15,12 @@ import {
   Users,
 } from 'lucide-react';
 import { useAppPreferences } from '@/components/providers/app-preferences-provider';
+import { AlertBanner } from '@/components/ui/alert-banner';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { PageHeader } from '@/components/ui/page-header';
 import { SegmentedControl } from '@/components/ui/segmented-control';
+import { Skeleton } from '@/components/ui/skeleton';
 import { StatStrip } from '@/components/ui/stat-strip';
 import { Surface } from '@/components/ui/surface';
 import type { AgencyRecord, AgencyRole } from '@/lib/agency/types';
@@ -72,6 +76,14 @@ function formatCreatedDate(
   } catch {
     return isoDate.slice(0, 10);
   }
+}
+
+function getCustomerInitials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) {
+    return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+  }
+  return (name.slice(0, 2) || 'CL').toUpperCase();
 }
 
 export function CustomersDirectory({
@@ -178,7 +190,7 @@ export function CustomersDirectory({
         description={copy.description}
         meta={`${agency.name} · ${copy.roles[role]}`}
         action={
-          <div className="flex flex-wrap items-center gap-2.5">
+          <div className="flex flex-wrap items-center gap-2">
             <Button
               variant="secondary"
               onClick={refreshCustomers}
@@ -204,42 +216,31 @@ export function CustomersDirectory({
       />
 
       {feedbackBanner ? (
-        <div
-          role="status"
-          className="flex items-center justify-between gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900 dark:border-emerald-900/70 dark:bg-emerald-950/40 dark:text-emerald-200"
+        <AlertBanner
+          variant="success"
+          onDismiss={() => setFeedbackBanner(null)}
+          dismissLabel={copy.dismissBannerLabel}
         >
-          <div className="flex items-center gap-2.5">
-            <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden="true" />
-            <span>{feedbackBanner}</span>
-          </div>
-          <button
-            type="button"
-            onClick={() => setFeedbackBanner(null)}
-            className="text-xs font-medium underline underline-offset-2 hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 rounded cursor-pointer"
-          >
-            {copy.dismissBannerLabel}
-          </button>
-        </div>
+          {feedbackBanner}
+        </AlertBanner>
       ) : null}
 
       {loadError ? (
-        <div
-          role="alert"
-          className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900 dark:border-red-900/70 dark:bg-red-950/40 dark:text-red-200"
+        <AlertBanner
+          variant="error"
+          action={
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={refreshCustomers}
+              disabled={refreshing}
+            >
+              {copy.retryLabel}
+            </Button>
+          }
         >
-          <div className="flex items-center gap-2.5">
-            <AlertCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
-            <span>{loadError}</span>
-          </div>
-          <Button
-            size="sm"
-            variant="secondary"
-            onClick={refreshCustomers}
-            disabled={refreshing}
-          >
-            {copy.retryLabel}
-          </Button>
-        </div>
+          {loadError}
+        </AlertBanner>
       ) : null}
 
       <StatStrip
@@ -249,6 +250,7 @@ export function CustomersDirectory({
             label: copy.stats.totalLabel,
             value: String(summary.totalCount),
             note: copy.stats.totalNote,
+            tone: 'brand',
           },
           {
             id: 'individual',
@@ -273,11 +275,11 @@ export function CustomersDirectory({
 
       <Surface className="overflow-hidden" aria-busy={refreshing}>
         {/* Search, customer type filter & sort toolbar */}
-        <div className="space-y-3 border-b border-slate-200 p-4 dark:border-slate-800">
+        <div className="space-y-3 border-b border-slate-200/90 p-4 sm:px-5 dark:border-slate-800/90">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="relative w-full lg:max-w-md">
               <Search
-                className="pointer-events-none absolute top-1/2 start-3 h-4 w-4 -translate-y-1/2 text-slate-400"
+                className="pointer-events-none absolute top-1/2 start-3.5 h-4 w-4 -translate-y-1/2 text-slate-400"
                 aria-hidden="true"
               />
               <input
@@ -288,11 +290,11 @@ export function CustomersDirectory({
                 }
                 placeholder={copy.searchPlaceholder}
                 aria-label={copy.searchAriaLabel}
-                className="h-9 w-full rounded-lg border border-slate-200 bg-white ps-9 pe-3 text-sm text-slate-900 placeholder:text-slate-400 transition-colors focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-blue-400"
+                className="h-11 sm:h-10 w-full rounded-xl border border-slate-200/95 bg-white ps-10 pe-3.5 text-sm text-slate-900 placeholder:text-slate-400 shadow-[0_1px_2px_rgba(15,23,42,0.03)] transition-[border-color,box-shadow] focus:border-[#1D4ED8] focus:outline-none focus:ring-3 focus:ring-blue-600/15 dark:border-slate-700/90 dark:bg-slate-950/90 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-blue-400 dark:focus:ring-blue-400/20"
               />
             </div>
 
-            <div className="flex flex-wrap items-center gap-2.5">
+            <div className="flex flex-wrap items-center gap-2">
               <SegmentedControl
                 options={typeFilterOptions}
                 value={filters.customerType}
@@ -311,7 +313,7 @@ export function CustomersDirectory({
                     sortBy: e.target.value as CustomerSortKey,
                   }))
                 }
-                className="h-9 rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-700 transition-colors focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:focus:border-blue-400"
+                className="h-10 rounded-xl border border-slate-200/95 bg-white px-3 text-xs font-medium text-slate-700 shadow-[0_1px_2px_rgba(15,23,42,0.03)] transition-colors hover:border-slate-300 focus:border-[#1D4ED8] focus:outline-none focus:ring-3 focus:ring-blue-600/15 dark:border-slate-700/90 dark:bg-slate-950/90 dark:text-slate-200 dark:hover:border-slate-600 dark:focus:border-blue-400 cursor-pointer"
               >
                 {CUSTOMER_SORT_OPTIONS.map((opt) => (
                   <option key={opt.value} value={opt.value}>
@@ -337,7 +339,7 @@ export function CustomersDirectory({
             aria-live="polite"
             className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500 dark:text-slate-400"
           >
-            <span className="tabular-nums">
+            <span className="font-mono text-[11px] font-medium tabular-nums">
               {filteredCustomers.length} / {customers.length}
             </span>
             {refreshing ? <span>{copy.loadingLabel}</span> : null}
@@ -349,19 +351,25 @@ export function CustomersDirectory({
           <div
             role="status"
             aria-label={copy.loadingLabel}
-            className="divide-y divide-slate-200 dark:divide-slate-800"
+            className="divide-y divide-slate-200/80 dark:divide-slate-800/80"
           >
             {[0, 1, 2, 3].map((rowIndex) => (
               <div
                 key={rowIndex}
-                className="grid grid-cols-2 gap-4 px-4 py-4 md:grid-cols-6"
+                className="flex items-center justify-between gap-4 px-5 py-4"
               >
-                <div className="h-4 w-32 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
-                <div className="h-4 w-20 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
-                <div className="hidden h-4 w-28 animate-pulse rounded bg-slate-200 md:block dark:bg-slate-800" />
-                <div className="hidden h-4 w-36 animate-pulse rounded bg-slate-200 md:block dark:bg-slate-800" />
-                <div className="hidden h-4 w-20 animate-pulse rounded bg-slate-200 md:block dark:bg-slate-800" />
-                <div className="hidden h-4 w-24 animate-pulse rounded bg-slate-200 md:ms-auto md:block dark:bg-slate-800" />
+                <div className="flex items-center gap-3">
+                  <Skeleton rounded="lg" className="h-9 w-9 shrink-0" />
+                  <div className="space-y-1.5">
+                    <Skeleton className="h-4 w-36" />
+                    <Skeleton className="h-3 w-24" />
+                  </div>
+                </div>
+                <div className="hidden items-center gap-6 md:flex">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-4 w-20" />
+                </div>
               </div>
             ))}
           </div>
@@ -396,15 +404,15 @@ export function CustomersDirectory({
           />
         ) : (
           <>
-            {/* Desktop responsive table */}
+            {/* Desktop table */}
             <div className="hidden overflow-x-auto md:block">
               <table
                 aria-label={copy.tableAriaLabel}
                 className="w-full border-collapse text-sm"
               >
                 <thead>
-                  <tr className="border-b border-slate-200 bg-slate-50/80 text-xs font-medium text-slate-500 dark:border-slate-800 dark:bg-slate-950/60 dark:text-slate-400">
-                    <th scope="col" className="px-4 py-3 text-start">
+                  <tr className="border-b border-slate-200/90 bg-slate-50/75 text-[11px] font-semibold uppercase tracking-[0.04em] text-slate-500 dark:border-slate-800/90 dark:bg-slate-950/50 dark:text-slate-400">
+                    <th scope="col" className="px-5 py-3 text-start">
                       {copy.columns.customer}
                     </th>
                     <th scope="col" className="px-4 py-3 text-start">
@@ -419,12 +427,12 @@ export function CustomersDirectory({
                     <th scope="col" className="px-4 py-3 text-start">
                       {copy.columns.city}
                     </th>
-                    <th scope="col" className="px-4 py-3 text-end">
+                    <th scope="col" className="px-5 py-3 text-end">
                       {copy.columns.createdAt}
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
+                <tbody className="divide-y divide-slate-200/80 dark:divide-slate-800/80">
                   {filteredCustomers.map((customer) => {
                     const formattedDate = formatCreatedDate(
                       customer.created_at,
@@ -432,49 +440,71 @@ export function CustomersDirectory({
                       agencyTimeZone
                     );
                     const isSelected = selectedCustomerId === customer.id;
+                    const initials = getCustomerInitials(customer.full_name);
 
                     return (
                       <tr
                         key={customer.id}
                         onClick={() => openCustomerDetail(customer.id)}
                         className={cn(
-                          'cursor-pointer transition-colors hover:bg-slate-50/90 dark:hover:bg-slate-800/50',
-                          isSelected && 'bg-blue-50/60 dark:bg-blue-950/30'
+                          'group cursor-pointer transition-colors hover:bg-slate-50/90 dark:hover:bg-slate-800/45',
+                          isSelected && 'bg-blue-50/60 dark:bg-blue-950/35'
                         )}
                       >
-                        <td className="px-4 py-3.5 align-top">
-                          <button
-                            type="button"
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              openCustomerDetail(customer.id);
-                            }}
-                            aria-label={`${copy.detailDrawer.openDetailAriaPrefix} ${customer.full_name}`}
-                            className="rounded text-start font-medium text-slate-950 transition-colors hover:text-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 cursor-pointer dark:text-slate-100 dark:hover:text-blue-400 dark:focus-visible:ring-offset-slate-900"
-                          >
-                            {customer.full_name}
-                          </button>
-                          {customer.company_name ? (
-                            <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-                              {customer.company_name}
-                            </p>
-                          ) : null}
+                        <td className="px-5 py-3.5 align-middle">
+                          <div className="flex items-center gap-3">
+                            <span
+                              aria-hidden="true"
+                              className={cn(
+                                'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl font-display text-xs font-bold transition-colors',
+                                customer.customer_type === 'corporate'
+                                  ? 'bg-blue-50 text-[#1D4ED8] ring-1 ring-blue-200/70 dark:bg-blue-950/60 dark:text-blue-300 dark:ring-blue-900/60'
+                                  : 'bg-slate-100 text-slate-700 ring-1 ring-slate-200/80 dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-700/70'
+                              )}
+                            >
+                              {initials}
+                            </span>
+                            <div className="min-w-0">
+                              <button
+                                type="button"
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  openCustomerDetail(customer.id);
+                                }}
+                                aria-label={`${copy.detailDrawer.openDetailAriaPrefix} ${customer.full_name}`}
+                                className="rounded text-start font-semibold text-slate-950 transition-colors group-hover:text-[#1D4ED8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 cursor-pointer dark:text-slate-100 dark:group-hover:text-blue-400 dark:focus-visible:ring-offset-slate-900"
+                              >
+                                {customer.full_name}
+                              </button>
+                              {customer.company_name ? (
+                                <p className="mt-0.5 flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
+                                  <Building2
+                                    className="h-3 w-3 shrink-0 opacity-70"
+                                    aria-hidden="true"
+                                  />
+                                  <span className="truncate">
+                                    {customer.company_name}
+                                  </span>
+                                </p>
+                              ) : null}
+                            </div>
+                          </div>
                         </td>
 
-                        <td className="px-4 py-3.5 align-top">
+                        <td className="px-4 py-3.5 align-middle">
                           <CustomerTypeBadge
                             customerType={customer.customer_type}
                             label={copy.typeBadges[customer.customer_type]}
                           />
                         </td>
 
-                        <td className="px-4 py-3.5 align-top font-mono text-xs text-slate-800 tabular-nums dark:text-slate-200">
+                        <td className="px-4 py-3.5 align-middle font-mono text-xs text-slate-800 tabular-nums dark:text-slate-200">
                           <span dir="ltr" className="inline-block">
                             {customer.phone}
                           </span>
                         </td>
 
-                        <td className="px-4 py-3.5 align-top text-xs text-slate-700 dark:text-slate-300">
+                        <td className="px-4 py-3.5 align-middle text-xs text-slate-600 dark:text-slate-300">
                           {customer.email ? (
                             <span dir="ltr" className="inline-block break-all">
                               {customer.email}
@@ -486,7 +516,7 @@ export function CustomersDirectory({
                           )}
                         </td>
 
-                        <td className="px-4 py-3.5 align-top text-xs text-slate-700 dark:text-slate-300">
+                        <td className="px-4 py-3.5 align-middle text-xs text-slate-700 dark:text-slate-300">
                           {customer.city ? (
                             <span>
                               {customer.city}
@@ -503,11 +533,11 @@ export function CustomersDirectory({
                           )}
                         </td>
 
-                        <td className="px-4 py-3.5 align-top text-end font-mono text-xs text-slate-600 tabular-nums whitespace-nowrap dark:text-slate-400">
+                        <td className="px-5 py-3.5 align-middle text-end font-mono text-xs text-slate-500 tabular-nums whitespace-nowrap dark:text-slate-400">
                           <span className="inline-flex items-center justify-end gap-1.5">
                             <span>{formattedDate}</span>
                             <ChevronRight
-                              className="h-3.5 w-3.5 text-slate-400 rtl:rotate-180 dark:text-slate-500"
+                              className="h-4 w-4 text-slate-400 transition-transform duration-150 group-hover:translate-x-0.5 group-hover:text-[#1D4ED8] rtl:rotate-180 rtl:group-hover:-translate-x-0.5 dark:text-slate-500 dark:group-hover:text-blue-400"
                               aria-hidden="true"
                             />
                           </span>
@@ -519,10 +549,10 @@ export function CustomersDirectory({
               </table>
             </div>
 
-            {/* Mobile stacked customer cards */}
+            {/* Mobile touch-friendly customer cards */}
             <ul
               aria-label={copy.tableAriaLabel}
-              className="divide-y divide-slate-200 md:hidden dark:divide-slate-800"
+              className="divide-y divide-slate-200/80 md:hidden dark:divide-slate-800/80"
             >
               {filteredCustomers.map((customer) => {
                 const formattedDate = formatCreatedDate(
@@ -531,34 +561,48 @@ export function CustomersDirectory({
                   agencyTimeZone
                 );
                 const isSelected = selectedCustomerId === customer.id;
+                const initials = getCustomerInitials(customer.full_name);
 
                 return (
                   <li
                     key={customer.id}
                     onClick={() => openCustomerDetail(customer.id)}
                     className={cn(
-                      'cursor-pointer space-y-3 p-4 transition-colors hover:bg-slate-50/90 dark:hover:bg-slate-800/50',
-                      isSelected && 'bg-blue-50/60 dark:bg-blue-950/30'
+                      'cursor-pointer space-y-3 p-4 transition-colors active:bg-slate-100/80 dark:active:bg-slate-800/70',
+                      isSelected && 'bg-blue-50/60 dark:bg-blue-950/35'
                     )}
                   >
                     <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <button
-                          type="button"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            openCustomerDetail(customer.id);
-                          }}
-                          aria-label={`${copy.detailDrawer.openDetailAriaPrefix} ${customer.full_name}`}
-                          className="max-w-full truncate rounded text-start text-sm font-semibold text-slate-950 transition-colors hover:text-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 cursor-pointer dark:text-slate-100 dark:hover:text-blue-400"
+                      <div className="flex min-w-0 items-center gap-3">
+                        <span
+                          aria-hidden="true"
+                          className={cn(
+                            'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl font-display text-xs font-bold',
+                            customer.customer_type === 'corporate'
+                              ? 'bg-blue-50 text-[#1D4ED8] ring-1 ring-blue-200/70 dark:bg-blue-950/60 dark:text-blue-300 dark:ring-blue-900/60'
+                              : 'bg-slate-100 text-slate-700 ring-1 ring-slate-200/80 dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-700/70'
+                          )}
                         >
-                          {customer.full_name}
-                        </button>
-                        {customer.company_name ? (
-                          <p className="mt-0.5 truncate text-xs text-slate-500 dark:text-slate-400">
-                            {customer.company_name}
-                          </p>
-                        ) : null}
+                          {initials}
+                        </span>
+                        <div className="min-w-0">
+                          <button
+                            type="button"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              openCustomerDetail(customer.id);
+                            }}
+                            aria-label={`${copy.detailDrawer.openDetailAriaPrefix} ${customer.full_name}`}
+                            className="max-w-full truncate rounded text-start text-sm font-semibold text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 cursor-pointer dark:text-slate-100"
+                          >
+                            {customer.full_name}
+                          </button>
+                          {customer.company_name ? (
+                            <p className="mt-0.5 truncate text-xs text-slate-500 dark:text-slate-400">
+                              {customer.company_name}
+                            </p>
+                          ) : null}
+                        </div>
                       </div>
                       <div className="flex shrink-0 items-center gap-1.5">
                         <CustomerTypeBadge
@@ -572,36 +616,36 @@ export function CustomersDirectory({
                       </div>
                     </div>
 
-                    <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
-                      <div>
-                        <dt className="text-slate-500 dark:text-slate-400">
-                          {copy.columns.phone}
-                        </dt>
-                        <dd className="mt-0.5 font-mono text-slate-900 tabular-nums dark:text-slate-100">
-                          <span dir="ltr" className="inline-block">
-                            {customer.phone}
+                    <div className="space-y-1.5 rounded-xl bg-slate-50/80 px-3 py-2.5 text-xs dark:bg-slate-950/45">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="inline-flex items-center gap-1.5 font-mono text-slate-900 tabular-nums dark:text-slate-100">
+                          <Phone
+                            className="h-3.5 w-3.5 shrink-0 text-slate-400"
+                            aria-hidden="true"
+                          />
+                          <span dir="ltr">{customer.phone}</span>
+                        </span>
+                        <span className="inline-flex items-center gap-1 text-slate-600 dark:text-slate-300">
+                          <MapPin
+                            className="h-3 w-3 shrink-0 text-slate-400"
+                            aria-hidden="true"
+                          />
+                          <span>
+                            {customer.city
+                              ? `${customer.city}${customer.country_code ? ` · ${customer.country_code}` : ''}`
+                              : copy.notProvided}
                           </span>
-                        </dd>
+                        </span>
                       </div>
 
-                      <div>
-                        <dt className="text-slate-500 dark:text-slate-400">
-                          {copy.columns.city}
-                        </dt>
-                        <dd className="mt-0.5 text-slate-900 dark:text-slate-100">
-                          {customer.city
-                            ? `${customer.city}${customer.country_code ? ` · ${customer.country_code}` : ''}`
-                            : copy.notProvided}
-                        </dd>
-                      </div>
-
-                      <div className="col-span-2">
-                        <dt className="text-slate-500 dark:text-slate-400">
-                          {copy.columns.email}
-                        </dt>
-                        <dd className="mt-0.5 break-all text-slate-900 dark:text-slate-100">
+                      <div className="flex items-center justify-between gap-2 pt-0.5">
+                        <span className="inline-flex min-w-0 items-center gap-1.5 text-slate-600 dark:text-slate-300">
+                          <Mail
+                            className="h-3.5 w-3.5 shrink-0 text-slate-400"
+                            aria-hidden="true"
+                          />
                           {customer.email ? (
-                            <span dir="ltr" className="inline-block">
+                            <span dir="ltr" className="truncate">
                               {customer.email}
                             </span>
                           ) : (
@@ -609,18 +653,12 @@ export function CustomersDirectory({
                               {copy.notProvided}
                             </span>
                           )}
-                        </dd>
-                      </div>
-
-                      <div className="col-span-2 flex items-center justify-between border-t border-slate-100 pt-2 dark:border-slate-800/80">
-                        <dt className="text-slate-500 dark:text-slate-400">
-                          {copy.columns.createdAt}
-                        </dt>
-                        <dd className="font-mono text-slate-600 tabular-nums dark:text-slate-400">
+                        </span>
+                        <span className="shrink-0 font-mono text-[11px] text-slate-500 tabular-nums dark:text-slate-400">
                           {formattedDate}
-                        </dd>
+                        </span>
                       </div>
-                    </dl>
+                    </div>
                   </li>
                 );
               })}

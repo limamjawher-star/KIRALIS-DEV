@@ -614,4 +614,418 @@ test('migration 0008 adds idempotent BEFORE UPDATE verification integrity trigge
   );
 });
 
+test('migration 0009 defines public.agency_invitations with hashed tokens, non-owner roles, bounded expiry, and single-use integrity guards', () => {
+  const migration0009 = fs.readFileSync(
+    path.join(ROOT, 'supabase/migrations/202611210009_team_invitations.sql'),
+    'utf8'
+  );
+  const exec0009 = stripSqlComments(migration0009);
+
+  // Explicit atomic transaction & finalized (temporary DRAFT warnings removed)
+  assert.doesNotMatch(migration0009, /\bDRAFT\b|DO NOT INSTALL YET/i);
+  assert.match(exec0009, /^\s*BEGIN;/);
+  assert.match(exec0009, /COMMIT;\s*$/);
+
+  // Strictly additive & non-destructive; preserves migrations 0001–0008 and existing tables
+  assert.doesNotMatch(exec0009, /\bDROP\s+TABLE\b/i);
+  assert.doesNotMatch(exec0009, /\bDROP\s+COLUMN\b/i);
+  assert.doesNotMatch(exec0009, /\bTRUNCATE\b/i);
+  assert.doesNotMatch(exec0009, /\bDELETE\s+FROM\b/i);
+  assert.doesNotMatch(migration0009, /service_role/i);
+  assert.doesNotMatch(exec0009, /\bTO\s+(anon|PUBLIC)\b/i);
+  assert.doesNotMatch(
+    exec0009,
+    /GRANT[^;]*ON\s+TABLE\s+public\.(agency_memberships|audit_logs|agencies|customers|customer_drivers|vehicles|reservations)\b/i
+  );
+  assert.doesNotMatch(
+    exec0009,
+    /CREATE\s+POLICY[^;]*ON\s+public\.(agency_memberships|audit_logs|agencies|customers|customer_drivers|vehicles|reservations)\b/i
+  );
+  assert.doesNotMatch(
+    exec0009,
+    /CREATE\s+OR\s+REPLACE\s+FUNCTION\s+public\.(audit_sensitive_change|audit_vehicle_pricing_change|audit_customer_driver_change|guard_agency_membership_integrity)\b/i
+  );
+
+  // Status enum & table with all required columns
+  assert.match(
+    exec0009,
+    /CREATE TYPE public\.agency_invitation_status AS ENUM \(\s*'pending',\s*'accepted',\s*'revoked',\s*'expired'\s*\);/
+  );
+  assert.match(exec0009, /CREATE TABLE IF NOT EXISTS public\.agency_invitations/);
+
+  const requiredColumns = [
+    'id uuid PRIMARY KEY DEFAULT gen_random_uuid()',
+    'agency_id uuid NOT NULL REFERENCES public.agencies (id) ON DELETE CASCADE',
+    'invited_email text NOT NULL',
+    'invited_role public.agency_role NOT NULL',
+    'token_hash text NOT NULL',
+    "status public.agency_invitation_status NOT NULL DEFAULT 'pending'",
+    'invited_by uuid REFERENCES auth.users (id) ON DELETE SET NULL',
+    'accepted_by uuid REFERENCES auth.users (id) ON DELETE SET NULL',
+    'expires_at timestamptz NOT NULL',
+    'accepted_at timestamptz',
+    'revoked_at timestamptz',
+    'created_at timestamptz NOT NULL DEFAULT now()',
+    'updated_at timestamptz NOT NULL DEFAULT now()',
+  ];
+  for (const col of requiredColumns) {
+    assert.ok(
+      exec0009.includes(col),
+      `Missing expected column definition in public.agency_invitations: ${col}`
+    );
+  }
+
+  // Hashed token storage only (fixed-length 64-char lowercase SHA-256 hex, UNIQUE, never plaintext)
+  assert.match(exec0009, /CONSTRAINT agency_invitations_token_hash_unique\s+UNIQUE \(token_hash\)/);
+  assert.match(
+    exec0009,
+    /CONSTRAINT agency_invitations_token_hash_format\s+CHECK \(token_hash ~ '\^\[0-9a-f\]\{64\}\$'\)/
+  );
+
+  // Normalized lowercase trimmed email & unique active pending invitation per agency+email
+  assert.match(exec0009, /invited_email = lower\(btrim\(invited_email\)\)/);
+  assert.match(
+    exec0009,
+    /CREATE UNIQUE INDEX IF NOT EXISTS idx_agency_invitations_one_pending_per_email\s+ON public\.agency_invitations \(agency_id, invited_email\)\s+WHERE status = 'pending'::public\.agency_invitation_status;/
+  );
+
+  // Owner invitations strictly prohibited (Manager or Agent only)
+  const roleCheckMatch = exec0009.match(
+    /CONSTRAINT agency_invitations_role_non_owner\s+CHECK \(([\s\S]*?)\)\s*,/
+  );
+  assert.ok(roleCheckMatch, 'Expected non-owner role CHECK constraint');
+  assert.match(roleCheckMatch[1], /'manager'::public\.agency_role/);
+  assert.match(roleCheckMatch[1], /'agent'::public\.agency_role/);
+  assert.doesNotMatch(roleCheckMatch[1], /'owner'/);
+
+  // Safe bounded expiration window & single-use integrity trigger
+  assert.match(
+    exec0009,
+    /expires_at > created_at\s+AND expires_at <= created_at \+ interval '30 days'/
+  );
+  assert.match(
+    exec0009,
+    /CREATE OR REPLACE FUNCTION public\.guard_agency_invitation_integrity\(\)[\s\S]*SET search_path = ''/
+  );
+  assert.match(exec0009, /Changing agency_id on an existing agency invitation is forbidden/);
+  assert.match(exec0009, /Changing invited_by on an existing agency invitation is forbidden/);
+  assert.match(exec0009, /Changing token_hash on an existing agency invitation is forbidden/);
+  assert.match(exec0009, /Finalized agency invitations cannot be modified/);
+  assert.match(exec0009, /Expired agency invitations cannot be accepted/);
+  assert.match(
+    exec0009,
+    /pg_catalog\.pg_trigger_depth\(\) > 1[\s\S]*current_user NOT IN \('anon', 'authenticated'\)/
+  );
+});
+
+test('migration 0009 enforces Owner-only forced RLS, excludes token_hash from SELECT grants, forbids direct client writes, and audits invitations and membership inserts safely', () => {
+  const migration0009 = fs.readFileSync(
+    path.join(ROOT, 'supabase/migrations/202611210009_team_invitations.sql'),
+    'utf8'
+  );
+  const exec0009 = stripSqlComments(migration0009);
+
+  // Revoke all defaults first
+  assert.match(
+    exec0009,
+    /REVOKE ALL ON TABLE public\.agency_invitations FROM PUBLIC, anon, authenticated;/
+  );
+
+  // Column-level SELECT only, explicitly EXCLUDING token_hash
+  const selectGrantMatch = exec0009.match(
+    /GRANT SELECT \(([^)]*)\) ON TABLE public\.agency_invitations TO authenticated;/
+  );
+  assert.ok(
+    selectGrantMatch,
+    'Expected column-level GRANT SELECT on public.agency_invitations'
+  );
+  assert.doesNotMatch(selectGrantMatch[1], /\btoken_hash\b/);
+  assert.match(selectGrantMatch[1], /\bid\b/);
+  assert.match(selectGrantMatch[1], /\bagency_id\b/);
+  assert.match(selectGrantMatch[1], /\binvited_email\b/);
+  assert.match(selectGrantMatch[1], /\binvited_role\b/);
+  assert.match(selectGrantMatch[1], /\bstatus\b/);
+
+  // ZERO direct client INSERT, UPDATE, or DELETE grants or policies on agency_invitations
+  assert.doesNotMatch(
+    exec0009,
+    /GRANT[^;]*\b(INSERT|UPDATE|DELETE)\b[^;]*ON TABLE public\.agency_invitations/i
+  );
+  assert.doesNotMatch(
+    exec0009,
+    /CREATE POLICY[^;]*FOR\s+(INSERT|UPDATE|DELETE)\b/i
+  );
+
+  // Forced RLS + strict Owner-only tenant-scoped SELECT policy
+  assert.match(
+    exec0009,
+    /ALTER TABLE public\.agency_invitations ENABLE ROW LEVEL SECURITY;/
+  );
+  assert.match(
+    exec0009,
+    /ALTER TABLE public\.agency_invitations FORCE ROW LEVEL SECURITY;/
+  );
+  assert.match(
+    exec0009,
+    /CREATE POLICY agency_invitations_select_owner_only[\s\S]*ON public\.agency_invitations[\s\S]*FOR SELECT[\s\S]*TO authenticated[\s\S]*USING \(public\.has_agency_role\(agency_id, ARRAY\['owner'\]::public\.agency_role\[\]\)\);/
+  );
+
+  // Invitation audit trigger: SECURITY DEFINER + locked search_path, logs lifecycle events, never logs token/token_hash/email
+  const auditFnMatch = exec0009.match(
+    /CREATE OR REPLACE FUNCTION public\.audit_agency_invitation_change\(\)[\s\S]*?\$\$;/
+  );
+  assert.ok(auditFnMatch, 'Expected audit_agency_invitation_change function definition');
+  assert.match(auditFnMatch[0], /SECURITY DEFINER[\s\S]*SET search_path = ''/);
+  assert.match(auditFnMatch[0], /'invitation\.created'/);
+  assert.match(auditFnMatch[0], /'invitation\.revoked'/);
+  assert.match(auditFnMatch[0], /'invitation\.accepted'/);
+  assert.doesNotMatch(auditFnMatch[0], /token_hash/);
+  assert.doesNotMatch(auditFnMatch[0], /invited_email/);
+
+  // Additive membership INSERT audit trigger: SECURITY DEFINER + locked search_path, logs membership.created, no token/email
+  const membershipAuditFnMatch = exec0009.match(
+    /CREATE OR REPLACE FUNCTION public\.audit_agency_membership_insert\(\)[\s\S]*?\$\$;/
+  );
+  assert.ok(membershipAuditFnMatch, 'Expected audit_agency_membership_insert function definition');
+  assert.match(membershipAuditFnMatch[0], /SECURITY DEFINER[\s\S]*SET search_path = ''/);
+  assert.match(membershipAuditFnMatch[0], /'membership\.created'/);
+  assert.doesNotMatch(membershipAuditFnMatch[0], /token_hash/);
+  assert.doesNotMatch(membershipAuditFnMatch[0], /email/);
+  assert.match(
+    exec0009,
+    /CREATE TRIGGER trg_agency_memberships_insert_audit\s+AFTER INSERT ON public\.agency_memberships\s+FOR EACH ROW\s+EXECUTE FUNCTION public\.audit_agency_membership_insert\(\);/
+  );
+
+  // Trigger functions revoked from all client roles
+  assert.match(
+    exec0009,
+    /REVOKE ALL ON FUNCTION public\.guard_agency_invitation_integrity\(\)\s+FROM PUBLIC, anon, authenticated;/
+  );
+  assert.match(
+    exec0009,
+    /REVOKE ALL ON FUNCTION public\.audit_agency_invitation_change\(\)\s+FROM PUBLIC, anon, authenticated;/
+  );
+  assert.match(
+    exec0009,
+    /REVOKE ALL ON FUNCTION public\.audit_agency_membership_insert\(\)\s+FROM PUBLIC, anon, authenticated;/
+  );
+
+  // Trigger ordering: integrity guard runs strictly before updated_at
+  const beforeTriggers = [
+    'trg_agency_invitations_updated_at',
+    'trg_agency_invitations_integrity',
+  ].sort();
+  assert.deepEqual(beforeTriggers, [
+    'trg_agency_invitations_integrity',
+    'trg_agency_invitations_updated_at',
+  ]);
+});
+
+test('migration 0009 defines all four Team/Invitation SECURITY DEFINER RPCs with strict search_path, grants, and security invariants', () => {
+  const migration0009 = fs.readFileSync(
+    path.join(ROOT, 'supabase/migrations/202611210009_team_invitations.sql'),
+    'utf8'
+  );
+  const exec0009 = stripSqlComments(migration0009);
+
+  // Exactly 6 SECURITY DEFINER functions in finalized migration 0009
+  // (2 audit triggers + 4 Team/Invitation RPCs) and EVERY ONE must lock search_path = ''
+  const definerBlocks = exec0009.match(/SECURITY DEFINER[\s\S]{0,60}/g) ?? [];
+  assert.equal(
+    definerBlocks.length,
+    6,
+    'Expected exactly 6 SECURITY DEFINER functions in finalized migration 0009'
+  );
+  for (const block of definerBlocks) {
+    assert.match(
+      block,
+      /SET search_path = ''/,
+      'Every SECURITY DEFINER function in migration 0009 must lock search_path'
+    );
+  }
+
+  // Extract each RPC body individually for strict assertions
+  const listFn = exec0009.match(
+    /CREATE OR REPLACE FUNCTION public\.list_agency_members\([\s\S]*?\$\$;/
+  );
+  const createFn = exec0009.match(
+    /CREATE OR REPLACE FUNCTION public\.create_agency_invitation\([\s\S]*?\$\$;/
+  );
+  const revokeFn = exec0009.match(
+    /CREATE OR REPLACE FUNCTION public\.revoke_agency_invitation\([\s\S]*?\$\$;/
+  );
+  const acceptFn = exec0009.match(
+    /CREATE OR REPLACE FUNCTION public\.accept_agency_invitation\([\s\S]*?\$\$;/
+  );
+
+  assert.ok(listFn, 'Expected public.list_agency_members definition');
+  assert.ok(createFn, 'Expected public.create_agency_invitation definition');
+  assert.ok(revokeFn, 'Expected public.revoke_agency_invitation definition');
+  assert.ok(acceptFn, 'Expected public.accept_agency_invitation definition');
+
+  // 1. list_agency_members: Owner-only, auth.uid() verified, minimal auth.users projection, no token_hash
+  assert.match(listFn[0], /STABLE[\s\S]*SECURITY DEFINER[\s\S]*SET search_path = ''/);
+  assert.match(listFn[0], /v_actor_id uuid := auth\.uid\(\);/);
+  assert.match(
+    listFn[0],
+    /public\.has_agency_role\(p_agency_id, ARRAY\['owner'\]::public\.agency_role\[\]\)/
+  );
+  assert.match(listFn[0], /WHERE m\.agency_id = p_agency_id/);
+  assert.doesNotMatch(listFn[0], /SELECT\s+\*/i);
+  assert.doesNotMatch(listFn[0], /\b(encrypted_password|token_hash|recovery_token|confirmation_token)\b/);
+
+  // 2. create_agency_invitation: Owner-only, Manager/Agent only, SHA-256 hash only, bounded expiry,
+  //    never returns token_hash, never inserts into agency_memberships
+  assert.match(createFn[0], /SECURITY DEFINER[\s\S]*SET search_path = ''/);
+  assert.match(createFn[0], /v_actor_id uuid := auth\.uid\(\);/);
+  assert.match(
+    createFn[0],
+    /public\.has_agency_role\(p_agency_id, ARRAY\['owner'\]::public\.agency_role\[\]\)/
+  );
+  assert.match(
+    createFn[0],
+    /p_invited_role NOT IN \('manager'::public\.agency_role, 'agent'::public\.agency_role\)/
+  );
+  assert.match(createFn[0], /v_clean_token_hash !~ '\^\[0-9a-f\]\{64\}\$'/);
+  assert.match(createFn[0], /p_expires_in_hours < 1 OR p_expires_in_hours > 720/);
+  assert.match(createFn[0], /FROM public\.agencies a\s+WHERE a\.id = p_agency_id\s+FOR UPDATE;/);
+  assert.doesNotMatch(createFn[0], /INSERT INTO public\.agency_memberships/i);
+  const createReturnMatch = createFn[0].match(/RETURNS TABLE \(([\s\S]*?)\)/);
+  assert.ok(createReturnMatch, 'Expected RETURNS TABLE projection on create_agency_invitation');
+  assert.doesNotMatch(createReturnMatch[1], /\btoken_hash\b/);
+  const createReturningClause = createFn[0].match(/RETURNING([\s\S]*?);/);
+  assert.ok(createReturningClause, 'Expected RETURNING clause on create_agency_invitation');
+  assert.doesNotMatch(createReturningClause[1], /\btoken_hash\b/);
+
+  // 3. revoke_agency_invitation: Owner-only, strictly tenant-scoped FOR UPDATE, pending unexpired only,
+  //    never returns token_hash, never mutates agency_memberships
+  assert.match(revokeFn[0], /SECURITY DEFINER[\s\S]*SET search_path = ''/);
+  assert.match(revokeFn[0], /v_actor_id uuid := auth\.uid\(\);/);
+  assert.match(
+    revokeFn[0],
+    /public\.has_agency_role\(p_agency_id, ARRAY\['owner'\]::public\.agency_role\[\]\)/
+  );
+  assert.match(
+    revokeFn[0],
+    /WHERE inv\.id = p_invitation_id\s+AND inv\.agency_id = p_agency_id\s+FOR UPDATE;/
+  );
+  assert.match(revokeFn[0], /v_inv\.status <> 'pending'::public\.agency_invitation_status/);
+  assert.match(revokeFn[0], /v_inv\.expires_at <= v_now/);
+  assert.doesNotMatch(revokeFn[0], /public\.agency_memberships/i);
+  const revokeReturnMatch = revokeFn[0].match(/RETURNS TABLE \(([\s\S]*?)\)/);
+  assert.ok(revokeReturnMatch, 'Expected RETURNS TABLE projection on revoke_agency_invitation');
+  assert.doesNotMatch(revokeReturnMatch[1], /\btoken_hash\b/);
+
+  // 4. accept_agency_invitation: verified-email binding, SHA-256 check, FOR UPDATE lock,
+  //    expiration + single-use status guards, non-owner role restriction, duplicate & suspended
+  //    membership rejection, atomic acceptance + active membership creation, cross-agency isolation
+  assert.match(acceptFn[0], /SECURITY DEFINER[\s\S]*SET search_path = ''/);
+  assert.match(acceptFn[0], /v_actor_id uuid := auth\.uid\(\);/);
+  assert.match(acceptFn[0], /v_clean_token_hash !~ '\^\[0-9a-f\]\{64\}\$'/);
+  assert.match(acceptFn[0], /SELECT u\.email, u\.email_confirmed_at[\s\S]*FROM auth\.users u\s+WHERE u\.id = v_actor_id;/);
+  assert.match(acceptFn[0], /v_user_email_confirmed_at IS NULL OR v_clean_user_email = ''/);
+  assert.match(
+    acceptFn[0],
+    /FROM public\.agency_invitations inv\s+WHERE inv\.token_hash = v_clean_token_hash\s+FOR UPDATE;/
+  );
+  assert.match(acceptFn[0], /v_inv\.status <> 'pending'::public\.agency_invitation_status/);
+  assert.match(acceptFn[0], /v_inv\.expires_at <= v_now/);
+  assert.match(acceptFn[0], /v_inv\.invited_email IS DISTINCT FROM v_clean_user_email/);
+  assert.match(
+    acceptFn[0],
+    /v_inv\.invited_role NOT IN \('manager'::public\.agency_role, 'agent'::public\.agency_role\)/
+  );
+  assert.match(
+    acceptFn[0],
+    /FROM public\.agency_memberships m\s+WHERE m\.agency_id = v_inv\.agency_id\s+AND m\.user_id = v_actor_id\s+FOR UPDATE;/
+  );
+  assert.match(
+    acceptFn[0],
+    /v_existing_membership_status = 'suspended'::public\.membership_status/
+  );
+  assert.doesNotMatch(acceptFn[0], /UPDATE public\.agency_memberships/i);
+  assert.match(
+    acceptFn[0],
+    /UPDATE public\.agency_invitations inv\s+SET status = 'accepted'::public\.agency_invitation_status,\s+accepted_by = v_actor_id,\s+accepted_at = v_now\s+WHERE inv\.id = v_inv\.id\s+AND inv\.agency_id = v_inv\.agency_id\s+AND inv\.status = 'pending'::public\.agency_invitation_status;/
+  );
+  assert.match(
+    acceptFn[0],
+    /INSERT INTO public\.agency_memberships \(\s*agency_id,\s*user_id,\s*role,\s*status,\s*invited_by\s*\)\s*VALUES \(\s*v_inv\.agency_id,\s*v_actor_id,\s*v_inv\.invited_role,\s*'active'::public\.membership_status,\s*v_inv\.invited_by\s*\)/
+  );
+  const acceptReturnMatch = acceptFn[0].match(/RETURNS TABLE \(([\s\S]*?)\)/);
+  assert.ok(acceptReturnMatch, 'Expected RETURNS TABLE projection on accept_agency_invitation');
+  assert.match(acceptReturnMatch[1], /\bagency_id uuid\b/);
+  assert.match(acceptReturnMatch[1], /\bmembership_id uuid\b/);
+  assert.match(acceptReturnMatch[1], /\brole public\.agency_role\b/);
+  assert.doesNotMatch(acceptReturnMatch[1], /\btoken_hash\b/);
+  assert.doesNotMatch(acceptReturnMatch[1], /\bemail\b/);
+
+  // Least-privilege EXECUTE grants: revoked from PUBLIC/anon, granted only to authenticated
+  assert.match(
+    exec0009,
+    /REVOKE ALL ON FUNCTION public\.list_agency_members\(uuid\)\s+FROM PUBLIC, anon;/
+  );
+  assert.match(
+    exec0009,
+    /REVOKE ALL ON FUNCTION public\.create_agency_invitation\(uuid, text, public\.agency_role, text, integer\)\s+FROM PUBLIC, anon;/
+  );
+  assert.match(
+    exec0009,
+    /REVOKE ALL ON FUNCTION public\.revoke_agency_invitation\(uuid, uuid\)\s+FROM PUBLIC, anon;/
+  );
+  assert.match(
+    exec0009,
+    /REVOKE ALL ON FUNCTION public\.accept_agency_invitation\(text\)\s+FROM PUBLIC, anon;/
+  );
+  assert.match(
+    exec0009,
+    /GRANT EXECUTE ON FUNCTION public\.list_agency_members\(uuid\)\s+TO authenticated;/
+  );
+  assert.match(
+    exec0009,
+    /GRANT EXECUTE ON FUNCTION public\.create_agency_invitation\(uuid, text, public\.agency_role, text, integer\)\s+TO authenticated;/
+  );
+  assert.match(
+    exec0009,
+    /GRANT EXECUTE ON FUNCTION public\.revoke_agency_invitation\(uuid, uuid\)\s+TO authenticated;/
+  );
+  assert.match(
+    exec0009,
+    /GRANT EXECUTE ON FUNCTION public\.accept_agency_invitation\(text\)\s+TO authenticated;/
+  );
+});
+
+test('migration 0009 read-only verification SQL is strictly read-only and covers every required catalog check', () => {
+  const verify0009 = fs.readFileSync(
+    path.join(ROOT, 'supabase/tests/verify_0009_team_invitations_readonly.sql'),
+    'utf8'
+  );
+  const execVerify = stripSqlComments(verify0009);
+
+  // Strictly read-only (no DDL/DML/role switching outside quoted catalog arguments)
+  const execVerifyNoStrings = execVerify.replace(/'[^']*'/g, "''");
+  assert.doesNotMatch(
+    execVerifyNoStrings,
+    /\b(INSERT|UPDATE|DELETE|CREATE|ALTER|DROP|TRUNCATE|GRANT|REVOKE)\b/i
+  );
+  assert.doesNotMatch(execVerifyNoStrings, /\bSET\s+LOCAL\s+ROLE\b/i);
+  assert.doesNotMatch(verify0009, /service_role/i);
+
+  // Required catalog checks present
+  assert.match(execVerify, /01_table_agency_invitations_exists/);
+  assert.match(execVerify, /03_rls_enabled_and_forced_agency_invitations/);
+  assert.match(execVerify, /05_no_direct_client_insert_agency_memberships/);
+  assert.match(execVerify, /06_no_anon_or_public_invitation_table_access/);
+  assert.match(execVerify, /08_no_client_access_to_token_hash/);
+  assert.match(execVerify, /09_no_owner_invitation_role_constraint_and_data/);
+  assert.match(execVerify, /10_four_rpcs_exist_with_expected_signatures/);
+  assert.match(execVerify, /11_security_definer_search_path_and_owner_bypassrls/);
+  assert.match(execVerify, /12_rpc_execute_grants_authenticated_only/);
+  assert.match(execVerify, /13_trigger_functions_execute_revoked_from_clients/);
+  assert.match(execVerify, /14_triggers_attached_and_enabled/);
+});
+
+
+
+
 

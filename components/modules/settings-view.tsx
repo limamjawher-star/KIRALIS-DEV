@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Building2, CheckCircle2, Globe, ShieldCheck } from 'lucide-react';
+import { Building2, Globe, ShieldCheck } from 'lucide-react';
 import {
   formatAgencyRoleLabel,
   formatCountryLabel,
@@ -10,6 +10,7 @@ import {
   type AgencyRole,
 } from '@/lib/agency/types';
 import { useAppPreferences } from '@/components/providers/app-preferences-provider';
+import { AlertBanner } from '@/components/ui/alert-banner';
 import {
   FormField,
   INPUT_BASE_CLASSES,
@@ -46,46 +47,35 @@ export function SettingsView({ agency, role }: SettingsViewProps) {
   const readOnlyInputClass = cn(
     INPUT_BASE_CLASSES,
     getInputStateClasses(false),
-    'bg-slate-50 text-slate-900 dark:bg-slate-950/70 dark:text-slate-100'
+    'bg-slate-50/90 text-slate-900 dark:bg-slate-950/70 dark:text-slate-100'
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 sm:space-y-6">
       <PageHeader
         title={`${moduleCopy.title} — ${agency.name}`}
         description="Paramètres persistés de votre agence chargés en direct depuis Supabase PostgreSQL avec isolation par agence (RLS)."
         meta={`Agence active · Rôle : ${roleLabel} · Créée le ${createdDate}`}
       />
 
-      <div
-        role="status"
-        className="flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50/70 px-4 py-3.5 text-sm dark:border-emerald-900 dark:bg-emerald-950/40"
+      <AlertBanner
+        variant="success"
+        title="Agence synchronisée avec Supabase PostgreSQL"
       >
-        <CheckCircle2
-          className="mt-0.5 h-4 w-4 shrink-0 text-emerald-700 dark:text-emerald-400"
-          aria-hidden="true"
-        />
-        <div className="space-y-0.5">
-          <p className="font-medium text-emerald-950 dark:text-emerald-200">
-            Agence synchronisée avec Supabase PostgreSQL
-          </p>
-          <p className="text-xs leading-relaxed text-emerald-800 dark:text-emerald-300/90">
-            Les informations ci-dessous proviennent directement de votre fiche
-            agence enregistrée lors de l’onboarding. L’édition avancée des
-            paramètres et la gestion d’équipe seront ajoutées lors de la phase
-            dédiée.
-          </p>
-        </div>
-      </div>
+        Les informations ci-dessous proviennent directement de votre fiche
+        agence enregistrée lors de l’onboarding. L’édition avancée des
+        paramètres et la gestion d’équipe seront ajoutées lors de la phase
+        dédiée.
+      </AlertBanner>
 
       {/* Identity section */}
       <Surface padded className="space-y-5">
-        <div className="flex items-start gap-3 border-b border-slate-200 pb-4 dark:border-slate-800">
-          <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-600 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300">
+        <div className="flex items-start gap-3 border-b border-slate-200/80 pb-4 dark:border-slate-800/80">
+          <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-blue-200/80 bg-blue-50/80 text-blue-700 dark:border-blue-900/70 dark:bg-blue-950/50 dark:text-blue-400">
             <Building2 className="h-4 w-4" aria-hidden="true" />
           </span>
           <div>
-            <h2 className="text-base font-semibold text-slate-950 dark:text-slate-50">
+            <h2 className="font-display text-base font-semibold tracking-tight text-slate-950 dark:text-slate-50">
               {copy.identitySectionTitle}
             </h2>
             <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
@@ -159,7 +149,7 @@ export function SettingsView({ agency, role }: SettingsViewProps) {
               type="tel"
               value={agency.phone ?? 'Non renseigné'}
               readOnly
-              className={cn(readOnlyInputClass, 'font-mono')}
+              className={cn(readOnlyInputClass, 'font-mono tabular-nums')}
             />
           </FormField>
 
@@ -201,12 +191,12 @@ export function SettingsView({ agency, role }: SettingsViewProps) {
 
       {/* Regional & tax defaults */}
       <Surface padded className="space-y-5">
-        <div className="flex items-start gap-3 border-b border-slate-200 pb-4 dark:border-slate-800">
-          <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-600 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300">
+        <div className="flex items-start gap-3 border-b border-slate-200/80 pb-4 dark:border-slate-800/80">
+          <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-200/90 bg-slate-50 text-slate-600 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300">
             <Globe className="h-4 w-4" aria-hidden="true" />
           </span>
           <div>
-            <h2 className="text-base font-semibold text-slate-950 dark:text-slate-50">
+            <h2 className="font-display text-base font-semibold tracking-tight text-slate-950 dark:text-slate-50">
               {copy.regionalSectionTitle}
             </h2>
             <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
@@ -222,7 +212,7 @@ export function SettingsView({ agency, role }: SettingsViewProps) {
               type="text"
               value={`${agency.currency_code} (${agency.currency_minor_unit} décimales)`}
               readOnly
-              className={cn(readOnlyInputClass, 'font-mono')}
+              className={cn(readOnlyInputClass, 'font-mono tabular-nums')}
             />
           </FormField>
 
@@ -243,7 +233,9 @@ export function SettingsView({ agency, role }: SettingsViewProps) {
             <input
               id="settings-default-language"
               type="text"
-              value={LOCALE_NAMES[agency.default_locale] ?? agency.default_locale}
+              value={
+                LOCALE_NAMES[agency.default_locale] ?? agency.default_locale
+              }
               readOnly
               className={readOnlyInputClass}
             />
@@ -266,16 +258,18 @@ export function SettingsView({ agency, role }: SettingsViewProps) {
       </Surface>
 
       {/* Tenant Security Summary */}
-      <Surface padded className="flex items-start gap-3">
-        <ShieldCheck
-          className="mt-0.5 h-4 w-4 shrink-0 text-blue-700 dark:text-blue-400"
+      <Surface variant="subtle" padded className="flex items-start gap-3">
+        <span
           aria-hidden="true"
-        />
+          className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-blue-100/80 text-blue-700 dark:bg-blue-950/60 dark:text-blue-400"
+        >
+          <ShieldCheck className="h-4 w-4" />
+        </span>
         <div className="space-y-0.5 text-xs text-slate-600 dark:text-slate-400">
-          <p className="font-medium text-slate-900 dark:text-slate-100">
+          <p className="font-semibold text-slate-900 dark:text-slate-100">
             Accès vérifié · Rôle {roleLabel}
           </p>
-          <p>
+          <p className="leading-relaxed">
             Votre adhésion active à l’agence <strong>{agency.name}</strong> est
             vérifiée côté serveur à chaque requête via Supabase Auth et les
             politiques Row Level Security (RLS).

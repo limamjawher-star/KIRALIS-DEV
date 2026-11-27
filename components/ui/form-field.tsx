@@ -24,7 +24,7 @@ export function FormField({
     <div className={cn('space-y-1.5', className)}>
       <label
         htmlFor={id}
-        className="block text-sm font-medium text-slate-800 dark:text-slate-200"
+        className="block text-[13px] font-medium text-slate-800 dark:text-slate-200"
       >
         {label}
         {required ? (
@@ -45,7 +45,7 @@ export function FormField({
       ) : helperText ? (
         <p
           id={`${id}-help`}
-          className="text-xs text-slate-500 dark:text-slate-400"
+          className="text-xs leading-relaxed text-slate-500 dark:text-slate-400"
         >
           {helperText}
         </p>
@@ -55,10 +55,13 @@ export function FormField({
 }
 
 export const INPUT_BASE_CLASSES =
-  'h-10 w-full rounded-lg border bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 transition-colors focus:outline-none focus:ring-2 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-500 dark:disabled:bg-slate-900 dark:disabled:text-slate-400';
+  'h-11 sm:h-10 w-full rounded-xl border bg-white px-3.5 text-sm text-slate-900 placeholder:text-slate-400 shadow-[0_1px_2px_rgba(15,23,42,0.03)] transition-[border-color,box-shadow,background-color] duration-150 focus:outline-none focus:ring-3 dark:bg-slate-950/90 dark:text-slate-100 dark:placeholder:text-slate-500 dark:shadow-none disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-500 dark:disabled:bg-slate-900 dark:disabled:text-slate-400';
+
+export const TEXTAREA_BASE_CLASSES =
+  'w-full rounded-xl border bg-white px-3.5 py-2.5 text-sm leading-relaxed text-slate-900 placeholder:text-slate-400 shadow-[0_1px_2px_rgba(15,23,42,0.03)] transition-[border-color,box-shadow,background-color] duration-150 focus:outline-none focus:ring-3 dark:bg-slate-950/90 dark:text-slate-100 dark:placeholder:text-slate-500 dark:shadow-none disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-500 dark:disabled:bg-slate-900 dark:disabled:text-slate-400';
 
 export function getInputStateClasses(hasError: boolean): string {
   return hasError
-    ? 'border-red-500 focus:border-red-600 focus:ring-red-500/20 dark:border-red-500 dark:focus:border-red-400'
-    : 'border-slate-200 focus:border-blue-600 focus:ring-blue-600/20 dark:border-slate-700 dark:focus:border-blue-400 dark:focus:ring-blue-400/20';
+    ? 'border-red-400 hover:border-red-500 focus:border-red-600 focus:ring-red-500/15 dark:border-red-500/80 dark:focus:border-red-400 dark:focus:ring-red-400/20'
+    : 'border-slate-200/95 hover:border-slate-300 focus:border-[#1D4ED8] focus:ring-blue-600/15 dark:border-slate-700/90 dark:hover:border-slate-600 dark:focus:border-blue-400 dark:focus:ring-blue-400/20';
 }

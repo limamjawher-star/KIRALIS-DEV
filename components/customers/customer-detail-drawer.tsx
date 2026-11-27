@@ -1,9 +1,21 @@
 'use client';
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { AlertCircle, CheckCircle2, Pencil, RefreshCw, X } from 'lucide-react';
+import {
+  Clock,
+  FileText,
+  MapPin,
+  Pencil,
+  Phone,
+  RefreshCw,
+  User,
+  X,
+} from 'lucide-react';
+import { AnimatePresence, motion } from 'motion/react';
 import { useAppPreferences } from '@/components/providers/app-preferences-provider';
+import { AlertBanner } from '@/components/ui/alert-banner';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { DEFAULT_TIMEZONE, type SupportedLocale } from '@/lib/currency';
 import {
   createCustomerDetailController,
@@ -15,6 +27,7 @@ import {
   type CustomerRecord,
 } from '@/lib/customers/types';
 import type { AgencyRole } from '@/lib/supabase/database.types';
+import { cn } from '@/lib/utils';
 import { CustomerDriversSection } from './customer-drivers-section';
 import { CustomerTypeBadge } from './customer-type-badge';
 import { EditCustomerForm } from './edit-customer-form';
@@ -58,6 +71,14 @@ function formatDetailTimestamp(
   } catch {
     return isoDate.slice(0, 16).replace('T', ' ');
   }
+}
+
+function getCustomerInitials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) {
+    return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+  }
+  return (name.slice(0, 2) || 'CL').toUpperCase();
 }
 
 export function CustomerDetailDrawer({
@@ -121,8 +142,6 @@ export function CustomerDetailDrawer({
     return controllerRef.current;
   }, []);
 
-  // Load real customer details whenever customerId changes, cancelling any
-  // superseded in-flight request so stale data never overwrites the panel.
   useEffect(() => {
     const controller = getController();
     if (!customerId) {
@@ -137,7 +156,6 @@ export function CustomerDetailDrawer({
     };
   }, [customerId, getController]);
 
-  // Manage body scroll lock, initial focus inside the dialog, and focus restoration.
   useEffect(() => {
     if (!isOpen) return;
 
@@ -160,7 +178,6 @@ export function CustomerDetailDrawer({
     };
   }, [isOpen]);
 
-  // Escape-to-cancel/close and lightweight Tab focus trapping inside the dialog.
   useEffect(() => {
     if (!isOpen) return;
 
@@ -219,11 +236,6 @@ export function CustomerDetailDrawer({
     onCloseRef.current();
   }, []);
 
-  if (!isOpen) {
-    return null;
-  }
-
-  // Prevent rendering even a single frame of a previously viewed customer while switching IDs.
   const isCurrentMatch = detailState.selectedCustomerId === customerId;
   const effectiveStatus = isCurrentMatch ? detailState.status : 'loading';
   const customer =
@@ -272,165 +284,175 @@ export function CustomerDetailDrawer({
   }
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-end justify-end bg-slate-950/50 backdrop-blur-[2px] md:items-stretch"
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget && !isSavingEdit) {
-          handleClose();
-        }
-      }}
-    >
-      <div
-        ref={panelRef}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={titleId}
-        aria-busy={effectiveStatus === 'loading' || isSavingEdit}
-        className="flex max-h-[92vh] w-full flex-col overflow-hidden rounded-t-2xl border-t border-slate-200 bg-white shadow-2xl md:h-full md:max-h-none md:max-w-lg md:rounded-none md:border-s md:border-t-0 dark:border-slate-800 dark:bg-slate-900"
-      >
-        {/* Header */}
-        <div className="flex items-start justify-between gap-4 border-b border-slate-200 px-6 py-5 dark:border-slate-800">
-          <div className="min-w-0 flex-1">
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
-              {drawerCopy.kicker}
-            </p>
-            {isEditing && customer ? (
-              <div className="mt-1">
-                <h2
-                  id={titleId}
-                  className="truncate text-lg font-semibold tracking-tight text-slate-950 dark:text-slate-50"
-                >
-                  {drawerCopy.editTitle}
-                </h2>
-                <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-                  {drawerCopy.editSubtitle}
+    <AnimatePresence>
+      {isOpen ? (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.16 }}
+          className="fixed inset-0 z-50 flex items-end justify-end bg-slate-950/50 backdrop-blur-[2px] md:items-stretch"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget && !isSavingEdit) {
+              handleClose();
+            }
+          }}
+        >
+          <motion.div
+            ref={panelRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={titleId}
+            aria-busy={effectiveStatus === 'loading' || isSavingEdit}
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 16 }}
+            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            className="flex max-h-[92dvh] w-full flex-col overflow-hidden rounded-t-3xl border-t border-slate-200/90 bg-white shadow-2xl md:h-full md:max-h-none md:max-w-[540px] md:rounded-none md:border-s md:border-t-0 dark:border-slate-800 dark:bg-slate-900"
+          >
+            {/* Mobile bottom-sheet grabber affordance */}
+            <div className="flex justify-center pt-2.5 pb-1 md:hidden" aria-hidden="true">
+              <span className="h-1 w-10 rounded-full bg-slate-300 dark:bg-slate-700" />
+            </div>
+
+            {/* Sticky Header */}
+            <div className="flex items-start justify-between gap-4 border-b border-slate-200/90 bg-white/95 px-5 py-4 sm:px-6 sm:py-5 dark:border-slate-800 dark:bg-slate-900/95">
+              <div className="min-w-0 flex-1">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400 dark:text-slate-500">
+                  {drawerCopy.kicker}
                 </p>
-              </div>
-            ) : effectiveStatus === 'ready' && customer ? (
-              <div className="mt-1.5 space-y-1.5">
-                <div className="flex flex-wrap items-center gap-2.5">
+                {isEditing && customer ? (
+                  <div className="mt-1">
+                    <h2
+                      id={titleId}
+                      className="truncate font-display text-lg font-bold tracking-tight text-slate-950 dark:text-slate-50"
+                    >
+                      {drawerCopy.editTitle}
+                    </h2>
+                    <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+                      {drawerCopy.editSubtitle}
+                    </p>
+                  </div>
+                ) : effectiveStatus === 'ready' && customer ? (
+                  <div className="mt-2 flex items-start gap-3">
+                    <span
+                      aria-hidden="true"
+                      className={cn(
+                        'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl font-display text-sm font-bold',
+                        customer.customer_type === 'corporate'
+                          ? 'bg-blue-50 text-[#1D4ED8] ring-1 ring-blue-200/80 dark:bg-blue-950/60 dark:text-blue-300 dark:ring-blue-900/60'
+                          : 'bg-slate-100 text-slate-700 ring-1 ring-slate-200/80 dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-700/70'
+                      )}
+                    >
+                      {getCustomerInitials(customer.full_name)}
+                    </span>
+                    <div className="min-w-0 flex-1 space-y-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h2
+                          id={titleId}
+                          className="truncate font-display text-lg font-bold tracking-tight text-slate-950 dark:text-slate-50"
+                        >
+                          {customer.full_name}
+                        </h2>
+                        <CustomerTypeBadge
+                          customerType={customer.customer_type}
+                          label={copy.typeBadges[customer.customer_type]}
+                        />
+                      </div>
+                      {customer.company_name ? (
+                        <p className="truncate text-xs font-medium text-slate-500 dark:text-slate-400">
+                          {customer.company_name}
+                        </p>
+                      ) : null}
+                    </div>
+                  </div>
+                ) : effectiveStatus === 'error' ? (
                   <h2
                     id={titleId}
-                    className="truncate text-lg font-semibold tracking-tight text-slate-950 dark:text-slate-50"
+                    className="mt-1 font-display text-base font-semibold tracking-tight text-slate-950 dark:text-slate-50"
                   >
-                    {customer.full_name}
+                    {drawerCopy.errorTitle}
                   </h2>
-                  <CustomerTypeBadge
-                    customerType={customer.customer_type}
-                    label={copy.typeBadges[customer.customer_type]}
-                  />
-                </div>
-                {customer.company_name ? (
-                  <p className="truncate text-sm text-slate-600 dark:text-slate-400">
-                    {customer.company_name}
-                  </p>
-                ) : null}
-              </div>
-            ) : effectiveStatus === 'error' ? (
-              <h2
-                id={titleId}
-                className="mt-1 text-base font-semibold tracking-tight text-slate-950 dark:text-slate-50"
-              >
-                {drawerCopy.errorTitle}
-              </h2>
-            ) : (
-              <div className="mt-1.5 space-y-2">
-                <h2 id={titleId} className="sr-only">
-                  {drawerCopy.loadingTitle}
-                </h2>
-                <div className="h-6 w-48 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
-                <div className="h-3.5 w-32 animate-pulse rounded bg-slate-100 dark:bg-slate-800/70" />
-              </div>
-            )}
-          </div>
-
-          <button
-            ref={closeButtonRef}
-            type="button"
-            onClick={handleClose}
-            disabled={isSavingEdit}
-            aria-label={drawerCopy.closeAriaLabel}
-            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
-          >
-            <X className="h-4 w-4" aria-hidden="true" />
-          </button>
-        </div>
-
-        {/* Edit Mode or Read-Only View */}
-        {isEditing && customer ? (
-          <EditCustomerForm
-            key={customer.id}
-            customer={customer}
-            onCancel={handleCancelEdit}
-            onSaved={handleEditSaved}
-            onSubmittingChange={setIsSavingEdit}
-          />
-        ) : (
-          <>
-            {/* Scrollable Body */}
-            <div className="flex-1 overflow-y-auto px-6 py-5">
-              {showUpdateSuccessBanner ? (
-                <div
-                  role="status"
-                  className="mb-5 flex items-center justify-between gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-2.5 text-sm text-emerald-900 dark:border-emerald-900/70 dark:bg-emerald-950/40 dark:text-emerald-200"
-                >
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2
-                      className="h-4 w-4 shrink-0"
-                      aria-hidden="true"
-                    />
-                    <span>{drawerCopy.updateSuccessBanner}</span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setUpdatedBannerCustomerId(null)}
-                    className="rounded text-xs font-medium underline underline-offset-2 hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 cursor-pointer"
-                  >
-                    {copy.dismissBannerLabel}
-                  </button>
-                </div>
-              ) : null}
-
-              {effectiveStatus === 'loading' ? (
-                <div
-                  role="status"
-                  aria-label={drawerCopy.loadingAriaLabel}
-                  className="space-y-6"
-                >
-                  {[0, 1, 2, 3].map((sectionIndex) => (
-                    <div
-                      key={sectionIndex}
-                      className="space-y-3 border-b border-slate-100 pb-5 last:border-b-0 dark:border-slate-800/80"
-                    >
-                      <div className="h-3.5 w-28 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
-                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                        <div className="space-y-1.5">
-                          <div className="h-3 w-20 animate-pulse rounded bg-slate-100 dark:bg-slate-800/70" />
-                          <div className="h-4 w-36 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
-                        </div>
-                        <div className="space-y-1.5">
-                          <div className="h-3 w-20 animate-pulse rounded bg-slate-100 dark:bg-slate-800/70" />
-                          <div className="h-4 w-32 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
-                        </div>
-                      </div>
+                ) : (
+                  <div className="mt-2 flex items-center gap-3">
+                    <h2 id={titleId} className="sr-only">
+                      {drawerCopy.loadingTitle}
+                    </h2>
+                    <Skeleton rounded="lg" className="h-10 w-10 shrink-0" />
+                    <div className="space-y-1.5">
+                      <Skeleton className="h-5 w-44" />
+                      <Skeleton className="h-3.5 w-28" />
                     </div>
-                  ))}
-                </div>
-              ) : effectiveStatus === 'error' ? (
-                <div
-                  role="alert"
-                  className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-900 dark:border-red-900/70 dark:bg-red-950/40 dark:text-red-200"
-                >
-                  <div className="flex items-start gap-3">
-                    <AlertCircle
-                      className="mt-0.5 h-4 w-4 shrink-0"
-                      aria-hidden="true"
-                    />
-                    <div className="space-y-3">
-                      <p className="leading-relaxed">
-                        {errorMessage ?? drawerCopy.errorTitle}
-                      </p>
-                      <div className="flex flex-wrap items-center gap-2">
+                  </div>
+                )}
+              </div>
+
+              <button
+                ref={closeButtonRef}
+                type="button"
+                onClick={handleClose}
+                disabled={isSavingEdit}
+                aria-label={drawerCopy.closeAriaLabel}
+                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600/80 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+              >
+                <X className="h-4 w-4" aria-hidden="true" />
+              </button>
+            </div>
+
+            {/* Edit Mode or Read-Only View */}
+            {isEditing && customer ? (
+              <EditCustomerForm
+                key={customer.id}
+                customer={customer}
+                onCancel={handleCancelEdit}
+                onSaved={handleEditSaved}
+                onSubmittingChange={setIsSavingEdit}
+              />
+            ) : (
+              <>
+                {/* Scrollable Body */}
+                <div className="flex-1 overflow-y-auto px-5 py-5 sm:px-6">
+                  {showUpdateSuccessBanner ? (
+                    <AlertBanner
+                      variant="success"
+                      compact
+                      onDismiss={() => setUpdatedBannerCustomerId(null)}
+                      dismissLabel={copy.dismissBannerLabel}
+                      className="mb-5"
+                    >
+                      {drawerCopy.updateSuccessBanner}
+                    </AlertBanner>
+                  ) : null}
+
+                  {effectiveStatus === 'loading' ? (
+                    <div
+                      role="status"
+                      aria-label={drawerCopy.loadingAriaLabel}
+                      className="space-y-6"
+                    >
+                      {[0, 1, 2, 3].map((sectionIndex) => (
+                        <div
+                          key={sectionIndex}
+                          className="space-y-3 border-b border-slate-100 pb-5 last:border-b-0 dark:border-slate-800/80"
+                        >
+                          <Skeleton className="h-3.5 w-28" />
+                          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                            <div className="space-y-1.5">
+                              <Skeleton className="h-3 w-20" />
+                              <Skeleton className="h-4 w-36" />
+                            </div>
+                            <div className="space-y-1.5">
+                              <Skeleton className="h-3 w-20" />
+                              <Skeleton className="h-4 w-32" />
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : effectiveStatus === 'error' ? (
+                    <AlertBanner
+                      variant="error"
+                      action={
                         <Button
                           size="sm"
                           variant="secondary"
@@ -442,217 +464,227 @@ export function CustomerDetailDrawer({
                           />
                           <span>{drawerCopy.retryLabel}</span>
                         </Button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ) : customer ? (
-                <div className="divide-y divide-slate-200 dark:divide-slate-800">
-                  {/* Identity */}
-                  <section className="pb-5">
-                    <h3 className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                      {drawerCopy.sectionIdentity}
-                    </h3>
-                    <dl className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                      <div>
-                        <dt className="text-xs text-slate-500 dark:text-slate-400">
-                          {drawerCopy.customerTypeLabel}
-                        </dt>
-                        <dd className="mt-1">
-                          <CustomerTypeBadge
-                            customerType={customer.customer_type}
-                            label={copy.typeBadges[customer.customer_type]}
-                          />
-                        </dd>
-                      </div>
+                      }
+                    >
+                      {errorMessage ?? drawerCopy.errorTitle}
+                    </AlertBanner>
+                  ) : customer ? (
+                    <div className="divide-y divide-slate-200/80 dark:divide-slate-800/80">
+                      {/* Identity */}
+                      <section className="pb-5">
+                        <h3 className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400 dark:text-slate-500">
+                          <User className="h-3.5 w-3.5" aria-hidden="true" />
+                          <span>{drawerCopy.sectionIdentity}</span>
+                        </h3>
+                        <dl className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                          <div>
+                            <dt className="text-xs text-slate-500 dark:text-slate-400">
+                              {drawerCopy.customerTypeLabel}
+                            </dt>
+                            <dd className="mt-1">
+                              <CustomerTypeBadge
+                                customerType={customer.customer_type}
+                                label={copy.typeBadges[customer.customer_type]}
+                              />
+                            </dd>
+                          </div>
 
-                      <div>
-                        <dt className="text-xs text-slate-500 dark:text-slate-400">
-                          {drawerCopy.fullNameLabel}
-                        </dt>
-                        <dd className="mt-1 text-sm font-medium text-slate-950 dark:text-slate-100">
-                          {customer.full_name}
-                        </dd>
-                      </div>
+                          <div>
+                            <dt className="text-xs text-slate-500 dark:text-slate-400">
+                              {drawerCopy.fullNameLabel}
+                            </dt>
+                            <dd className="mt-1 text-sm font-semibold text-slate-950 dark:text-slate-100">
+                              {customer.full_name}
+                            </dd>
+                          </div>
 
-                      {showCompanyRow ? (
-                        <div className="sm:col-span-2">
-                          <dt className="text-xs text-slate-500 dark:text-slate-400">
-                            {drawerCopy.companyNameLabel}
-                          </dt>
-                          <dd className="mt-1 text-sm text-slate-900 dark:text-slate-100">
-                            {customer.company_name ? (
-                              customer.company_name
-                            ) : (
-                              <span className="text-slate-400 dark:text-slate-500">
-                                {copy.notProvided}
+                          {showCompanyRow ? (
+                            <div className="sm:col-span-2">
+                              <dt className="text-xs text-slate-500 dark:text-slate-400">
+                                {drawerCopy.companyNameLabel}
+                              </dt>
+                              <dd className="mt-1 text-sm font-medium text-slate-900 dark:text-slate-100">
+                                {customer.company_name ? (
+                                  customer.company_name
+                                ) : (
+                                  <span className="text-slate-400 dark:text-slate-500">
+                                    {copy.notProvided}
+                                  </span>
+                                )}
+                              </dd>
+                            </div>
+                          ) : null}
+                        </dl>
+                      </section>
+
+                      {/* Contact */}
+                      <section className="py-5">
+                        <h3 className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400 dark:text-slate-500">
+                          <Phone className="h-3.5 w-3.5" aria-hidden="true" />
+                          <span>{drawerCopy.sectionContact}</span>
+                        </h3>
+                        <dl className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                          <div>
+                            <dt className="text-xs text-slate-500 dark:text-slate-400">
+                              {drawerCopy.phoneLabel}
+                            </dt>
+                            <dd className="mt-1 font-mono text-sm font-medium text-slate-950 tabular-nums dark:text-slate-100">
+                              <span dir="ltr" className="inline-block">
+                                {customer.phone}
                               </span>
-                            )}
-                          </dd>
+                            </dd>
+                          </div>
+
+                          <div>
+                            <dt className="text-xs text-slate-500 dark:text-slate-400">
+                              {drawerCopy.emailLabel}
+                            </dt>
+                            <dd className="mt-1 text-sm text-slate-900 dark:text-slate-100">
+                              {customer.email ? (
+                                <span
+                                  dir="ltr"
+                                  className="inline-block break-all"
+                                >
+                                  {customer.email}
+                                </span>
+                              ) : (
+                                <span className="text-slate-400 dark:text-slate-500">
+                                  {copy.notProvided}
+                                </span>
+                              )}
+                            </dd>
+                          </div>
+                        </dl>
+                      </section>
+
+                      {/* Address & Country */}
+                      <section className="py-5">
+                        <h3 className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400 dark:text-slate-500">
+                          <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
+                          <span>{drawerCopy.sectionAddress}</span>
+                        </h3>
+                        <dl className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                          <div className="sm:col-span-2">
+                            <dt className="text-xs text-slate-500 dark:text-slate-400">
+                              {drawerCopy.addressLabel}
+                            </dt>
+                            <dd className="mt-1 text-sm text-slate-900 dark:text-slate-100">
+                              {customer.address ? (
+                                customer.address
+                              ) : (
+                                <span className="text-slate-400 dark:text-slate-500">
+                                  {copy.notProvided}
+                                </span>
+                              )}
+                            </dd>
+                          </div>
+
+                          <div>
+                            <dt className="text-xs text-slate-500 dark:text-slate-400">
+                              {drawerCopy.cityLabel}
+                            </dt>
+                            <dd className="mt-1 text-sm text-slate-900 dark:text-slate-100">
+                              {customer.city ? (
+                                customer.city
+                              ) : (
+                                <span className="text-slate-400 dark:text-slate-500">
+                                  {copy.notProvided}
+                                </span>
+                              )}
+                            </dd>
+                          </div>
+
+                          <div>
+                            <dt className="text-xs text-slate-500 dark:text-slate-400">
+                              {drawerCopy.countryLabel}
+                            </dt>
+                            <dd className="mt-1 text-sm text-slate-900 dark:text-slate-100">
+                              {getCustomerCountryLabel(customer.country_code)}
+                            </dd>
+                          </div>
+                        </dl>
+                      </section>
+
+                      {/* Internal Notes */}
+                      <section className="py-5">
+                        <h3 className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400 dark:text-slate-500">
+                          <FileText className="h-3.5 w-3.5" aria-hidden="true" />
+                          <span>{drawerCopy.sectionNotes}</span>
+                        </h3>
+                        <div className="mt-2.5 rounded-xl border border-slate-200/80 bg-slate-50/75 px-3.5 py-3 text-sm leading-relaxed text-slate-800 dark:border-slate-800 dark:bg-slate-950/50 dark:text-slate-200">
+                          {customer.notes ? (
+                            <p className="whitespace-pre-wrap break-words">
+                              {customer.notes}
+                            </p>
+                          ) : (
+                            <p className="text-xs text-slate-400 dark:text-slate-500">
+                              {drawerCopy.noNotesLabel}
+                            </p>
+                          )}
                         </div>
-                      ) : null}
-                    </dl>
-                  </section>
+                      </section>
 
-                  {/* Contact */}
-                  <section className="py-5">
-                    <h3 className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                      {drawerCopy.sectionContact}
-                    </h3>
-                    <dl className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                      <div>
-                        <dt className="text-xs text-slate-500 dark:text-slate-400">
-                          {drawerCopy.phoneLabel}
-                        </dt>
-                        <dd className="mt-1 font-mono text-sm text-slate-950 tabular-nums dark:text-slate-100">
-                          <span dir="ltr" className="inline-block">
-                            {customer.phone}
-                          </span>
-                        </dd>
-                      </div>
+                      {/* Authorized Drivers */}
+                      <CustomerDriversSection
+                        customerId={customer.id}
+                        role={role}
+                      />
 
-                      <div>
-                        <dt className="text-xs text-slate-500 dark:text-slate-400">
-                          {drawerCopy.emailLabel}
-                        </dt>
-                        <dd className="mt-1 text-sm text-slate-900 dark:text-slate-100">
-                          {customer.email ? (
-                            <span dir="ltr" className="inline-block break-all">
-                              {customer.email}
-                            </span>
-                          ) : (
-                            <span className="text-slate-400 dark:text-slate-500">
-                              {copy.notProvided}
-                            </span>
-                          )}
-                        </dd>
-                      </div>
-                    </dl>
-                  </section>
+                      {/* Timestamps */}
+                      <section className="pt-5">
+                        <h3 className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400 dark:text-slate-500">
+                          <Clock className="h-3.5 w-3.5" aria-hidden="true" />
+                          <span>{drawerCopy.sectionTimestamps}</span>
+                        </h3>
+                        <dl className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                          <div>
+                            <dt className="text-xs text-slate-500 dark:text-slate-400">
+                              {drawerCopy.createdAtLabel}
+                            </dt>
+                            <dd className="mt-1 font-mono text-xs text-slate-700 tabular-nums dark:text-slate-300">
+                              {formatDetailTimestamp(
+                                customer.created_at,
+                                locale,
+                                timeZone
+                              )}
+                            </dd>
+                          </div>
 
-                  {/* Address & Country */}
-                  <section className="py-5">
-                    <h3 className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                      {drawerCopy.sectionAddress}
-                    </h3>
-                    <dl className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                      <div className="sm:col-span-2">
-                        <dt className="text-xs text-slate-500 dark:text-slate-400">
-                          {drawerCopy.addressLabel}
-                        </dt>
-                        <dd className="mt-1 text-sm text-slate-900 dark:text-slate-100">
-                          {customer.address ? (
-                            customer.address
-                          ) : (
-                            <span className="text-slate-400 dark:text-slate-500">
-                              {copy.notProvided}
-                            </span>
-                          )}
-                        </dd>
-                      </div>
-
-                      <div>
-                        <dt className="text-xs text-slate-500 dark:text-slate-400">
-                          {drawerCopy.cityLabel}
-                        </dt>
-                        <dd className="mt-1 text-sm text-slate-900 dark:text-slate-100">
-                          {customer.city ? (
-                            customer.city
-                          ) : (
-                            <span className="text-slate-400 dark:text-slate-500">
-                              {copy.notProvided}
-                            </span>
-                          )}
-                        </dd>
-                      </div>
-
-                      <div>
-                        <dt className="text-xs text-slate-500 dark:text-slate-400">
-                          {drawerCopy.countryLabel}
-                        </dt>
-                        <dd className="mt-1 text-sm text-slate-900 dark:text-slate-100">
-                          {getCustomerCountryLabel(customer.country_code)}
-                        </dd>
-                      </div>
-                    </dl>
-                  </section>
-
-                  {/* Internal Notes */}
-                  <section className="py-5">
-                    <h3 className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                      {drawerCopy.sectionNotes}
-                    </h3>
-                    <div className="mt-2.5 text-sm leading-relaxed text-slate-900 dark:text-slate-100">
-                      {customer.notes ? (
-                        <p className="whitespace-pre-wrap break-words">
-                          {customer.notes}
-                        </p>
-                      ) : (
-                        <p className="text-slate-400 dark:text-slate-500">
-                          {drawerCopy.noNotesLabel}
-                        </p>
-                      )}
+                          <div>
+                            <dt className="text-xs text-slate-500 dark:text-slate-400">
+                              {drawerCopy.updatedAtLabel}
+                            </dt>
+                            <dd className="mt-1 font-mono text-xs text-slate-700 tabular-nums dark:text-slate-300">
+                              {formatDetailTimestamp(
+                                customer.updated_at,
+                                locale,
+                                timeZone
+                              )}
+                            </dd>
+                          </div>
+                        </dl>
+                      </section>
                     </div>
-                  </section>
-
-                  {/* Authorized Drivers (Read-Only) */}
-                  <CustomerDriversSection
-                    customerId={customer.id}
-                    role={role}
-                  />
-
-                  {/* Timestamps */}
-                  <section className="pt-5">
-                    <h3 className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                      {drawerCopy.sectionTimestamps}
-                    </h3>
-                    <dl className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                      <div>
-                        <dt className="text-xs text-slate-500 dark:text-slate-400">
-                          {drawerCopy.createdAtLabel}
-                        </dt>
-                        <dd className="mt-1 font-mono text-xs text-slate-700 tabular-nums dark:text-slate-300">
-                          {formatDetailTimestamp(
-                            customer.created_at,
-                            locale,
-                            timeZone
-                          )}
-                        </dd>
-                      </div>
-
-                      <div>
-                        <dt className="text-xs text-slate-500 dark:text-slate-400">
-                          {drawerCopy.updatedAtLabel}
-                        </dt>
-                        <dd className="mt-1 font-mono text-xs text-slate-700 tabular-nums dark:text-slate-300">
-                          {formatDetailTimestamp(
-                            customer.updated_at,
-                            locale,
-                            timeZone
-                          )}
-                        </dd>
-                      </div>
-                    </dl>
-                  </section>
+                  ) : null}
                 </div>
-              ) : null}
-            </div>
 
-            {/* Read-Only Footer */}
-            <div className="flex flex-wrap items-center justify-end gap-2.5 border-t border-slate-200 px-6 py-4 dark:border-slate-800">
-              <Button variant="secondary" onClick={handleClose}>
-                {drawerCopy.closeLabel}
-              </Button>
-              {canEdit && effectiveStatus === 'ready' && customer ? (
-                <Button variant="primary" onClick={handleStartEdit}>
-                  <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
-                  <span>{drawerCopy.editButtonLabel}</span>
-                </Button>
-              ) : null}
-            </div>
-          </>
-        )}
-      </div>
-    </div>
+                {/* Sticky Read-Only Footer */}
+                <div className="pb-safe flex flex-wrap items-center justify-end gap-2.5 border-t border-slate-200/90 bg-slate-50/80 px-5 py-3.5 sm:px-6 sm:py-4 dark:border-slate-800 dark:bg-slate-950/70">
+                  <Button variant="secondary" onClick={handleClose}>
+                    {drawerCopy.closeLabel}
+                  </Button>
+                  {canEdit && effectiveStatus === 'ready' && customer ? (
+                    <Button variant="primary" onClick={handleStartEdit}>
+                      <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
+                      <span>{drawerCopy.editButtonLabel}</span>
+                    </Button>
+                  ) : null}
+                </div>
+              </>
+            )}
+          </motion.div>
+        </motion.div>
+      ) : null}
+    </AnimatePresence>
   );
 }

@@ -15,7 +15,7 @@ export function AssistantView() {
   const assistantCopy = dict.assistant;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 sm:space-y-6">
       <PageHeader
         title={moduleCopy.title}
         description={moduleCopy.description}
@@ -27,9 +27,9 @@ export function AssistantView() {
         body={assistantCopy.noticeBody}
       />
 
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-5 sm:gap-6 xl:grid-cols-3">
         {/* Conversation shell (disabled in Phase 1) */}
-        <Surface className="xl:col-span-2 flex min-h-[420px] flex-col overflow-hidden">
+        <Surface className="xl:col-span-2 flex min-h-[400px] flex-col overflow-hidden">
           <div className="flex flex-1 items-center justify-center">
             <EmptyState
               icon={<Sparkles className="h-5 w-5" aria-hidden="true" />}
@@ -39,7 +39,7 @@ export function AssistantView() {
             />
           </div>
 
-          <div className="border-t border-slate-200 bg-slate-50/70 p-4 dark:border-slate-800 dark:bg-slate-950/60">
+          <div className="border-t border-slate-200/80 bg-slate-50/75 p-4 dark:border-slate-800/80 dark:bg-slate-950/60">
             <div className="flex flex-col gap-2 sm:flex-row">
               <label htmlFor="assistant-prompt-input" className="sr-only">
                 {assistantCopy.promptPlaceholder}
@@ -51,14 +51,17 @@ export function AssistantView() {
                 value=""
                 readOnly
                 placeholder={assistantCopy.promptPlaceholder}
-                className="h-10 flex-1 rounded-lg border border-slate-200 bg-white px-3.5 text-sm text-slate-500 placeholder:text-slate-400 disabled:cursor-not-allowed disabled:bg-slate-100 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400 dark:disabled:bg-slate-900/70"
+                className="h-11 flex-1 rounded-xl border border-slate-200/90 bg-white px-3.5 text-sm text-slate-500 placeholder:text-slate-400 disabled:cursor-not-allowed disabled:bg-slate-100/80 sm:h-10 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400 dark:disabled:bg-slate-900/70"
               />
               <Button
                 variant="primary"
                 disabled
                 title={assistantCopy.disabledFeedback}
               >
-                <SendHorizontal className="h-4 w-4" aria-hidden="true" />
+                <SendHorizontal
+                  className="h-4 w-4 rtl:rotate-180"
+                  aria-hidden="true"
+                />
                 <span>{assistantCopy.sendButton}</span>
               </Button>
             </div>
@@ -70,20 +73,25 @@ export function AssistantView() {
 
         {/* Planned capabilities */}
         <Surface className="overflow-hidden self-start">
-          <div className="border-b border-slate-200 px-5 py-4 dark:border-slate-800">
-            <h2 className="text-base font-semibold text-slate-950 dark:text-slate-50">
+          <div className="border-b border-slate-200/80 px-5 py-4 dark:border-slate-800/80">
+            <h2 className="font-display text-base font-semibold tracking-tight text-slate-950 dark:text-slate-50">
               {assistantCopy.plannedCapabilitiesTitle}
             </h2>
           </div>
-          <ul className="divide-y divide-slate-200 dark:divide-slate-800">
-            {assistantCopy.plannedCapabilities.map((item) => (
-              <li key={item.title} className="px-5 py-4 space-y-1">
-                <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
-                  {item.title}
-                </p>
-                <p className="text-xs leading-relaxed text-slate-600 dark:text-slate-400">
-                  {item.description}
-                </p>
+          <ul className="divide-y divide-slate-200/80 dark:divide-slate-800/80">
+            {assistantCopy.plannedCapabilities.map((item, idx) => (
+              <li key={item.title} className="flex items-start gap-3 px-5 py-4">
+                <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-slate-100 font-mono text-[11px] font-semibold text-slate-600 tabular-nums dark:bg-slate-800 dark:text-slate-300">
+                  {idx + 1}
+                </span>
+                <div className="min-w-0 space-y-1">
+                  <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                    {item.title}
+                  </p>
+                  <p className="text-xs leading-relaxed text-slate-600 dark:text-slate-400">
+                    {item.description}
+                  </p>
+                </div>
               </li>
             ))}
           </ul>

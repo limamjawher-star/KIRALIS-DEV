@@ -57,7 +57,7 @@ export function CalendarView() {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 sm:space-y-6">
       <PageHeader
         title={moduleCopy.title}
         description={moduleCopy.description}
@@ -69,27 +69,33 @@ export function CalendarView() {
         body={dict.common.phase1NoticeBody}
       />
 
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-5 sm:gap-6 xl:grid-cols-3">
         {/* Main calendar surface */}
         <Surface className="xl:col-span-2 overflow-hidden">
-          <div className="flex flex-col gap-3 border-b border-slate-200 px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between sm:px-5 dark:border-slate-800">
-            <div className="flex items-center gap-2">
-              <div className="inline-flex items-center rounded-lg border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-950">
+          <div className="flex flex-col gap-3 border-b border-slate-200/80 px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between sm:px-5 dark:border-slate-800/80">
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="inline-flex items-center rounded-xl border border-slate-200/90 bg-white dark:border-slate-700/90 dark:bg-slate-950">
                 <button
                   type="button"
                   onClick={() => setCoords((c) => shiftMonth(c, -1))}
                   aria-label={dict.calendar.previousMonth}
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-s-lg text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white cursor-pointer"
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-s-xl text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600/30 sm:h-9 sm:w-9 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white cursor-pointer"
                 >
-                  <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+                  <ChevronLeft
+                    className="h-4 w-4 rtl:rotate-180"
+                    aria-hidden="true"
+                  />
                 </button>
                 <button
                   type="button"
                   onClick={() => setCoords((c) => shiftMonth(c, 1))}
                   aria-label={dict.calendar.nextMonth}
-                  className="inline-flex h-9 w-9 items-center justify-center border-s border-slate-200 rounded-e-lg text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white cursor-pointer"
+                  className="inline-flex h-10 w-10 items-center justify-center border-s border-slate-200/90 rounded-e-xl text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600/30 sm:h-9 sm:w-9 dark:border-slate-700/90 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white cursor-pointer"
                 >
-                  <ChevronRight className="h-4 w-4" aria-hidden="true" />
+                  <ChevronRight
+                    className="h-4 w-4 rtl:rotate-180"
+                    aria-hidden="true"
+                  />
                 </button>
               </div>
 
@@ -97,7 +103,7 @@ export function CalendarView() {
                 {dict.calendar.today}
               </Button>
 
-              <h2 className="ms-1 text-base font-semibold text-slate-950 dark:text-slate-50">
+              <h2 className="ms-1 font-display text-base font-semibold tracking-tight text-slate-950 dark:text-slate-50">
                 {monthHeading}
               </h2>
             </div>
@@ -113,11 +119,11 @@ export function CalendarView() {
           {viewMode === 'month' ? (
             <div className="p-4 sm:p-5">
               {/* Weekday headings */}
-              <div className="grid grid-cols-7 border-b border-slate-200 pb-2 dark:border-slate-800">
+              <div className="grid grid-cols-7 border-b border-slate-200/80 pb-2 dark:border-slate-800/80">
                 {dict.calendar.weekdays.map((day) => (
                   <div
                     key={day}
-                    className="text-center text-xs font-medium text-slate-500 dark:text-slate-400"
+                    className="text-center text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-500 dark:text-slate-400"
                   >
                     {day}
                   </div>
@@ -125,7 +131,7 @@ export function CalendarView() {
               </div>
 
               {/* 42-day grid */}
-              <div className="mt-2 grid grid-cols-7 gap-1">
+              <div className="mt-2.5 grid grid-cols-7 gap-1.5">
                 {cells.map((cell) => {
                   const isSelected = cell.isoDate === selectedDate;
                   return (
@@ -136,10 +142,10 @@ export function CalendarView() {
                       aria-pressed={isSelected}
                       aria-label={cell.isoDate}
                       className={cn(
-                        'flex h-14 flex-col items-start justify-between rounded-lg border p-2 text-start transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 sm:h-[68px] dark:focus-visible:ring-blue-400 cursor-pointer',
+                        'flex h-14 flex-col items-start justify-between rounded-xl border p-2 text-start transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600/30 sm:h-[68px] dark:focus-visible:ring-blue-400/40 cursor-pointer',
                         isSelected
-                          ? 'border-blue-600 bg-blue-50/70 dark:border-blue-500 dark:bg-blue-950/40'
-                          : 'border-slate-200/80 bg-white hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800/70',
+                          ? 'border-blue-600 bg-blue-50/75 shadow-xs dark:border-blue-500 dark:bg-blue-950/40'
+                          : 'border-slate-200/80 bg-white hover:border-slate-300 hover:bg-slate-50/80 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700 dark:hover:bg-slate-800/70',
                         !cell.inCurrentMonth &&
                           !isSelected &&
                           'bg-slate-50/70 text-slate-400 dark:bg-slate-950/40 dark:text-slate-600'
@@ -147,7 +153,7 @@ export function CalendarView() {
                     >
                       <span
                         className={cn(
-                          'inline-flex h-6 min-w-6 items-center justify-center rounded-md px-1 font-mono text-xs tabular-nums',
+                          'inline-flex h-6 min-w-6 items-center justify-center rounded-lg px-1 font-mono text-xs tabular-nums',
                           cell.isToday
                             ? 'bg-blue-700 font-semibold text-white dark:bg-blue-600'
                             : cell.inCurrentMonth
@@ -179,11 +185,11 @@ export function CalendarView() {
 
         {/* Selected day detail panel */}
         <Surface className="overflow-hidden self-start">
-          <div className="border-b border-slate-200 px-5 py-4 dark:border-slate-800">
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+          <div className="border-b border-slate-200/80 bg-slate-50/70 px-5 py-4 dark:border-slate-800/80 dark:bg-slate-950/50">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-500 dark:text-slate-400">
               {dict.calendar.selectedDateLabel}
             </p>
-            <p className="mt-0.5 font-mono text-base font-semibold text-slate-950 tabular-nums dark:text-slate-50">
+            <p className="mt-1 font-mono text-base font-semibold text-slate-950 tabular-nums dark:text-slate-50">
               {selectedDate}
             </p>
           </div>

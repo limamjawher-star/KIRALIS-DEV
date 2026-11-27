@@ -168,7 +168,7 @@ export function AgencyOnboardingForm({
   const slugPreview = values.slug.trim() || 'votre-agence';
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="space-y-6">
+    <form onSubmit={handleSubmit} noValidate className="space-y-5 sm:space-y-6">
       {serverError ? (
         <AuthAlert variant="error" title="Création impossible">
           {serverError}
@@ -187,12 +187,12 @@ export function AgencyOnboardingForm({
 
       {/* Section 1: Agency identity */}
       <Surface padded className="space-y-5">
-        <div className="flex items-start gap-3 border-b border-slate-200 pb-4 dark:border-slate-800">
-          <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900 dark:bg-blue-950/60 dark:text-blue-300">
+        <div className="flex items-start gap-3 border-b border-slate-200/80 pb-4 dark:border-slate-800/80">
+          <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-blue-200/80 bg-blue-50/80 text-blue-700 dark:border-blue-900/70 dark:bg-blue-950/60 dark:text-blue-300">
             <Building2 className="h-4 w-4" aria-hidden="true" />
           </span>
           <div>
-            <h2 className="text-base font-semibold text-slate-950 dark:text-slate-50">
+            <h2 className="font-display text-base font-semibold tracking-tight text-slate-950 dark:text-slate-50">
               Identité et coordonnées de l’agence
             </h2>
             <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
@@ -219,7 +219,9 @@ export function AgencyOnboardingForm({
               disabled={isSubmitting || Boolean(createdAgencyName)}
               placeholder="Ex. Atlas Mobility Tunis"
               aria-invalid={Boolean(fieldErrors.name)}
-              aria-describedby={fieldErrors.name ? 'agency-name-error' : undefined}
+              aria-describedby={
+                fieldErrors.name ? 'agency-name-error' : undefined
+              }
               className={cn(
                 INPUT_BASE_CLASSES,
                 getInputStateClasses(Boolean(fieldErrors.name))
@@ -351,7 +353,7 @@ export function AgencyOnboardingForm({
               }
               className={cn(
                 INPUT_BASE_CLASSES,
-                'font-mono',
+                'font-mono tabular-nums',
                 getInputStateClasses(Boolean(fieldErrors.phone))
               )}
             />
@@ -440,12 +442,12 @@ export function AgencyOnboardingForm({
 
       {/* Section 2: Regional defaults */}
       <Surface padded className="space-y-5">
-        <div className="flex items-start gap-3 border-b border-slate-200 pb-4 dark:border-slate-800">
-          <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-600 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300">
+        <div className="flex items-start gap-3 border-b border-slate-200/80 pb-4 dark:border-slate-800/80">
+          <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-200/90 bg-slate-50 text-slate-600 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300">
             <Globe className="h-4 w-4" aria-hidden="true" />
           </span>
           <div>
-            <h2 className="text-base font-semibold text-slate-950 dark:text-slate-50">
+            <h2 className="font-display text-base font-semibold tracking-tight text-slate-950 dark:text-slate-50">
               Paramètres régionaux par défaut
             </h2>
             <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
@@ -528,8 +530,12 @@ export function AgencyOnboardingForm({
       </Surface>
 
       {/* Footer actions */}
-      <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+      <Surface
+        variant="subtle"
+        padded
+        className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between"
+      >
+        <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
           <ShieldCheck
             className="h-4 w-4 shrink-0 text-blue-700 dark:text-blue-400"
             aria-hidden="true"
@@ -544,7 +550,7 @@ export function AgencyOnboardingForm({
           type="submit"
           variant="primary"
           disabled={isSubmitting || Boolean(createdAgencyName)}
-          className="min-w-[220px]"
+          className="w-full sm:w-auto sm:min-w-[220px]"
         >
           {isSubmitting ? (
             <>
@@ -564,7 +570,7 @@ export function AgencyOnboardingForm({
             </span>
           )}
         </Button>
-      </div>
+      </Surface>
     </form>
   );
 }
