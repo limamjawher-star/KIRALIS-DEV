@@ -164,6 +164,240 @@ export interface Dictionary {
     validationErrorSummary: string;
     errors: Record<ValidationErrorCode, string>;
   };
+  customersDirectory: {
+    title: string;
+    description: string;
+    refreshLabel: string;
+    refreshAriaLabel: string;
+    refreshingLabel: string;
+    retryLabel: string;
+    loadErrorFallback: string;
+    networkError: string;
+    roles: Record<'owner' | 'manager' | 'agent', string>;
+    stats: {
+      totalLabel: string;
+      totalNote: string;
+      individualLabel: string;
+      individualNote: string;
+      corporateLabel: string;
+      corporateNote: string;
+      withEmailLabel: string;
+      withEmailNote: string;
+    };
+    searchPlaceholder: string;
+    searchAriaLabel: string;
+    typeFilterAriaLabel: string;
+    typeFilters: {
+      all: string;
+      individual: string;
+      corporate: string;
+    };
+    typeBadges: {
+      individual: string;
+      corporate: string;
+    };
+    sortAriaLabel: string;
+    sortPrefix: string;
+    sortOptions: {
+      newest: string;
+      oldest: string;
+      name_asc: string;
+      name_desc: string;
+    };
+    resetFiltersLabel: string;
+    tableAriaLabel: string;
+    columns: {
+      customer: string;
+      type: string;
+      phone: string;
+      email: string;
+      city: string;
+      createdAt: string;
+    };
+    emptyAgencyTitle: string;
+    emptyAgencyDescription: string;
+    emptyFilterTitle: string;
+    emptyFilterDescription: string;
+    notProvided: string;
+    loadingLabel: string;
+    addButtonLabel: string;
+    addFirstButtonLabel: string;
+    createSuccessBanner: string;
+    dismissBannerLabel: string;
+    addModal: {
+      title: string;
+      subtitle: string;
+      closeAriaLabel: string;
+      sectionIdentity: string;
+      sectionContact: string;
+      sectionAddress: string;
+      sectionNotes: string;
+      customerTypeLabel: string;
+      fullNameLabel: string;
+      fullNamePlaceholder: string;
+      companyNameLabel: string;
+      companyNamePlaceholder: string;
+      phoneLabel: string;
+      phonePlaceholder: string;
+      phoneHelper: string;
+      emailLabel: string;
+      emailPlaceholder: string;
+      addressLabel: string;
+      addressPlaceholder: string;
+      cityLabel: string;
+      cityPlaceholder: string;
+      countryLabel: string;
+      notesLabel: string;
+      notesPlaceholder: string;
+      cancelLabel: string;
+      submitLabel: string;
+      submittingLabel: string;
+      validationSummaryError: string;
+    };
+    detailDrawer: {
+      kicker: string;
+      loadingTitle: string;
+      loadingAriaLabel: string;
+      errorTitle: string;
+      closeAriaLabel: string;
+      closeLabel: string;
+      retryLabel: string;
+      openDetailAriaPrefix: string;
+      sectionIdentity: string;
+      sectionContact: string;
+      sectionAddress: string;
+      sectionNotes: string;
+      sectionTimestamps: string;
+      customerTypeLabel: string;
+      fullNameLabel: string;
+      companyNameLabel: string;
+      phoneLabel: string;
+      emailLabel: string;
+      addressLabel: string;
+      cityLabel: string;
+      countryLabel: string;
+      notesLabel: string;
+      noNotesLabel: string;
+      createdAtLabel: string;
+      updatedAtLabel: string;
+      editButtonLabel: string;
+      editTitle: string;
+      editSubtitle: string;
+      saveLabel: string;
+      savingLabel: string;
+      cancelLabel: string;
+      noChangesMessage: string;
+      updateSuccessBanner: string;
+      drivers: {
+        sectionTitle: string;
+        refreshLabel: string;
+        refreshAriaLabel: string;
+        loadingLabel: string;
+        loadingAriaLabel: string;
+        errorTitle: string;
+        retryLabel: string;
+        emptyTitle: string;
+        emptyDescription: string;
+        driverCountSingular: string;
+        driverCountPlural: string;
+        statusActive: string;
+        statusInactive: string;
+        issuingCountryLabel: string;
+        licenceCategoryLabel: string;
+        licenceExpiresOnLabel: string;
+        verificationStatusLabel: string;
+        eligibilityLabel: string;
+        warningsLabel: string;
+        verificationNotesLabel: string;
+        legalNotice: string;
+        verificationStatuses: {
+          unverified: string;
+          pending: string;
+          verified: string;
+          rejected: string;
+        };
+        eligibilityStatuses: {
+          blocked: string;
+          attention_required: string;
+          checks_passed_manual_review_required: string;
+        };
+        flagMessages: {
+          driver_inactive: string;
+          licence_expiry_missing: string;
+          licence_expired: string;
+          licence_expires_during_rental: string;
+          licence_expiring_soon: string;
+          verification_unverified: string;
+          verification_pending: string;
+          verification_rejected: string;
+          licence_category_missing: string;
+          licence_category_mismatch: string;
+          issuing_country_missing: string;
+          foreign_licence_manual_check: string;
+        };
+        addForm: {
+          addButtonLabel: string;
+          title: string;
+          subtitle: string;
+          fullNameLabel: string;
+          fullNamePlaceholder: string;
+          issuingCountryLabel: string;
+          issuingCountryEmptyOption: string;
+          licenceCategoryLabel: string;
+          licenceCategoryEmptyOption: string;
+          licenceExpiresOnLabel: string;
+          licenceExpiresOnHelper: string;
+          cancelLabel: string;
+          submitLabel: string;
+          submittingLabel: string;
+          createSuccessBanner: string;
+          dismissBannerLabel: string;
+        };
+        editForm: {
+          editButtonLabel: string;
+          editButtonAriaPrefix: string;
+          title: string;
+          subtitle: string;
+          cancelLabel: string;
+          saveLabel: string;
+          savingLabel: string;
+          noChangesMessage: string;
+          verifiedLicenceChangeWarning: string;
+          updateSuccessBanner: string;
+          updateSuccessVerifiedReviewBanner: string;
+        };
+        verificationForm: {
+          buttonLabel: string;
+          buttonAriaPrefix: string;
+          title: string;
+          manualReviewNotice: string;
+          statusLabel: string;
+          notesLabel: string;
+          notesPlaceholder: string;
+          notesHelper: string;
+          clearNotesLabel: string;
+          cancelLabel: string;
+          saveLabel: string;
+          savingLabel: string;
+          noChangesMessage: string;
+          updateSuccessBanner: string;
+        };
+        activation: {
+          deactivateButtonLabel: string;
+          reactivateButtonLabel: string;
+          deactivateAriaPrefix: string;
+          reactivateAriaPrefix: string;
+          confirmDeactivateTitle: string;
+          confirmDeactivateBody: string;
+          confirmDeactivateButton: string;
+          cancelLabel: string;
+          updatingLabel: string;
+          deactivatedSuccessBanner: string;
+          reactivatedSuccessBanner: string;
+        };
+      };
+    };
+  };
 }
 
 const FR_DICTIONARY: Dictionary = {
@@ -201,11 +435,11 @@ const FR_DICTIONARY: Dictionary = {
       navLabel: 'Clients',
       title: 'Clients',
       description:
-        'Base clients particuliers et entreprises, pièces d’identité, permis de conduire et historique des locations.',
+        'Répertoire des clients particuliers et entreprises de votre agence, synchronisé avec Supabase PostgreSQL.',
       emptyTitle: 'Aucun client enregistré',
       emptyDescription:
-        'Les dossiers clients (CIN, passeport, permis et coordonnées) seront stockés de façon isolée par agence via Supabase.',
-      plannedFeatureSummary: 'Dossiers clients, permis de conduire, historique et liste de vigilance.',
+        'Aucun client n’est encore enregistré pour cette agence dans Supabase.',
+      plannedFeatureSummary: 'Répertoire clients, recherche multi-critères et filtrage par type.',
     },
     reservations: {
       navLabel: 'Réservations',
@@ -510,6 +744,273 @@ const FR_DICTIONARY: Dictionary = {
       invalid_vat: 'Le taux de TVA doit être compris entre 0 et 100.',
     },
   },
+  customersDirectory: {
+    title: 'Clients',
+    description:
+      'Consultez et filtrez le répertoire des clients particuliers et entreprises enregistrés dans votre agence.',
+    refreshLabel: 'Actualiser',
+    refreshAriaLabel: 'Actualiser la liste des clients',
+    refreshingLabel: 'Actualisation…',
+    retryLabel: 'Réessayer',
+    loadErrorFallback:
+      'Impossible d’actualiser le répertoire clients depuis Supabase.',
+    networkError: 'Erreur réseau lors du chargement des clients.',
+    roles: {
+      owner: 'Propriétaire',
+      manager: 'Gestionnaire',
+      agent: 'Agent',
+    },
+    stats: {
+      totalLabel: 'Total clients',
+      totalNote: 'Clients enregistrés dans votre agence',
+      individualLabel: 'Particuliers',
+      individualNote: 'Comptes individuels',
+      corporateLabel: 'Entreprises',
+      corporateNote: 'Comptes sociétés',
+      withEmailLabel: 'Avec e-mail',
+      withEmailNote: 'Coordonnées e-mail renseignées',
+    },
+    searchPlaceholder: 'Rechercher par nom, entreprise, e-mail ou téléphone…',
+    searchAriaLabel: 'Rechercher dans le répertoire clients',
+    typeFilterAriaLabel: 'Filtrer par type de client',
+    typeFilters: {
+      all: 'Tous',
+      individual: 'Particuliers',
+      corporate: 'Entreprises',
+    },
+    typeBadges: {
+      individual: 'Particulier',
+      corporate: 'Entreprise',
+    },
+    sortAriaLabel: 'Trier les clients',
+    sortPrefix: 'Tri',
+    sortOptions: {
+      newest: 'Plus récents',
+      oldest: 'Plus anciens',
+      name_asc: 'Nom (A → Z)',
+      name_desc: 'Nom (Z → A)',
+    },
+    resetFiltersLabel: 'Réinitialiser',
+    tableAriaLabel: 'Répertoire des clients de l’agence',
+    columns: {
+      customer: 'Client',
+      type: 'Type',
+      phone: 'Téléphone',
+      email: 'E-mail',
+      city: 'Ville',
+      createdAt: 'Créé le',
+    },
+    emptyAgencyTitle: 'Aucun client enregistré dans votre agence',
+    emptyAgencyDescription:
+      'Votre agence ne compte encore aucun client dans Supabase. Les clients enregistrés apparaîtront automatiquement dans ce répertoire.',
+    emptyFilterTitle: 'Aucun client ne correspond à votre recherche',
+    emptyFilterDescription:
+      'Modifiez vos termes de recherche ou réinitialisez les filtres actifs pour afficher l’ensemble du répertoire.',
+    notProvided: 'Non renseigné',
+    loadingLabel: 'Chargement du répertoire clients…',
+    addButtonLabel: 'Ajouter un client',
+    addFirstButtonLabel: 'Ajouter un premier client',
+    createSuccessBanner: 'Client enregistré avec succès dans le répertoire.',
+    dismissBannerLabel: 'Fermer',
+    addModal: {
+      title: 'Ajouter un client',
+      subtitle: 'Enregistrez un client particulier ou entreprise dans votre agence.',
+      closeAriaLabel: 'Fermer la fenêtre',
+      sectionIdentity: 'Identité',
+      sectionContact: 'Coordonnées',
+      sectionAddress: 'Adresse',
+      sectionNotes: 'Notes internes',
+      customerTypeLabel: 'Type de client',
+      fullNameLabel: 'Nom complet',
+      fullNamePlaceholder: 'Ex. Sami Ben Ali',
+      companyNameLabel: 'Raison sociale',
+      companyNamePlaceholder: 'Ex. Atlas Mobility SARL',
+      phoneLabel: 'Téléphone',
+      phonePlaceholder: '+216 22 123 456',
+      phoneHelper: 'Format international recommandé (ex. +216 22 123 456).',
+      emailLabel: 'E-mail',
+      emailPlaceholder: 'client@exemple.tn',
+      addressLabel: 'Adresse',
+      addressPlaceholder: 'Ex. 12 Avenue Habib Bourguiba',
+      cityLabel: 'Ville',
+      cityPlaceholder: 'Ex. Tunis',
+      countryLabel: 'Pays',
+      notesLabel: 'Notes internes',
+      notesPlaceholder: 'Informations utiles pour votre équipe (facultatif)…',
+      cancelLabel: 'Annuler',
+      submitLabel: 'Enregistrer le client',
+      submittingLabel: 'Enregistrement…',
+      validationSummaryError: 'Veuillez corriger les champs indiqués ci-dessous.',
+    },
+    detailDrawer: {
+      kicker: 'Fiche client',
+      loadingTitle: 'Chargement de la fiche client…',
+      loadingAriaLabel: 'Chargement des détails du client',
+      errorTitle: 'Impossible d’afficher cette fiche client',
+      closeAriaLabel: 'Fermer la fiche client',
+      closeLabel: 'Fermer',
+      retryLabel: 'Réessayer',
+      openDetailAriaPrefix: 'Consulter la fiche de',
+      sectionIdentity: 'Identité',
+      sectionContact: 'Coordonnées',
+      sectionAddress: 'Adresse et pays',
+      sectionNotes: 'Notes internes',
+      sectionTimestamps: 'Historique de la fiche',
+      customerTypeLabel: 'Type de client',
+      fullNameLabel: 'Nom complet',
+      companyNameLabel: 'Raison sociale',
+      phoneLabel: 'Téléphone',
+      emailLabel: 'E-mail',
+      addressLabel: 'Adresse',
+      cityLabel: 'Ville',
+      countryLabel: 'Pays',
+      notesLabel: 'Notes internes',
+      noNotesLabel: 'Aucune note interne enregistrée.',
+      createdAtLabel: 'Date de création',
+      updatedAtLabel: 'Dernière mise à jour',
+      editButtonLabel: 'Modifier',
+      editTitle: 'Modifier le client',
+      editSubtitle: 'Mettez à jour les informations modifiables de cette fiche client.',
+      saveLabel: 'Enregistrer les modifications',
+      savingLabel: 'Enregistrement…',
+      cancelLabel: 'Annuler',
+      noChangesMessage: 'Aucune modification à enregistrer.',
+      updateSuccessBanner: 'Fiche client mise à jour avec succès.',
+      drivers: {
+        sectionTitle: 'Conducteurs autorisés',
+        refreshLabel: 'Actualiser',
+        refreshAriaLabel: 'Actualiser les conducteurs autorisés',
+        loadingLabel: 'Chargement des conducteurs autorisés…',
+        loadingAriaLabel: 'Chargement des conducteurs autorisés',
+        errorTitle: 'Impossible de charger les conducteurs autorisés',
+        retryLabel: 'Réessayer',
+        emptyTitle: 'Aucun conducteur autorisé enregistré',
+        emptyDescription:
+          'Aucun conducteur autorisé n’est encore associé à ce client dans Supabase.',
+        driverCountSingular: 'conducteur',
+        driverCountPlural: 'conducteurs',
+        statusActive: 'Actif',
+        statusInactive: 'Inactif',
+        issuingCountryLabel: 'Pays de délivrance',
+        licenceCategoryLabel: 'Catégorie du permis',
+        licenceExpiresOnLabel: 'Expiration du permis',
+        verificationStatusLabel: 'Statut de vérification',
+        eligibilityLabel: 'Pré-vérification opérationnelle',
+        warningsLabel: 'Alertes et vérifications',
+        verificationNotesLabel: 'Notes de vérification internes',
+        legalNotice:
+          'Pré-vérification opérationnelle uniquement : ne constitue pas une preuve d’aptitude légale à conduire. Vérifiez le permis physique et les règles du pays avant remise du véhicule.',
+        verificationStatuses: {
+          unverified: 'Non vérifié',
+          pending: 'En attente',
+          verified: 'Vérifié',
+          rejected: 'Refusé',
+        },
+        eligibilityStatuses: {
+          blocked: 'Bloqué',
+          attention_required: 'À vérifier',
+          checks_passed_manual_review_required: 'Contrôles OK · Vérif. manuelle',
+        },
+        flagMessages: {
+          driver_inactive: 'Ce conducteur est désactivé pour ce client.',
+          licence_expiry_missing:
+            'Date d’expiration du permis non renseignée.',
+          licence_expired:
+            'Le permis de conduire est expiré.',
+          licence_expires_during_rental:
+            'Le permis expire avant la fin de la période de location.',
+          licence_expiring_soon:
+            'Le permis de conduire arrive bientôt à expiration.',
+          verification_unverified:
+            'Le permis n’a pas encore été vérifié manuellement.',
+          verification_pending:
+            'La vérification du permis est en attente.',
+          verification_rejected:
+            'La vérification du conducteur a été refusée.',
+          licence_category_missing:
+            'Catégorie de permis non renseignée.',
+          licence_category_mismatch:
+            'La catégorie du permis peut ne pas correspondre au véhicule.',
+          issuing_country_missing:
+            'Pays de délivrance du permis non renseigné.',
+          foreign_licence_manual_check:
+            'Permis étranger : vérifier la validité locale (et le permis international si requis).',
+        },
+        addForm: {
+          addButtonLabel: 'Ajouter un conducteur',
+          title: 'Ajouter un conducteur autorisé',
+          subtitle:
+            'Le conducteur sera enregistré avec le statut « Non vérifié » jusqu’à vérification manuelle par l’agence.',
+          fullNameLabel: 'Nom complet du conducteur',
+          fullNamePlaceholder: 'Ex. Youssef Trabelsi',
+          issuingCountryLabel: 'Pays de délivrance',
+          issuingCountryEmptyOption: 'Non renseigné (facultatif)',
+          licenceCategoryLabel: 'Catégorie du permis',
+          licenceCategoryEmptyOption: 'Non renseignée (facultatif)',
+          licenceExpiresOnLabel: 'Date d’expiration du permis',
+          licenceExpiresOnHelper:
+            'Facultatif. Aucun numéro ni copie de permis n’est collecté ici.',
+          cancelLabel: 'Annuler',
+          submitLabel: 'Enregistrer le conducteur',
+          submittingLabel: 'Enregistrement…',
+          createSuccessBanner:
+            'Conducteur autorisé ajouté avec le statut « Non vérifié ».',
+          dismissBannerLabel: 'Fermer',
+        },
+        editForm: {
+          editButtonLabel: 'Modifier',
+          editButtonAriaPrefix: 'Modifier le conducteur',
+          title: 'Modifier le conducteur',
+          subtitle:
+            'Modifiez uniquement le nom complet et les métadonnées de permis de ce conducteur.',
+          cancelLabel: 'Annuler',
+          saveLabel: 'Enregistrer',
+          savingLabel: 'Enregistrement…',
+          noChangesMessage: 'Aucune modification à enregistrer.',
+          verifiedLicenceChangeWarning:
+            'Ce conducteur est actuellement marqué « Vérifié ». Toute modification du nom ou des informations du permis réinitialise automatiquement son statut à « Non vérifié » et exige une nouvelle vérification manuelle.',
+          updateSuccessBanner: 'Informations du conducteur mises à jour.',
+          updateSuccessVerifiedReviewBanner:
+            'Informations du conducteur mises à jour. Le statut de vérification a été réinitialisé à « Non vérifié » et nécessite une nouvelle vérification manuelle.',
+        },
+        verificationForm: {
+          buttonLabel: 'Vérification',
+          buttonAriaPrefix: 'Gérer la vérification de',
+          title: 'Vérification du conducteur',
+          manualReviewNotice:
+            'Le statut « Vérifié » atteste uniquement d’un contrôle manuel interne par votre agence : il ne constitue pas une preuve légale d’aptitude à conduire.',
+          statusLabel: 'Statut de vérification',
+          notesLabel: 'Notes internes de vérification',
+          notesPlaceholder:
+            'Notes privées réservées au propriétaire et au gérant (facultatif)…',
+          notesHelper:
+            'Visibles uniquement par le propriétaire et le gérant (jamais exposées aux agents). Max. 1000 caractères.',
+          clearNotesLabel: 'Effacer les notes',
+          cancelLabel: 'Annuler',
+          saveLabel: 'Enregistrer la vérification',
+          savingLabel: 'Enregistrement…',
+          noChangesMessage: 'Aucune modification de vérification à enregistrer.',
+          updateSuccessBanner:
+            'Statut et notes de vérification mis à jour.',
+        },
+        activation: {
+          deactivateButtonLabel: 'Désactiver',
+          reactivateButtonLabel: 'Réactiver',
+          deactivateAriaPrefix: 'Désactiver le conducteur',
+          reactivateAriaPrefix: 'Réactiver le conducteur',
+          confirmDeactivateTitle: 'Désactiver ce conducteur autorisé ?',
+          confirmDeactivateBody:
+            'Ce conducteur ne sera plus considéré comme disponible opérationnellement. Son dossier, son historique d’audit et son statut de vérification sont conservés sans suppression.',
+          confirmDeactivateButton: 'Confirmer la désactivation',
+          cancelLabel: 'Annuler',
+          updatingLabel: 'Mise à jour…',
+          deactivatedSuccessBanner:
+            'Conducteur désactivé (non disponible opérationnellement).',
+          reactivatedSuccessBanner: 'Conducteur réactivé.',
+        },
+      },
+    },
+  },
 };
 
 const EN_DICTIONARY: Dictionary = {
@@ -547,11 +1048,11 @@ const EN_DICTIONARY: Dictionary = {
       navLabel: 'Customers',
       title: 'Customers',
       description:
-        'Individual and corporate customer directory, ID records, driver licenses, and rental history.',
+        'Individual and corporate customer directory for your agency, connected to Supabase PostgreSQL.',
       emptyTitle: 'No customers recorded',
       emptyDescription:
-        'Customer profiles (ID, passport, driver license, contact details) will be isolated per agency in Supabase.',
-      plannedFeatureSummary: 'Customer records, driver licenses, rental history, and verification.',
+        'No customers have been recorded for this agency in Supabase yet.',
+      plannedFeatureSummary: 'Customer directory, multi-field search, and type filtering.',
     },
     reservations: {
       navLabel: 'Reservations',
@@ -821,6 +1322,272 @@ const EN_DICTIONARY: Dictionary = {
       invalid_vat: 'VAT rate must be between 0 and 100.',
     },
   },
+  customersDirectory: {
+    title: 'Customers',
+    description:
+      'Browse and filter individual and corporate customers registered in your agency.',
+    refreshLabel: 'Refresh',
+    refreshAriaLabel: 'Refresh customer directory',
+    refreshingLabel: 'Refreshing…',
+    retryLabel: 'Retry',
+    loadErrorFallback:
+      'Unable to refresh the customer directory from Supabase.',
+    networkError: 'Network error while loading customers.',
+    roles: {
+      owner: 'Owner',
+      manager: 'Manager',
+      agent: 'Agent',
+    },
+    stats: {
+      totalLabel: 'Total customers',
+      totalNote: 'Registered in your agency',
+      individualLabel: 'Individuals',
+      individualNote: 'Personal accounts',
+      corporateLabel: 'Companies',
+      corporateNote: 'Corporate accounts',
+      withEmailLabel: 'With email',
+      withEmailNote: 'Email address on file',
+    },
+    searchPlaceholder: 'Search by name, company, email, or phone…',
+    searchAriaLabel: 'Search customer directory',
+    typeFilterAriaLabel: 'Filter by customer type',
+    typeFilters: {
+      all: 'All',
+      individual: 'Individuals',
+      corporate: 'Companies',
+    },
+    typeBadges: {
+      individual: 'Individual',
+      corporate: 'Company',
+    },
+    sortAriaLabel: 'Sort customers',
+    sortPrefix: 'Sort',
+    sortOptions: {
+      newest: 'Newest first',
+      oldest: 'Oldest first',
+      name_asc: 'Name (A → Z)',
+      name_desc: 'Name (Z → A)',
+    },
+    resetFiltersLabel: 'Reset',
+    tableAriaLabel: 'Agency customer directory',
+    columns: {
+      customer: 'Customer',
+      type: 'Type',
+      phone: 'Phone',
+      email: 'Email',
+      city: 'City',
+      createdAt: 'Created',
+    },
+    emptyAgencyTitle: 'No customers registered in your agency',
+    emptyAgencyDescription:
+      'Your agency does not have any customer records in Supabase yet. Registered customers will appear here automatically.',
+    emptyFilterTitle: 'No customers match your filters',
+    emptyFilterDescription:
+      'Adjust your search query or reset active filters to view the full customer directory.',
+    notProvided: 'Not provided',
+    loadingLabel: 'Loading customer directory…',
+    addButtonLabel: 'Add customer',
+    addFirstButtonLabel: 'Add first customer',
+    createSuccessBanner: 'Customer saved successfully to the directory.',
+    dismissBannerLabel: 'Dismiss',
+    addModal: {
+      title: 'Add customer',
+      subtitle: 'Create an individual or company customer record for your agency.',
+      closeAriaLabel: 'Close modal',
+      sectionIdentity: 'Identity',
+      sectionContact: 'Contact details',
+      sectionAddress: 'Address',
+      sectionNotes: 'Internal notes',
+      customerTypeLabel: 'Customer type',
+      fullNameLabel: 'Full name',
+      fullNamePlaceholder: 'e.g. Sami Ben Ali',
+      companyNameLabel: 'Company name',
+      companyNamePlaceholder: 'e.g. Atlas Mobility SARL',
+      phoneLabel: 'Phone',
+      phonePlaceholder: '+216 22 123 456',
+      phoneHelper: 'International format recommended (e.g. +216 22 123 456).',
+      emailLabel: 'Email',
+      emailPlaceholder: 'customer@example.tn',
+      addressLabel: 'Address',
+      addressPlaceholder: 'e.g. 12 Avenue Habib Bourguiba',
+      cityLabel: 'City',
+      cityPlaceholder: 'e.g. Tunis',
+      countryLabel: 'Country',
+      notesLabel: 'Internal notes',
+      notesPlaceholder: 'Helpful notes for your team (optional)…',
+      cancelLabel: 'Cancel',
+      submitLabel: 'Save customer',
+      submittingLabel: 'Saving…',
+      validationSummaryError: 'Please fix the highlighted fields below.',
+    },
+    detailDrawer: {
+      kicker: 'Customer profile',
+      loadingTitle: 'Loading customer profile…',
+      loadingAriaLabel: 'Loading customer details',
+      errorTitle: 'Unable to load this customer profile',
+      closeAriaLabel: 'Close customer profile',
+      closeLabel: 'Close',
+      retryLabel: 'Retry',
+      openDetailAriaPrefix: 'View customer profile for',
+      sectionIdentity: 'Identity',
+      sectionContact: 'Contact details',
+      sectionAddress: 'Address & country',
+      sectionNotes: 'Internal notes',
+      sectionTimestamps: 'Record timestamps',
+      customerTypeLabel: 'Customer type',
+      fullNameLabel: 'Full name',
+      companyNameLabel: 'Company name',
+      phoneLabel: 'Phone',
+      emailLabel: 'Email',
+      addressLabel: 'Address',
+      cityLabel: 'City',
+      countryLabel: 'Country',
+      notesLabel: 'Internal notes',
+      noNotesLabel: 'No internal notes recorded.',
+      createdAtLabel: 'Created on',
+      updatedAtLabel: 'Last updated',
+      editButtonLabel: 'Edit',
+      editTitle: 'Edit customer',
+      editSubtitle: 'Update the editable details for this customer profile.',
+      saveLabel: 'Save changes',
+      savingLabel: 'Saving…',
+      cancelLabel: 'Cancel',
+      noChangesMessage: 'No changes to save.',
+      updateSuccessBanner: 'Customer profile updated successfully.',
+      drivers: {
+        sectionTitle: 'Authorized drivers',
+        refreshLabel: 'Refresh',
+        refreshAriaLabel: 'Refresh authorized drivers',
+        loadingLabel: 'Loading authorized drivers…',
+        loadingAriaLabel: 'Loading authorized drivers',
+        errorTitle: 'Unable to load authorized drivers',
+        retryLabel: 'Retry',
+        emptyTitle: 'No authorized drivers registered',
+        emptyDescription:
+          'No authorized drivers are linked to this customer in Supabase yet.',
+        driverCountSingular: 'driver',
+        driverCountPlural: 'drivers',
+        statusActive: 'Active',
+        statusInactive: 'Inactive',
+        issuingCountryLabel: 'Issuing country',
+        licenceCategoryLabel: 'Licence category',
+        licenceExpiresOnLabel: 'Licence expiry',
+        verificationStatusLabel: 'Verification status',
+        eligibilityLabel: 'Operational pre-check',
+        warningsLabel: 'Checks & warnings',
+        verificationNotesLabel: 'Internal verification notes',
+        legalNotice:
+          'Operational pre-check only: this never proves legal driving eligibility. Inspect the physical driving licence and apply local jurisdiction rules before vehicle handover.',
+        verificationStatuses: {
+          unverified: 'Unverified',
+          pending: 'Pending',
+          verified: 'Verified',
+          rejected: 'Rejected',
+        },
+        eligibilityStatuses: {
+          blocked: 'Blocked',
+          attention_required: 'Attention required',
+          checks_passed_manual_review_required: 'Checks passed · Manual review',
+        },
+        flagMessages: {
+          driver_inactive: 'This driver is marked inactive for this customer.',
+          licence_expiry_missing:
+            'Driving licence expiration date is missing.',
+          licence_expired:
+            'Driving licence has expired.',
+          licence_expires_during_rental:
+            'Driving licence expires before the rental period ends.',
+          licence_expiring_soon:
+            'Driving licence is approaching expiration.',
+          verification_unverified:
+            'Driving licence has not been manually verified yet.',
+          verification_pending:
+            'Driving licence verification is pending.',
+          verification_rejected:
+            'Driver verification has been rejected.',
+          licence_category_missing:
+            'Driving licence category is missing.',
+          licence_category_mismatch:
+            'Driving licence category may not cover the target vehicle.',
+          issuing_country_missing:
+            'Driving licence issuing country is missing.',
+          foreign_licence_manual_check:
+            'Foreign licence: verify local acceptance rules and international permit requirements.',
+        },
+        addForm: {
+          addButtonLabel: 'Add driver',
+          title: 'Add authorized driver',
+          subtitle:
+            'New drivers are saved as Unverified until manually reviewed by your agency.',
+          fullNameLabel: 'Driver full name',
+          fullNamePlaceholder: 'e.g. Youssef Trabelsi',
+          issuingCountryLabel: 'Licence issuing country',
+          issuingCountryEmptyOption: 'Not specified (optional)',
+          licenceCategoryLabel: 'Licence category',
+          licenceCategoryEmptyOption: 'Not specified (optional)',
+          licenceExpiresOnLabel: 'Licence expiration date',
+          licenceExpiresOnHelper:
+            'Optional. No licence numbers or document scans are collected here.',
+          cancelLabel: 'Cancel',
+          submitLabel: 'Save driver',
+          submittingLabel: 'Saving…',
+          createSuccessBanner:
+            'Authorized driver added with Unverified status.',
+          dismissBannerLabel: 'Dismiss',
+        },
+        editForm: {
+          editButtonLabel: 'Edit',
+          editButtonAriaPrefix: 'Edit driver',
+          title: 'Edit driver details',
+          subtitle:
+            'Update only the full name and driving licence metadata for this driver.',
+          cancelLabel: 'Cancel',
+          saveLabel: 'Save changes',
+          savingLabel: 'Saving…',
+          noChangesMessage: 'No changes to save.',
+          verifiedLicenceChangeWarning:
+            'This driver is currently marked Verified. Updating the driver’s name or licence metadata automatically resets verification status to Unverified and requires a fresh manual review.',
+          updateSuccessBanner: 'Driver details updated.',
+          updateSuccessVerifiedReviewBanner:
+            'Driver details updated. Verification status has been reset to Unverified and requires renewed manual review.',
+        },
+        verificationForm: {
+          buttonLabel: 'Verification',
+          buttonAriaPrefix: 'Manage verification for',
+          title: 'Driver verification',
+          manualReviewNotice:
+            '“Verified” records an internal manual agency review only and never represents a legal determination of driving eligibility.',
+          statusLabel: 'Verification status',
+          notesLabel: 'Internal verification notes',
+          notesPlaceholder:
+            'Private notes for Owner and Manager only (optional)…',
+          notesHelper:
+            'Visible only to Owners and Managers (never shown to Agents). Max 1,000 characters.',
+          clearNotesLabel: 'Clear notes',
+          cancelLabel: 'Cancel',
+          saveLabel: 'Save verification',
+          savingLabel: 'Saving…',
+          noChangesMessage: 'No verification changes to save.',
+          updateSuccessBanner: 'Driver verification updated.',
+        },
+        activation: {
+          deactivateButtonLabel: 'Deactivate',
+          reactivateButtonLabel: 'Reactivate',
+          deactivateAriaPrefix: 'Deactivate driver',
+          reactivateAriaPrefix: 'Reactivate driver',
+          confirmDeactivateTitle: 'Deactivate this authorized driver?',
+          confirmDeactivateBody:
+            'This driver will no longer be operationally available for rentals. Historical records, audit trail, and verification status are preserved without deletion.',
+          confirmDeactivateButton: 'Confirm deactivation',
+          cancelLabel: 'Cancel',
+          updatingLabel: 'Updating…',
+          deactivatedSuccessBanner:
+            'Driver deactivated (not operationally available).',
+          reactivatedSuccessBanner: 'Driver reactivated.',
+        },
+      },
+    },
+  },
 };
 
 const AR_DICTIONARY: Dictionary = {
@@ -858,11 +1625,11 @@ const AR_DICTIONARY: Dictionary = {
       navLabel: 'الحرفاء',
       title: 'الحرفاء',
       description:
-        'دليل الحرفاء الأفراد والشركات ووثائق الهوية ورخص السياقة وسجل الكراء.',
+        'دليل الحرفاء الأفراد والشركات المسجلين في وكالتك والمتصل بقاعدة بيانات Supabase PostgreSQL.',
       emptyTitle: 'لا يوجد حرفاء مسجلون',
       emptyDescription:
-        'سيتم حفظ ملفات الحرفاء بشكل معزول لكل وكالة عبر Supabase.',
-      plannedFeatureSummary: 'ملفات الحرفاء، رخص السياقة، السجل والمتابعة.',
+        'لا يوجد أي حريف مسجل لهذه الوكالة في Supabase حالياً.',
+      plannedFeatureSummary: 'دليل الحرفاء، البحث متعدد المعايير والفرز حسب النوع.',
     },
     reservations: {
       navLabel: 'الحجوزات',
@@ -1130,6 +1897,263 @@ const AR_DICTIONARY: Dictionary = {
       invalid_email: 'يرجى إدخال بريد إلكتروني صالح.',
       invalid_phone: 'يرجى إدخال رقم هاتف صالح (من 8 إلى 20 حرفاً).',
       invalid_vat: 'يجب أن تكون النسبة بين 0 و 100.',
+    },
+  },
+  customersDirectory: {
+    title: 'الحرفاء',
+    description:
+      'تصفح وابحث في دليل الحرفاء الأفراد والشركات المسجلين ضمن وكالتك.',
+    refreshLabel: 'تحديث',
+    refreshAriaLabel: 'تحديث قائمة الحرفاء',
+    refreshingLabel: 'جارٍ التحديث…',
+    retryLabel: 'إعادة المحاولة',
+    loadErrorFallback: 'تعذر تحديث دليل الحرفاء من Supabase.',
+    networkError: 'خطأ في الشبكة أثناء تحميل قائمة الحرفاء.',
+    roles: {
+      owner: 'المالك',
+      manager: 'المدير',
+      agent: 'عون',
+    },
+    stats: {
+      totalLabel: 'إجمالي الحرفاء',
+      totalNote: 'المسجلون في وكالتك',
+      individualLabel: 'أفراد',
+      individualNote: 'حسابات شخصية',
+      corporateLabel: 'شركات',
+      corporateNote: 'حسابات مهنية',
+      withEmailLabel: 'ببريد إلكتروني',
+      withEmailNote: 'عنوان بريد مسجل',
+    },
+    searchPlaceholder: 'ابحث بالاسم أو الشركة أو البريد أو الهاتف…',
+    searchAriaLabel: 'البحث في دليل الحرفاء',
+    typeFilterAriaLabel: 'تصفية حسب نوع الحريف',
+    typeFilters: {
+      all: 'الكل',
+      individual: 'أفراد',
+      corporate: 'شركات',
+    },
+    typeBadges: {
+      individual: 'فرد',
+      corporate: 'شركة',
+    },
+    sortAriaLabel: 'ترتيب الحرفاء',
+    sortPrefix: 'ترتيب',
+    sortOptions: {
+      newest: 'الأحدث أولاً',
+      oldest: 'الأقدم أولاً',
+      name_asc: 'الاسم (أ ← ي)',
+      name_desc: 'الاسم (ي ← أ)',
+    },
+    resetFiltersLabel: 'إعادة ضبط',
+    tableAriaLabel: 'دليل حرفاء الوكالة',
+    columns: {
+      customer: 'الحريف',
+      type: 'النوع',
+      phone: 'الهاتف',
+      email: 'البريد الإلكتروني',
+      city: 'المدينة',
+      createdAt: 'تاريخ الإضافة',
+    },
+    emptyAgencyTitle: 'لا يوجد حرفاء مسجلون في وكالتك',
+    emptyAgencyDescription:
+      'لا تحتوي وكالتك على أي سجلات حرفاء في Supabase بعد. سيظهر الحرفاء المسجلون تلقائياً في هذا الدليل.',
+    emptyFilterTitle: 'لا توجد نتائج مطابقة لمعايير البحث',
+    emptyFilterDescription:
+      'عدّل كلمات البحث أو أعد ضبط الفلاتر النشطة لعرض جميع الحرفاء.',
+    notProvided: 'غير محدد',
+    loadingLabel: 'جارٍ تحميل دليل الحرفاء…',
+    addButtonLabel: 'إضافة حريف',
+    addFirstButtonLabel: 'إضافة أول حريف',
+    createSuccessBanner: 'تم حفظ الحريف بنجاح في الدليل.',
+    dismissBannerLabel: 'إغلاق',
+    addModal: {
+      title: 'إضافة حريف',
+      subtitle: 'تسجيل حريف فرد أو شركة ضمن وكالتك.',
+      closeAriaLabel: 'إغلاق النافذة',
+      sectionIdentity: 'الهوية',
+      sectionContact: 'بيانات الاتصال',
+      sectionAddress: 'العنوان',
+      sectionNotes: 'ملاحظات داخلية',
+      customerTypeLabel: 'نوع الحريف',
+      fullNameLabel: 'الاسم الكامل',
+      fullNamePlaceholder: 'مثال: سامي بن علي',
+      companyNameLabel: 'اسم الشركة',
+      companyNamePlaceholder: 'مثال: أطلس موبيليتي ش.ذ.م.م',
+      phoneLabel: 'الهاتف',
+      phonePlaceholder: '+216 22 123 456',
+      phoneHelper: 'يفضل الصيغة الدولية (مثال: +216 22 123 456).',
+      emailLabel: 'البريد الإلكتروني',
+      emailPlaceholder: 'client@exemple.tn',
+      addressLabel: 'العنوان',
+      addressPlaceholder: 'مثال: 12 شارع الحبيب بورقيبة',
+      cityLabel: 'المدينة',
+      cityPlaceholder: 'مثال: تونس',
+      countryLabel: 'الدولة',
+      notesLabel: 'ملاحظات داخلية',
+      notesPlaceholder: 'ملاحظات مفيدة لفريق الوكالة (اختياري)…',
+      cancelLabel: 'إلغاء',
+      submitLabel: 'حفظ الحريف',
+      submittingLabel: 'جارٍ الحفظ…',
+      validationSummaryError: 'يرجى تصحيح الحقول المحددة أدناه.',
+    },
+    detailDrawer: {
+      kicker: 'بطاقة الحريف',
+      loadingTitle: 'جارٍ تحميل بطاقة الحريف…',
+      loadingAriaLabel: 'جارٍ تحميل تفاصيل الحريف',
+      errorTitle: 'تعذر عرض بطاقة هذا الحريف',
+      closeAriaLabel: 'إغلاق بطاقة الحريف',
+      closeLabel: 'إغلاق',
+      retryLabel: 'إعادة المحاولة',
+      openDetailAriaPrefix: 'عرض بطاقة الحريف',
+      sectionIdentity: 'الهوية',
+      sectionContact: 'بيانات الاتصال',
+      sectionAddress: 'العنوان والدولة',
+      sectionNotes: 'ملاحظات داخلية',
+      sectionTimestamps: 'تواريخ السجل',
+      customerTypeLabel: 'نوع الحريف',
+      fullNameLabel: 'الاسم الكامل',
+      companyNameLabel: 'اسم الشركة',
+      phoneLabel: 'الهاتف',
+      emailLabel: 'البريد الإلكتروني',
+      addressLabel: 'العنوان',
+      cityLabel: 'المدينة',
+      countryLabel: 'الدولة',
+      notesLabel: 'ملاحظات داخلية',
+      noNotesLabel: 'لا توجد ملاحظات داخلية مسجلة.',
+      createdAtLabel: 'تاريخ الإنشاء',
+      updatedAtLabel: 'آخر تحديث',
+      editButtonLabel: 'تعديل',
+      editTitle: 'تعديل الحريف',
+      editSubtitle: 'حدّث البيانات القابلة للتعديل في بطاقة هذا الحريف.',
+      saveLabel: 'حفظ التغييرات',
+      savingLabel: 'جارٍ الحفظ…',
+      cancelLabel: 'إلغاء',
+      noChangesMessage: 'لا توجد تغييرات للحفظ.',
+      updateSuccessBanner: 'تم تحديث بطاقة الحريف بنجاح.',
+      drivers: {
+        sectionTitle: 'السائقون المعتمدون',
+        refreshLabel: 'تحديث',
+        refreshAriaLabel: 'تحديث قائمة السائقين المعتمدين',
+        loadingLabel: 'جارٍ تحميل السائقين المعتمدين…',
+        loadingAriaLabel: 'جارٍ تحميل السائقين المعتمدين',
+        errorTitle: 'تعذر تحميل السائقين المعتمدين',
+        retryLabel: 'إعادة المحاولة',
+        emptyTitle: 'لا يوجد سائقون معتمدون مسجلون',
+        emptyDescription:
+          'لا يوجد أي سائق معتمد مرتبط بهذا الحريف في Supabase حالياً.',
+        driverCountSingular: 'سائق',
+        driverCountPlural: 'سائقين',
+        statusActive: 'نشط',
+        statusInactive: 'غير نشط',
+        issuingCountryLabel: 'بلد إصدار الرخصة',
+        licenceCategoryLabel: 'صنف الرخصة',
+        licenceExpiresOnLabel: 'تاريخ انتهاء الرخصة',
+        verificationStatusLabel: 'حالة التحقق',
+        eligibilityLabel: 'الفحص التشغيلي المسبق',
+        warningsLabel: 'التنبيهات والملاحظات التشغيلية',
+        verificationNotesLabel: 'ملاحظات التحقق الداخلية',
+        legalNotice:
+          'فحص تشغيلي مسبق فقط: لا يُثبت الأهلية القانونية للقيادة. يجب معاينة رخصة السياقة الأصلية وتطبيق قوانين بلد الكراء قبل تسليم السيارة.',
+        verificationStatuses: {
+          unverified: 'غير متحقق منه',
+          pending: 'قيد التحقق',
+          verified: 'متحقق منه',
+          rejected: 'مرفوض',
+        },
+        eligibilityStatuses: {
+          blocked: 'محظور',
+          attention_required: 'يتطلب انتباهاً',
+          checks_passed_manual_review_required: 'فحص سليم · مراجعة يدوية',
+        },
+        flagMessages: {
+          driver_inactive: 'تم تعطيل هذا السائق لهذا الحريف.',
+          licence_expiry_missing: 'تاريخ انتهاء رخصة السياقة غير محدد.',
+          licence_expired: 'رخصة السياقة منتهية الصلاحية.',
+          licence_expires_during_rental:
+            'تنتهي صلاحية الرخصة قبل نهاية فترة الكراء.',
+          licence_expiring_soon: 'رخصة السياقة قريبة من تاريخ الانتهاء.',
+          verification_unverified: 'لم يتم التحقق يدوياً من الرخصة بعد.',
+          verification_pending: 'التحقق من رخصة السياقة قيد الانتظار.',
+          verification_rejected: 'تم رفض التحقق من هذا السائق.',
+          licence_category_missing: 'صنف رخصة السياقة غير محدد.',
+          licence_category_mismatch:
+            'قد لا يتطابق صنف الرخصة مع نوع السيارة المطلوبة.',
+          issuing_country_missing: 'بلد إصدار رخصة السياقة غير محدد.',
+          foreign_licence_manual_check:
+            'رخصة أجنبية: تحقق من شروط الاعتراف المحلي والرخصة الدولية عند الاقتضاء.',
+        },
+        addForm: {
+          addButtonLabel: 'إضافة سائق',
+          title: 'إضافة سائق معتمد',
+          subtitle:
+            'يتم تسجيل السائق الجديد بحالة « غير متحقق منه » إلى حين المراجعة اليدوية من قبل الوكالة.',
+          fullNameLabel: 'الاسم الكامل للسائق',
+          fullNamePlaceholder: 'مثال: يوسف الطرابلسي',
+          issuingCountryLabel: 'بلد إصدار الرخصة',
+          issuingCountryEmptyOption: 'غير محدد (اختياري)',
+          licenceCategoryLabel: 'صنف الرخصة',
+          licenceCategoryEmptyOption: 'غير محدد (اختياري)',
+          licenceExpiresOnLabel: 'تاريخ انتهاء الرخصة',
+          licenceExpiresOnHelper:
+            'اختياري. لا يتم جمع أرقام الرخص أو نسخ الوثائق هنا.',
+          cancelLabel: 'إلغاء',
+          submitLabel: 'حفظ السائق',
+          submittingLabel: 'جارٍ الحفظ…',
+          createSuccessBanner:
+            'تمت إضافة السائق المعتمد بحالة « غير متحقق منه ».',
+          dismissBannerLabel: 'إغلاق',
+        },
+        editForm: {
+          editButtonLabel: 'تعديل',
+          editButtonAriaPrefix: 'تعديل السائق',
+          title: 'تعديل بيانات السائق',
+          subtitle:
+            'عدّل الاسم الكامل وبيانات رخصة السياقة لهذا السائق فقط.',
+          cancelLabel: 'إلغاء',
+          saveLabel: 'حفظ التغييرات',
+          savingLabel: 'جارٍ الحفظ…',
+          noChangesMessage: 'لا توجد تغييرات للحفظ.',
+          verifiedLicenceChangeWarning:
+            'هذا السائق مُصنَّف حالياً « متحقق منه ». أي تعديل على الاسم أو بيانات الرخصة يعيد تلقائياً حالة التحقق إلى « غير متحقق منه » ويتطلب مراجعة يدوية جديدة.',
+          updateSuccessBanner: 'تم تحديث بيانات السائق.',
+          updateSuccessVerifiedReviewBanner:
+            'تم تحديث بيانات السائق. تمت إعادة تعيين حالة التحقق إلى « غير متحقق منه » ويلزم إجراء تحقق يدوي جديد.',
+        },
+        verificationForm: {
+          buttonLabel: 'التحقق',
+          buttonAriaPrefix: 'إدارة التحقق للسائق',
+          title: 'التحقق من السائق',
+          manualReviewNotice:
+            'حالة « متحقق منه » تسجل مراجعة يدوية داخلية من قبل الوكالة فقط ولا تُعد إثباتاً قانونياً للأهلية للقيادة.',
+          statusLabel: 'حالة التحقق',
+          notesLabel: 'ملاحظات التحقق الداخلية',
+          notesPlaceholder:
+            'ملاحظات خاصة بالمالك والمدير فقط (اختياري)…',
+          notesHelper:
+            'مرئية فقط للمالك والمدير (لا تُعرض للأعوان أبداً). الحد الأقصى 1000 حرف.',
+          clearNotesLabel: 'مسح الملاحظات',
+          cancelLabel: 'إلغاء',
+          saveLabel: 'حفظ التحقق',
+          savingLabel: 'جارٍ الحفظ…',
+          noChangesMessage: 'لا توجد تغييرات في التحقق للحفظ.',
+          updateSuccessBanner: 'تم تحديث حالة وملاحظات التحقق بنجاح.',
+        },
+        activation: {
+          deactivateButtonLabel: 'تعطيل',
+          reactivateButtonLabel: 'إعادة تفعيل',
+          deactivateAriaPrefix: 'تعطيل السائق',
+          reactivateAriaPrefix: 'إعادة تفعيل السائق',
+          confirmDeactivateTitle: 'تأكيد تعطيل هذا السائق المعتمد؟',
+          confirmDeactivateBody:
+            'لن يكون هذا السائق متاحاً تشغيلياً للكراء. يتم الاحتفاظ بالسجل التاريخي وسجل التدقيق وحالة التحقق دون حذف.',
+          confirmDeactivateButton: 'تأكيد التعطيل',
+          cancelLabel: 'إلغاء',
+          updatingLabel: 'جارٍ التحديث…',
+          deactivatedSuccessBanner:
+            'تم تعطيل السائق (غير متاح تشغيلياً).',
+          reactivatedSuccessBanner: 'تمت إعادة تفعيل السائق.',
+        },
+      },
     },
   },
 };

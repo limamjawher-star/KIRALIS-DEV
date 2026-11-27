@@ -359,3 +359,259 @@ test('migration 0005 safely supports auth.users ON DELETE SET NULL on created_by
     /REVOKE DELETE ON TABLE public\.vehicles FROM PUBLIC, anon, authenticated;\s*DROP POLICY IF EXISTS vehicles_delete_owner_only ON public\.vehicles;\s*COMMIT;\s*$/
   );
 });
+
+test('migration 0007 adds privacy-minimized public.customer_drivers with composite tenant FK, forced RLS, no client DELETE, and trusted audit trigger', () => {
+  const migration0007 = fs.readFileSync(
+    path.join(
+      ROOT,
+      'supabase/migrations/202611210007_customer_authorized_drivers.sql'
+    ),
+    'utf8'
+  );
+  const exec0007 = stripSqlComments(migration0007);
+
+  // Explicit atomic transaction
+  assert.match(exec0007, /^\s*BEGIN;/);
+  assert.match(exec0007, /COMMIT;\s*$/);
+
+  // Non-destructive and no direct client audit/delete/service_role exposure
+  assert.doesNotMatch(exec0007, /\bDROP\s+TABLE\b/i);
+  assert.doesNotMatch(exec0007, /\bDROP\s+COLUMN\b/i);
+  assert.doesNotMatch(exec0007, /\bTRUNCATE\b/i);
+  assert.doesNotMatch(exec0007, /\bDELETE\s+FROM\b/i);
+  assert.doesNotMatch(exec0007, /\bservice_role\b/i);
+  assert.doesNotMatch(exec0007, /\bTO\s+(anon|PUBLIC)\b/i);
+  assert.doesNotMatch(exec0007, /GRANT[\s\S]*ON\s+TABLE\s+public\.audit_logs/i);
+  assert.doesNotMatch(
+    exec0007,
+    /GRANT[\s\S]*DELETE[\s\S]*ON\s+TABLE\s+public\.customer_drivers/i
+  );
+  assert.doesNotMatch(exec0007, /CREATE POLICY[\s\S]*FOR\s+DELETE/i);
+
+  // Privacy minimization: no licence numbers, identity document numbers, or document scan columns
+  assert.doesNotMatch(
+    exec0007,
+    /\b(licence_number|license_number|passport_number|national_id|cin_number|identity_number|document_url|scan_url|photo_url)\b/i
+  );
+
+  // Verification status enum
+  assert.match(
+    exec0007,
+    /CREATE TYPE public\.driver_verification_status AS ENUM \(\s*'unverified',\s*'pending',\s*'verified',\s*'rejected'\s*\);/
+  );
+
+  // Table + same-agency composite FK to public.customers (agency_id, id) + composite unique key
+  assert.match(exec0007, /CREATE TABLE IF NOT EXISTS public\.customer_drivers/);
+  assert.match(
+    exec0007,
+    /CONSTRAINT customer_drivers_tenant_id_unique\s+UNIQUE \(agency_id, id\)/
+  );
+  assert.match(
+    exec0007,
+    /CONSTRAINT customer_drivers_customer_same_agency_fk\s+FOREIGN KEY \(agency_id, customer_id\)\s+REFERENCES public\.customers \(agency_id, id\)/
+  );
+
+  // Date & format checks on operational metadata
+  assert.match(exec0007, /licence_issuing_country ~ '\^\[A-Z\]\{2\}\$'/);
+  assert.match(exec0007, /licence_category ~ '\^\[A-Z\]\[A-Z0-9\+\]\{0,9\}\$'/);
+  assert.match(
+    exec0007,
+    /licence_expires_on BETWEEN DATE '1980-01-01' AND DATE '2150-12-31'/
+  );
+
+  // Column-level UPDATE grant excludes immutable identifiers and timestamps
+  const updateGrantMatch = exec0007.match(
+    /GRANT UPDATE \(([^)]*)\) ON TABLE public\.customer_drivers TO authenticated;/
+  );
+  assert.ok(
+    updateGrantMatch,
+    'Expected column-level UPDATE grant on public.customer_drivers'
+  );
+  assert.doesNotMatch(updateGrantMatch[1], /\bid\b/);
+  assert.doesNotMatch(updateGrantMatch[1], /\bagency_id\b/);
+  assert.doesNotMatch(updateGrantMatch[1], /\bcustomer_id\b/);
+  assert.doesNotMatch(updateGrantMatch[1], /\bcreated_by\b/);
+  assert.doesNotMatch(updateGrantMatch[1], /\bcreated_at\b/);
+  assert.doesNotMatch(updateGrantMatch[1], /\bupdated_at\b/);
+
+  // Forced RLS + exact 3 policies (Agent read, Owner/Manager insert & update, no DELETE)
+  assert.match(
+    exec0007,
+    /ALTER TABLE public\.customer_drivers ENABLE ROW LEVEL SECURITY;/
+  );
+  assert.match(
+    exec0007,
+    /ALTER TABLE public\.customer_drivers FORCE ROW LEVEL SECURITY;/
+  );
+  assert.match(
+    exec0007,
+    /CREATE POLICY customer_drivers_select_active_member[\s\S]*FOR SELECT[\s\S]*TO authenticated[\s\S]*USING \(public\.is_active_agency_member\(agency_id\)\);/
+  );
+  assert.match(
+    exec0007,
+    /CREATE POLICY customer_drivers_insert_owner_manager[\s\S]*FOR INSERT[\s\S]*TO authenticated[\s\S]*public\.has_agency_role\(agency_id, ARRAY\['owner', 'manager'\]::public\.agency_role\[\]\)[\s\S]*AND created_by = auth\.uid\(\)/
+  );
+  assert.match(
+    exec0007,
+    /CREATE POLICY customer_drivers_update_owner_manager[\s\S]*FOR UPDATE[\s\S]*TO authenticated[\s\S]*USING \(public\.has_agency_role\(agency_id, ARRAY\['owner', 'manager'\]::public\.agency_role\[\]\)\)[\s\S]*WITH CHECK \(public\.has_agency_role\(agency_id, ARRAY\['owner', 'manager'\]::public\.agency_role\[\]\)\);/
+  );
+
+  // Integrity guard locks immutable fields & safely allows nested auth.users ON DELETE SET NULL
+  assert.match(
+    exec0007,
+    /CREATE OR REPLACE FUNCTION public\.guard_customer_driver_integrity\(\)[\s\S]*SET search_path = ''/
+  );
+  assert.match(
+    exec0007,
+    /Changing id on an existing customer driver is forbidden/
+  );
+  assert.match(
+    exec0007,
+    /Changing agency_id on an existing customer driver is forbidden/
+  );
+  assert.match(
+    exec0007,
+    /Changing customer_id on an existing customer driver is forbidden/
+  );
+  assert.match(
+    exec0007,
+    /OLD\.created_by IS NOT NULL[\s\S]*AND NEW\.created_by IS NULL[\s\S]*AND pg_catalog\.pg_trigger_depth\(\) > 1[\s\S]*AND current_user NOT IN \('anon', 'authenticated'\)/
+  );
+
+  // Trusted SECURITY DEFINER audit trigger logs operational metadata only (no full_name or verification_notes)
+  const auditFnMatch = exec0007.match(
+    /CREATE OR REPLACE FUNCTION public\.audit_customer_driver_change\(\)[\s\S]*?\$\$;/
+  );
+  assert.ok(auditFnMatch, 'Expected audit_customer_driver_change function definition');
+  assert.match(auditFnMatch[0], /SECURITY DEFINER[\s\S]*SET search_path = ''/);
+  assert.doesNotMatch(auditFnMatch[0], /'full_name'/);
+  assert.doesNotMatch(auditFnMatch[0], /'verification_notes'/);
+  assert.match(
+    auditFnMatch[0],
+    /OLD\.created_by IS NOT NULL[\s\S]*AND NEW\.created_by IS NULL[\s\S]*RETURN NULL;/
+  );
+
+  // Trigger functions revoked from all client roles
+  assert.match(
+    exec0007,
+    /REVOKE ALL ON FUNCTION public\.guard_customer_driver_integrity\(\) FROM PUBLIC, anon, authenticated;/
+  );
+  assert.match(
+    exec0007,
+    /REVOKE ALL ON FUNCTION public\.audit_customer_driver_change\(\) FROM PUBLIC, anon, authenticated;/
+  );
+});
+
+test('migration 0008 adds idempotent BEFORE UPDATE verification integrity trigger with guaranteed ordering before updated_at and compatibility with migration 0007 audit trigger', () => {
+  const migration0007 = fs.readFileSync(
+    path.join(
+      ROOT,
+      'supabase/migrations/202611210007_customer_authorized_drivers.sql'
+    ),
+    'utf8'
+  );
+  const migration0008 = fs.readFileSync(
+    path.join(
+      ROOT,
+      'supabase/migrations/202611210008_driver_verification_integrity.sql'
+    ),
+    'utf8'
+  );
+  const exec0007 = stripSqlComments(migration0007);
+  const exec0008 = stripSqlComments(migration0008);
+
+  // Explicit atomic transaction
+  assert.match(exec0008, /^\s*BEGIN;/);
+  assert.match(exec0008, /COMMIT;\s*$/);
+
+  // Strictly additive, non-destructive, and scoped only to public.customer_drivers
+  assert.doesNotMatch(exec0008, /\bDROP\s+TABLE\b/i);
+  assert.doesNotMatch(exec0008, /\bDROP\s+COLUMN\b/i);
+  assert.doesNotMatch(exec0008, /\bALTER\s+TABLE\b/i);
+  assert.doesNotMatch(exec0008, /\bTRUNCATE\b/i);
+  assert.doesNotMatch(exec0008, /\bDELETE\s+FROM\b/i);
+  assert.doesNotMatch(exec0008, /\bservice_role\b/i);
+  assert.doesNotMatch(exec0008, /\bTO\s+(anon|PUBLIC)\b/i);
+  assert.doesNotMatch(exec0008, /\bpublic\.(customers|vehicles|agencies)\b/i);
+  assert.doesNotMatch(exec0008, /\bDROP\s+POLICY\b/i);
+  assert.doesNotMatch(exec0008, /\bCREATE\s+POLICY\b/i);
+
+  // Trigger function uses locked search_path = '' and is revoked from client roles
+  assert.match(
+    exec0008,
+    /CREATE OR REPLACE FUNCTION public\.enforce_customer_driver_verification_integrity\(\)[\s\S]*SET search_path = ''/
+  );
+  assert.match(
+    exec0008,
+    /REVOKE ALL ON FUNCTION public\.enforce_customer_driver_verification_integrity\(\)\s+FROM PUBLIC, anon, authenticated;/
+  );
+
+  // Detects changes strictly across the 4 material identity/licence fields
+  const materialMatch = exec0008.match(/v_material_changed\s*:=\s*\(([\s\S]*?)\);/);
+  assert.ok(materialMatch, 'Expected v_material_changed predicate in migration 0008');
+  assert.match(materialMatch[1], /NEW\.full_name IS DISTINCT FROM OLD\.full_name/);
+  assert.match(
+    materialMatch[1],
+    /NEW\.licence_issuing_country IS DISTINCT FROM OLD\.licence_issuing_country/
+  );
+  assert.match(
+    materialMatch[1],
+    /NEW\.licence_category IS DISTINCT FROM OLD\.licence_category/
+  );
+  assert.match(
+    materialMatch[1],
+    /NEW\.licence_expires_on IS DISTINCT FROM OLD\.licence_expires_on/
+  );
+  // Notes and activation toggles must NOT invalidate verification
+  assert.doesNotMatch(materialMatch[1], /verification_notes/);
+  assert.doesNotMatch(materialMatch[1], /is_active/);
+
+  // Rejects simultaneous material edit + promotion to 'verified'
+  assert.match(
+    exec0008,
+    /IF NEW\.verification_status = 'verified'::public\.driver_verification_status\s+AND OLD\.verification_status IS DISTINCT FROM 'verified'::public\.driver_verification_status THEN[\s\S]*RAISE EXCEPTION[\s\S]*ERRCODE = '23514'[\s\S]*CONSTRAINT = 'customer_drivers_verification_integrity_check';/
+  );
+
+  // Resets previously 'verified' row to 'unverified' on material edits
+  assert.match(
+    exec0008,
+    /IF OLD\.verification_status = 'verified'::public\.driver_verification_status\s+AND NEW\.verification_status = 'verified'::public\.driver_verification_status THEN\s*NEW\.verification_status := 'unverified'::public\.driver_verification_status;/
+  );
+
+  // Idempotent BEFORE UPDATE trigger creation
+  assert.match(
+    exec0008,
+    /DROP TRIGGER IF EXISTS trg_customer_drivers_integrity_verification\s+ON public\.customer_drivers;/
+  );
+  assert.match(
+    exec0008,
+    /CREATE TRIGGER trg_customer_drivers_integrity_verification\s+BEFORE UPDATE ON public\.customer_drivers\s+FOR EACH ROW\s+EXECUTE FUNCTION public\.enforce_customer_driver_verification_integrity\(\);/
+  );
+
+  // Verify PostgreSQL ASCII alphabetical BEFORE UPDATE trigger ordering:
+  // 1. trg_customer_drivers_integrity (migration 0007)
+  // 2. trg_customer_drivers_integrity_verification (migration 0008)
+  // 3. trg_customer_drivers_updated_at (migration 0007)
+  const beforeUpdateTriggers = [
+    'trg_customer_drivers_updated_at',
+    'trg_customer_drivers_integrity_verification',
+    'trg_customer_drivers_integrity',
+  ].sort();
+  assert.deepEqual(beforeUpdateTriggers, [
+    'trg_customer_drivers_integrity',
+    'trg_customer_drivers_integrity_verification',
+    'trg_customer_drivers_updated_at',
+  ]);
+
+  // Verify compatibility with migration 0007's AFTER INSERT OR UPDATE audit trigger
+  assert.match(
+    exec0007,
+    /CREATE TRIGGER trg_customer_drivers_audit\s+AFTER INSERT OR UPDATE ON public\.customer_drivers/
+  );
+  assert.match(
+    exec0007,
+    /IF OLD\.verification_status IS DISTINCT FROM NEW\.verification_status THEN\s*v_action := 'customer_driver\.verification_status_changed';/
+  );
+});
+
+

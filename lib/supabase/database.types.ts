@@ -7,6 +7,11 @@ export type AgencyRole = 'owner' | 'manager' | 'agent';
 export type MembershipStatus = 'active' | 'invited' | 'suspended';
 export type VehicleStatus = 'available' | 'rented' | 'maintenance' | 'retired';
 export type CustomerType = 'individual' | 'corporate';
+export type DriverVerificationStatus =
+  | 'unverified'
+  | 'pending'
+  | 'verified'
+  | 'rejected';
 export type ReservationStatus =
   | 'draft'
   | 'pending'
@@ -101,6 +106,22 @@ export interface CustomerRow {
   city: string | null;
   country_code: string;
   notes: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CustomerDriverRow {
+  id: string;
+  agency_id: string;
+  customer_id: string;
+  full_name: string;
+  licence_issuing_country: string | null;
+  licence_category: string | null;
+  licence_expires_on: string | null;
+  verification_status: DriverVerificationStatus;
+  verification_notes: string | null;
+  is_active: boolean;
   created_by: string | null;
   created_at: string;
   updated_at: string;
