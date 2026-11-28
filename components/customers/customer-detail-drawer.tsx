@@ -470,7 +470,7 @@ export function CustomerDetailDrawer({
                     <div className="divide-y divide-slate-200/80 dark:divide-slate-800/80">
                       {/* Identity */}
                       <section className="pb-5">
-                        <h3 className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400 dark:text-slate-500">
+                        <h3 className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-600 dark:text-slate-300">
                           <User className="h-3.5 w-3.5" aria-hidden="true" />
                           <span>{drawerCopy.sectionIdentity}</span>
                         </h3>
@@ -517,7 +517,7 @@ export function CustomerDetailDrawer({
 
                       {/* Contact */}
                       <section className="py-5">
-                        <h3 className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400 dark:text-slate-500">
+                        <h3 className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-600 dark:text-slate-300">
                           <Phone className="h-3.5 w-3.5" aria-hidden="true" />
                           <span>{drawerCopy.sectionContact}</span>
                         </h3>
@@ -526,10 +526,14 @@ export function CustomerDetailDrawer({
                             <dt className="text-xs text-slate-500 dark:text-slate-400">
                               {drawerCopy.phoneLabel}
                             </dt>
-                            <dd className="mt-1 font-mono text-sm font-medium text-slate-950 tabular-nums dark:text-slate-100">
-                              <span dir="ltr" className="inline-block">
+                            <dd className="mt-1 font-mono text-sm font-medium tabular-nums">
+                              <a
+                                href={`tel:${customer.phone.replace(/\s+/g, '')}`}
+                                dir="ltr"
+                                className="inline-block rounded text-[#1D4ED8] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 dark:text-blue-400"
+                              >
                                 {customer.phone}
-                              </span>
+                              </a>
                             </dd>
                           </div>
 
@@ -537,16 +541,17 @@ export function CustomerDetailDrawer({
                             <dt className="text-xs text-slate-500 dark:text-slate-400">
                               {drawerCopy.emailLabel}
                             </dt>
-                            <dd className="mt-1 text-sm text-slate-900 dark:text-slate-100">
+                            <dd className="mt-1 text-sm">
                               {customer.email ? (
-                                <span
+                                <a
+                                  href={`mailto:${customer.email}`}
                                   dir="ltr"
-                                  className="inline-block break-all"
+                                  className="inline-block break-all rounded text-[#1D4ED8] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 dark:text-blue-400"
                                 >
                                   {customer.email}
-                                </span>
+                                </a>
                               ) : (
-                                <span className="text-slate-400 dark:text-slate-500">
+                                <span className="text-slate-500 dark:text-slate-400">
                                   {copy.notProvided}
                                 </span>
                               )}
@@ -557,7 +562,7 @@ export function CustomerDetailDrawer({
 
                       {/* Address & Country */}
                       <section className="py-5">
-                        <h3 className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400 dark:text-slate-500">
+                        <h3 className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-600 dark:text-slate-300">
                           <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
                           <span>{drawerCopy.sectionAddress}</span>
                         </h3>
@@ -570,7 +575,7 @@ export function CustomerDetailDrawer({
                               {customer.address ? (
                                 customer.address
                               ) : (
-                                <span className="text-slate-400 dark:text-slate-500">
+                                <span className="text-slate-500 dark:text-slate-400">
                                   {copy.notProvided}
                                 </span>
                               )}
@@ -585,7 +590,7 @@ export function CustomerDetailDrawer({
                               {customer.city ? (
                                 customer.city
                               ) : (
-                                <span className="text-slate-400 dark:text-slate-500">
+                                <span className="text-slate-500 dark:text-slate-400">
                                   {copy.notProvided}
                                 </span>
                               )}
@@ -605,17 +610,17 @@ export function CustomerDetailDrawer({
 
                       {/* Internal Notes */}
                       <section className="py-5">
-                        <h3 className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400 dark:text-slate-500">
+                        <h3 className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-600 dark:text-slate-300">
                           <FileText className="h-3.5 w-3.5" aria-hidden="true" />
                           <span>{drawerCopy.sectionNotes}</span>
                         </h3>
-                        <div className="mt-2.5 rounded-xl border border-slate-200/80 bg-slate-50/75 px-3.5 py-3 text-sm leading-relaxed text-slate-800 dark:border-slate-800 dark:bg-slate-950/50 dark:text-slate-200">
+                        <div className="mt-2.5 rounded-xl border border-slate-200/80 bg-[#F4F6FA] px-3.5 py-3 text-sm leading-relaxed text-slate-800 dark:border-slate-800 dark:bg-slate-950/50 dark:text-slate-200">
                           {customer.notes ? (
                             <p className="whitespace-pre-wrap break-words">
                               {customer.notes}
                             </p>
                           ) : (
-                            <p className="text-xs text-slate-400 dark:text-slate-500">
+                            <p className="text-xs text-slate-500 dark:text-slate-400">
                               {drawerCopy.noNotesLabel}
                             </p>
                           )}
@@ -630,7 +635,7 @@ export function CustomerDetailDrawer({
 
                       {/* Timestamps */}
                       <section className="pt-5">
-                        <h3 className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400 dark:text-slate-500">
+                        <h3 className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-600 dark:text-slate-300">
                           <Clock className="h-3.5 w-3.5" aria-hidden="true" />
                           <span>{drawerCopy.sectionTimestamps}</span>
                         </h3>

@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { Menu } from 'lucide-react';
 import { motion } from 'motion/react';
 import { NAV_ITEMS, type ModuleKey, type NavItemConfig } from '@/lib/navigation';
+import type { SupportedLocale } from '@/lib/currency';
 import { useAppPreferences } from '@/components/providers/app-preferences-provider';
 import { NavIcon } from '@/components/ui/nav-icon';
 import { cn } from '@/lib/utils';
@@ -19,8 +20,14 @@ const PRIMARY_MOBILE_KEYS: readonly ModuleKey[] = [
   'dashboard',
   'vehicles',
   'customers',
-  'reservations',
+  'settings',
 ];
+
+const MENU_LABEL_BY_LOCALE: Record<SupportedLocale, string> = {
+  fr: 'Menu',
+  en: 'More',
+  ar: 'القائمة',
+};
 
 function isRouteActive(pathname: string, item: NavItemConfig): boolean {
   if (item.href === '/') {
@@ -34,7 +41,7 @@ export function MobileBottomNav({
   menuOpen,
 }: MobileBottomNavProps) {
   const pathname = usePathname();
-  const { dict } = useAppPreferences();
+  const { dict, locale } = useAppPreferences();
 
   const primaryItems = PRIMARY_MOBILE_KEYS.map(
     (key) => NAV_ITEMS.find((item) => item.key === key)!
@@ -43,7 +50,7 @@ export function MobileBottomNav({
   return (
     <nav
       aria-label={dict.common.workspace}
-      className="pb-safe fixed inset-x-0 bottom-0 z-40 border-t border-slate-300/85 bg-white/95 shadow-[0_-4px_20px_-6px_rgba(11,18,32,0.1)] backdrop-blur-md lg:hidden dark:border-slate-800 dark:bg-[#0B1220]/95"
+      className="pb-safe fixed inset-x-0 bottom-0 z-40 border-t border-slate-300/85 bg-white/95 shadow-[0_-4px_20px_-6px_rgba(11,18,32,0.1)] backdrop-blur-md md:hidden dark:border-slate-800 dark:bg-[#0B1220]/95"
     >
       <div className="mx-auto grid h-[58px] max-w-lg grid-cols-5 items-stretch px-1">
         {primaryItems.map((item) => {
@@ -55,7 +62,7 @@ export function MobileBottomNav({
               href={item.href}
               aria-current={active ? 'page' : undefined}
               className={cn(
-                'group relative flex min-w-0 flex-col items-center justify-center gap-0.5 px-1 text-[10.5px] transition-colors active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600/80 dark:focus-visible:ring-blue-400',
+                'group relative flex min-w-0 flex-col items-center justify-center gap-0.5 px-1 text-[10.5px] transition-colors active:scale-[0.95] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600/80 dark:focus-visible:ring-blue-400',
                 active
                   ? 'font-semibold text-[#1D4ED8] dark:text-blue-400'
                   : 'font-medium text-slate-600 hover:text-slate-950 dark:text-slate-400 dark:hover:text-slate-100'
@@ -89,7 +96,7 @@ export function MobileBottomNav({
           aria-label={dict.common.openNavigation}
           aria-expanded={menuOpen}
           className={cn(
-            'group relative flex min-w-0 flex-col items-center justify-center gap-0.5 px-1 text-[10.5px] transition-colors active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600/80 dark:focus-visible:ring-blue-400 cursor-pointer',
+            'group relative flex min-w-0 flex-col items-center justify-center gap-0.5 px-1 text-[10.5px] transition-colors active:scale-[0.95] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600/80 dark:focus-visible:ring-blue-400 cursor-pointer',
             menuOpen
               ? 'font-semibold text-[#1D4ED8] dark:text-blue-400'
               : 'font-medium text-slate-600 hover:text-slate-950 dark:text-slate-400 dark:hover:text-slate-100'
@@ -112,7 +119,9 @@ export function MobileBottomNav({
           >
             <Menu className="h-[18px] w-[18px]" aria-hidden="true" />
           </span>
-          <span className="max-w-full truncate leading-none">Menu</span>
+          <span className="max-w-full truncate leading-none">
+            {MENU_LABEL_BY_LOCALE[locale]}
+          </span>
         </button>
       </div>
     </nav>

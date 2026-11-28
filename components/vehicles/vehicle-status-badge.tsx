@@ -1,10 +1,12 @@
+'use client';
+
 import React from 'react';
 import { Archive, Car, CheckCircle2, Wrench } from 'lucide-react';
+import { useAppPreferences } from '@/components/providers/app-preferences-provider';
+import type { SupportedLocale } from '@/lib/currency';
 import { cn } from '@/lib/utils';
-import {
-  VEHICLE_STATUS_LABELS,
-  type VehicleStatus,
-} from '@/lib/vehicles/types';
+import { getVehiclesCopy } from '@/lib/vehicles/i18n';
+import type { VehicleStatus } from '@/lib/vehicles/types';
 
 const STATUS_STYLES: Record<VehicleStatus, string> = {
   available:
@@ -33,13 +35,18 @@ function StatusIcon({ status }: { status: VehicleStatus }) {
 
 export interface VehicleStatusBadgeProps {
   status: VehicleStatus;
+  locale?: SupportedLocale;
   className?: string;
 }
 
 export function VehicleStatusBadge({
   status,
+  locale: localeOverride,
   className,
 }: VehicleStatusBadgeProps) {
+  const { locale } = useAppPreferences();
+  const copy = getVehiclesCopy(localeOverride ?? locale);
+
   return (
     <span
       className={cn(
@@ -49,7 +56,7 @@ export function VehicleStatusBadge({
       )}
     >
       <StatusIcon status={status} />
-      <span>{VEHICLE_STATUS_LABELS[status]}</span>
+      <span>{copy.statuses[status]}</span>
     </span>
   );
 }

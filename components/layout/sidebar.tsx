@@ -41,13 +41,18 @@ export function Sidebar({
 
   useEffect(() => {
     if (!mobileOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         onCloseMobile();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener('keydown', handleKeyDown);
+    };
   }, [mobileOpen, onCloseMobile]);
 
   const renderNavContent = (isCompact: boolean, isMobileDrawer = false) => {
@@ -95,7 +100,7 @@ export function Sidebar({
               type="button"
               onClick={onCloseMobile}
               aria-label={dict.common.closeNavigation}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-xl text-slate-300 transition-colors hover:bg-slate-800 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 cursor-pointer"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-xl text-slate-300 transition-colors hover:bg-slate-800 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 cursor-pointer"
             >
               <X className="h-4 w-4" aria-hidden="true" />
             </button>
@@ -112,7 +117,7 @@ export function Sidebar({
             return (
               <div key={groupId} className="space-y-1">
                 {!isCompact ? (
-                  <p className="px-3 pb-1 text-[11px] font-semibold tracking-wide text-slate-500">
+                  <p className="px-3 pb-1 text-[11px] font-semibold tracking-wide text-slate-400/90">
                     {dict.navGroups[groupId]}
                   </p>
                 ) : (
@@ -133,8 +138,8 @@ export function Sidebar({
                           aria-current={active ? 'page' : undefined}
                           title={isCompact ? label : undefined}
                           className={cn(
-                            'group relative flex items-center rounded-xl text-[13.5px] font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400',
-                            isMobileDrawer ? 'h-11' : 'h-10',
+                            'group relative flex items-center rounded-xl text-[13.5px] font-medium transition-colors duration-150 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400',
+                            isMobileDrawer ? 'min-h-[44px] py-2' : 'h-10',
                             isCompact ? 'justify-center px-0' : 'gap-3 px-3',
                             active
                               ? 'bg-[#1D4ED8] text-white shadow-[0_1px_2px_rgba(0,0,0,0.28)]'
@@ -169,7 +174,7 @@ export function Sidebar({
 
         {/* Mobile drawer quick preferences (Language + Theme) */}
         {isMobileDrawer ? (
-          <div className="shrink-0 space-y-3 border-t border-slate-800/90 bg-[#080D18] p-4">
+          <div className="pb-safe shrink-0 space-y-3 border-t border-slate-800/90 bg-[#080D18] p-4">
             <div className="flex items-center justify-between gap-2">
               <div
                 role="group"
@@ -277,7 +282,7 @@ export function Sidebar({
               animate={{ x: 0 }}
               exit={{ x: drawerOffsetX }}
               transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-              className="relative z-10 flex h-full w-[288px] max-w-[85vw] flex-col border-e border-slate-800 bg-[#0B1220] shadow-2xl"
+              className="relative z-10 flex h-full w-[288px] max-w-[85vw] flex-col overflow-hidden rounded-e-3xl border-e border-slate-800 bg-[#0B1220] shadow-2xl"
             >
               {renderNavContent(false, true)}
             </motion.aside>

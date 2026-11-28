@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Eye, EyeOff, Loader2, LogIn } from 'lucide-react';
+import { useAppPreferences } from '@/components/providers/app-preferences-provider';
 import { Button } from '@/components/ui/button';
 import {
   FormField,
@@ -11,6 +12,7 @@ import {
   INPUT_BASE_CLASSES,
 } from '@/components/ui/form-field';
 import { performEmailLogin } from '@/lib/auth/actions';
+import type { SupportedLocale } from '@/lib/currency';
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser';
 import type { SupabasePublicEnv } from '@/lib/supabase/env';
 import { cn } from '@/lib/utils';
@@ -23,6 +25,75 @@ export interface LoginFormProps {
   initialNotice?: string | null;
 }
 
+const LOGIN_COPY: Record<
+  SupportedLocale,
+  {
+    emailLabel: string;
+    emailPlaceholder: string;
+    passwordLabel: string;
+    passwordPlaceholder: string;
+    forgotPassword: string;
+    showPassword: string;
+    hidePassword: string;
+    submit: string;
+    submitting: string;
+    resendVerification: string;
+    missingConfig: string;
+    genericError: string;
+    networkError: string;
+  }
+> = {
+  fr: {
+    emailLabel: 'Adresse e-mail',
+    emailPlaceholder: 'nom@agence.tn',
+    passwordLabel: 'Mot de passe',
+    passwordPlaceholder: 'Votre mot de passe',
+    forgotPassword: 'Mot de passe oublié ?',
+    showPassword: 'Afficher le mot de passe',
+    hidePassword: 'Masquer le mot de passe',
+    submit: 'Se connecter',
+    submitting: 'Connexion en cours…',
+    resendVerification: 'Renvoyer l’e-mail de vérification',
+    missingConfig:
+      'L’authentification Supabase n’est pas configurée dans cet environnement.',
+    genericError: 'Impossible de vous connecter. Veuillez réessayer.',
+    networkError:
+      'Impossible de joindre le service d’authentification. Vérifiez votre connexion.',
+  },
+  en: {
+    emailLabel: 'Email address',
+    emailPlaceholder: 'name@agency.tn',
+    passwordLabel: 'Password',
+    passwordPlaceholder: 'Your password',
+    forgotPassword: 'Forgot password?',
+    showPassword: 'Show password',
+    hidePassword: 'Hide password',
+    submit: 'Sign in',
+    submitting: 'Signing in…',
+    resendVerification: 'Resend verification email',
+    missingConfig:
+      'Supabase authentication is not configured in this environment.',
+    genericError: 'Unable to sign in. Please try again.',
+    networkError:
+      'Unable to reach the authentication service. Check your connection.',
+  },
+  ar: {
+    emailLabel: 'البريد الإلكتروني',
+    emailPlaceholder: 'name@agency.tn',
+    passwordLabel: 'كلمة المرور',
+    passwordPlaceholder: 'كلمة المرور الخاصة بك',
+    forgotPassword: 'هل نسيت كلمة المرور؟',
+    showPassword: 'إظهار كلمة المرور',
+    hidePassword: 'إخفاء كلمة المرور',
+    submit: 'تسجيل الدخول',
+    submitting: 'جارٍ تسجيل الدخول…',
+    resendVerification: 'إعادة إرسال بريد التحقق',
+    missingConfig: 'المصادقة عبر Supabase غير مهيأة في هذه البيئة.',
+    genericError: 'تعذر تسجيل الدخول. يرجى المحاولة مجدداً.',
+    networkError: 'تعذر الاتصال بخدمة المصادقة. تحقق من اتصال الإنترنت.',
+  },
+};
+
 export function LoginForm({
   supabasePublicEnv,
   nextPath,
@@ -30,6 +101,8 @@ export function LoginForm({
   initialNotice,
 }: LoginFormProps) {
   const router = useRouter();
+  const { locale } = useAppPreferences();
+  const copy = LOGIN_COPY[locale];
   const supabaseConfigured = Boolean(supabasePublicEnv);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -46,9 +119,7 @@ export function LoginForm({
     setUnverifiedEmail(null);
 
     if (!supabasePublicEnv) {
-      setErrorMessage(
-        'L’authentification Supabase n’est pas configurée dans cet environnement.'
-      );
+      setErrorMessage(copy.missingConfig);
       return;
     }
 
@@ -62,9 +133,7 @@ export function LoginForm({
       });
 
       if (!result.ok) {
-        setErrorMessage(
-          result.error ?? 'Impossible de vous connecter. Veuillez réessayer.'
-        );
+        setErrorMessage(result.error ?? copy.genericError);
         if (result.data?.unverifiedEmail) {
           setUnverifiedEmail(email.trim().toLowerCase());
         }
@@ -74,9 +143,7 @@ export function LoginForm({
       router.replace(result.data?.redirectTo ?? '/');
       router.refresh();
     } catch {
-      setErrorMessage(
-        'Impossible de joindre le service d’authentification. Vérifiez votre connexion.'
-      );
+      setErrorMessage(copy.networkError);
     } finally {
       setSubmitting(false);
     }
@@ -97,25 +164,30 @@ export function LoginForm({
                 href={`/verify-email?email=${encodeURIComponent(unverifiedEmail)}`}
                 className="font-semibold underline underline-offset-2 hover:opacity-80"
               >
-                Renvoyer l’e-mail de vérification
+                {copy.resendVerification}
               </Link>
             </p>
           ) : null}
         </AuthAlert>
       ) : null}
 
-      <FormField id="login-email" label="Adresse e-mail" required>
+      <FormField id="login-email" label={copy.emailLabel} required>
         <input
           id="login-email"
           name="email"
           type="email"
+          dir="ltr"
           autoComplete="email"
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           disabled={submitting}
-          placeholder="nom@agence.tn"
-          className={cn(INPUT_BASE_CLASSES, getInputStateClasses(false))}
+          placeholder={copy.emailPlaceholder}
+          className={cn(
+            INPUT_BASE_CLASSES,
+            getInputStateClasses(false),
+            'rtl:text-right'
+          )}
         />
       </FormField>
 
@@ -123,18 +195,18 @@ export function LoginForm({
         <div className="flex items-center justify-between gap-2">
           <label
             htmlFor="login-password"
-            className="block text-sm font-medium text-slate-800 dark:text-slate-200"
+            className="block text-[13px] font-semibold text-slate-800 dark:text-slate-200"
           >
-            Mot de passe
+            {copy.passwordLabel}
             <span className="ms-1 text-red-600 dark:text-red-400" aria-hidden="true">
               *
             </span>
           </label>
           <Link
             href="/forgot-password"
-            className="text-xs font-medium text-blue-700 transition-colors hover:text-blue-800 hover:underline dark:text-blue-400 dark:hover:text-blue-300"
+            className="text-xs font-medium text-[#1D4ED8] transition-colors hover:text-[#1E40AF] hover:underline dark:text-blue-400 dark:hover:text-blue-300"
           >
-            Mot de passe oublié ?
+            {copy.forgotPassword}
           </Link>
         </div>
 
@@ -143,27 +215,24 @@ export function LoginForm({
             id="login-password"
             name="password"
             type={showPassword ? 'text' : 'password'}
+            dir="ltr"
             autoComplete="current-password"
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             disabled={submitting}
-            placeholder="Votre mot de passe"
+            placeholder={copy.passwordPlaceholder}
             className={cn(
               INPUT_BASE_CLASSES,
               getInputStateClasses(false),
-              'pe-10'
+              'pe-11 rtl:text-right'
             )}
           />
           <button
             type="button"
             onClick={() => setShowPassword((prev) => !prev)}
-            aria-label={
-              showPassword
-                ? 'Masquer le mot de passe'
-                : 'Afficher le mot de passe'
-            }
-            className="absolute inset-y-0 end-0 inline-flex w-10 items-center justify-center text-slate-400 transition-colors hover:text-slate-700 focus-visible:outline-none focus-visible:text-blue-700 dark:text-slate-500 dark:hover:text-slate-200 cursor-pointer"
+            aria-label={showPassword ? copy.hidePassword : copy.showPassword}
+            className="absolute inset-y-0 end-0 inline-flex w-11 items-center justify-center text-slate-500 transition-colors hover:text-slate-900 focus-visible:outline-none focus-visible:text-[#1D4ED8] dark:text-slate-400 dark:hover:text-slate-100 cursor-pointer"
           >
             {showPassword ? (
               <EyeOff className="h-4 w-4" aria-hidden="true" />
@@ -178,17 +247,17 @@ export function LoginForm({
         type="submit"
         variant="primary"
         disabled={submitting || !supabaseConfigured}
-        className="mt-2 w-full"
+        className="mt-2 h-11 w-full sm:h-10"
       >
         {submitting ? (
           <>
             <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-            <span>Connexion en cours…</span>
+            <span>{copy.submitting}</span>
           </>
         ) : (
           <>
-            <LogIn className="h-4 w-4" aria-hidden="true" />
-            <span>Se connecter</span>
+            <LogIn className="h-4 w-4 rtl:-scale-x-100" aria-hidden="true" />
+            <span>{copy.submit}</span>
           </>
         )}
       </Button>

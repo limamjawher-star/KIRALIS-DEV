@@ -64,12 +64,16 @@ export function AddCustomerModal({
         ? document.activeElement
         : null;
 
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
     const frame = window.requestAnimationFrame(() => {
       fullNameInputRef.current?.focus();
     });
 
     return () => {
       window.cancelAnimationFrame(frame);
+      document.body.style.overflow = previousOverflow;
       previousFocusRef.current?.focus();
     };
   }, [open]);
@@ -167,19 +171,22 @@ export function AddCustomerModal({
         className="flex max-h-[92dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-3xl border border-slate-200/90 bg-white shadow-2xl sm:max-h-[90vh] sm:rounded-2xl dark:border-slate-800 dark:bg-slate-900"
       >
         {/* Mobile grabber */}
-        <div className="flex justify-center pt-2.5 pb-1 sm:hidden" aria-hidden="true">
-          <span className="h-1 w-10 rounded-full bg-slate-300 dark:bg-slate-700" />
+        <div
+          className="flex justify-center bg-[#0B1220] pt-2.5 pb-1 sm:hidden"
+          aria-hidden="true"
+        >
+          <span className="h-1 w-10 rounded-full bg-slate-600" />
         </div>
 
-        <div className="flex items-start justify-between gap-4 border-b border-slate-200/90 px-5 py-4 sm:px-6 dark:border-slate-800">
+        <div className="flex items-start justify-between gap-4 border-b border-slate-800 bg-[#0B1220] px-5 py-4 text-white sm:px-6">
           <div className="min-w-0">
             <h2
               id={titleId}
-              className="font-display text-lg font-bold tracking-tight text-slate-950 dark:text-slate-50"
+              className="font-display text-lg font-bold tracking-tight text-white"
             >
               {modalCopy.title}
             </h2>
-            <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+            <p className="mt-0.5 text-xs text-slate-400">
               {modalCopy.subtitle}
             </p>
           </div>
@@ -188,7 +195,7 @@ export function AddCustomerModal({
             onClick={onClose}
             disabled={submitting}
             aria-label={modalCopy.closeAriaLabel}
-            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600/80 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-slate-400 transition-colors hover:bg-slate-800 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
           >
             <X className="h-4 w-4" aria-hidden="true" />
           </button>
@@ -208,7 +215,7 @@ export function AddCustomerModal({
 
             {/* Identity */}
             <fieldset className="space-y-4">
-              <legend className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400 dark:text-slate-500">
+              <legend className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-600 dark:text-slate-300">
                 {modalCopy.sectionIdentity}
               </legend>
 
@@ -305,7 +312,7 @@ export function AddCustomerModal({
 
             {/* Contact */}
             <fieldset className="space-y-4 border-t border-slate-200/80 pt-5 dark:border-slate-800/80">
-              <legend className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400 dark:text-slate-500">
+              <legend className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-600 dark:text-slate-300">
                 {modalCopy.sectionContact}
               </legend>
 
@@ -372,7 +379,7 @@ export function AddCustomerModal({
 
             {/* Address */}
             <fieldset className="space-y-4 border-t border-slate-200/80 pt-5 dark:border-slate-800/80">
-              <legend className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400 dark:text-slate-500">
+              <legend className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-600 dark:text-slate-300">
                 {modalCopy.sectionAddress}
               </legend>
 
@@ -464,7 +471,7 @@ export function AddCustomerModal({
 
             {/* Internal Notes */}
             <fieldset className="space-y-4 border-t border-slate-200/80 pt-5 dark:border-slate-800/80">
-              <legend className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400 dark:text-slate-500">
+              <legend className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-600 dark:text-slate-300">
                 {modalCopy.sectionNotes}
               </legend>
 
@@ -494,7 +501,7 @@ export function AddCustomerModal({
             </fieldset>
           </div>
 
-          <div className="pb-safe flex flex-wrap items-center justify-end gap-2.5 border-t border-slate-200/90 bg-slate-50/80 px-5 py-3.5 sm:px-6 sm:py-4 dark:border-slate-800 dark:bg-slate-950/70">
+          <div className="pb-safe flex flex-wrap items-center justify-end gap-2.5 border-t border-slate-200 bg-[#F4F6FA] px-5 py-3.5 sm:px-6 sm:py-4 dark:border-slate-800 dark:bg-slate-950/80">
             <Button
               type="button"
               variant="secondary"

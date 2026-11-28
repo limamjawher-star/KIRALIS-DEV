@@ -46,12 +46,35 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
       title="Connexion"
       subtitle="Accédez à votre espace de gestion KIRALIS."
       supabaseConfigured={Boolean(supabasePublicEnv)}
+      localizedText={{
+        fr: {
+          title: 'Connexion',
+          subtitle: 'Accédez à votre espace de gestion KIRALIS.',
+          footerPrompt: 'Pas encore de compte ?',
+          footerLinkLabel: 'Créer un compte',
+          footerLinkHref: '/signup',
+        },
+        en: {
+          title: 'Sign in',
+          subtitle: 'Access your KIRALIS agency management workspace.',
+          footerPrompt: 'Don’t have an account yet?',
+          footerLinkLabel: 'Create an account',
+          footerLinkHref: '/signup',
+        },
+        ar: {
+          title: 'تسجيل الدخول',
+          subtitle: 'ادخل إلى مساحة إدارة وكالتك على KIRALIS.',
+          footerPrompt: 'ليس لديك حساب بعد؟',
+          footerLinkLabel: 'إنشاء حساب',
+          footerLinkHref: '/signup',
+        },
+      }}
       footer={
         <p>
           Pas encore de compte ?{' '}
           <Link
             href="/signup"
-            className="font-semibold text-blue-700 hover:text-blue-800 hover:underline dark:text-blue-400 dark:hover:text-blue-300"
+            className="font-semibold text-[#1D4ED8] hover:text-[#1E40AF] hover:underline dark:text-blue-400 dark:hover:text-blue-300"
           >
             Créer un compte
           </Link>

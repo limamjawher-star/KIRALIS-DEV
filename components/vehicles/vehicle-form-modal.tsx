@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { Loader2, X } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
+import { useAppPreferences } from '@/components/providers/app-preferences-provider';
 import { AlertBanner } from '@/components/ui/alert-banner';
 import { Button } from '@/components/ui/button';
 import {
@@ -14,15 +15,17 @@ import {
 import { formatTndFromMillimes, parseTndToMillimes } from '@/lib/currency';
 import { cn } from '@/lib/utils';
 import {
+  getVehiclesCopy,
+  localizeVehicleFieldErrors,
+} from '@/lib/vehicles/i18n';
+import {
   createEmptyVehicleFormValues,
   VEHICLE_CATEGORY_OPTIONS,
-  VEHICLE_FUEL_LABELS,
   VEHICLE_FUEL_VALUES,
-  VEHICLE_STATUS_LABELS,
   VEHICLE_STATUS_VALUES,
-  VEHICLE_TRANSMISSION_LABELS,
   VEHICLE_TRANSMISSION_VALUES,
   vehicleRecordToFormValues,
+  type VehicleCategoryPreset,
   type VehicleFieldErrors,
   type VehicleFormValues,
   type VehicleFuelType,
@@ -53,6 +56,9 @@ export function VehicleFormModal({
   onClose,
   onSaved,
 }: VehicleFormModalProps) {
+  const { locale } = useAppPreferences();
+  const copy = getVehiclesCopy(locale);
+
   const [values, setValues] = useState<VehicleFormValues>(() =>
     mode === 'edit' && vehicle
       ? vehicleRecordToFormValues(vehicle)
@@ -64,13 +70,19 @@ export function VehicleFormModal({
 
   useEffect(() => {
     if (!open) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === 'Escape' && !submitting) {
         onClose();
       }
     }
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener('keydown', handleKeyDown);
+    };
   }, [open, submitting, onClose]);
 
   function updateField<K extends keyof VehicleFormValues>(
@@ -120,8 +132,8 @@ export function VehicleFormModal({
 
     const validation = validateVehiclePayload(candidatePayload);
     if (!validation.valid || !validation.data) {
-      setFieldErrors(validation.errors);
-      setFormError('Veuillez corriger les champs indiqués ci-dessous.');
+      setFieldErrors(localizeVehicleFieldErrors(validation.errors, locale));
+      setFormError(copy.form.fixFieldsError);
       return;
     }
 
@@ -151,19 +163,18 @@ export function VehicleFormModal({
 
       if (!response.ok || !payload?.ok || !payload.vehicle) {
         if (payload?.fieldErrors) {
-          setFieldErrors(payload.fieldErrors);
+          setFieldErrors(
+            localizeVehicleFieldErrors(payload.fieldErrors, locale)
+          );
         }
-        setFormError(
-          payload?.error ??
-            'Impossible d’enregistrer le véhicule. Veuillez réessayer.'
-        );
+        setFormError(payload?.error ?? copy.form.saveErrorFallback);
         setSubmitting(false);
         return;
       }
 
       onSaved(payload.vehicle, mode);
     } catch {
-      setFormError('Erreur réseau lors de la communication avec le serveur.');
+      setFormError(copy.form.networkError);
       setSubmitting(false);
     }
   }
@@ -178,6 +189,12 @@ export function VehicleFormModal({
   const parsedDeposit = parseTndToMillimes(values.deposit_tnd || '0');
   const titleId =
     mode === 'edit' ? 'edit-vehicle-modal-title' : 'create-vehicle-modal-title';
+
+  const hasCustomCategory =
+    values.category.trim() !== '' &&
+    !VEHICLE_CATEGORY_OPTIONS.some(
+      (opt) => opt.value === values.category.trim().toLowerCase()
+    );
 
   return (
     <AnimatePresence>
@@ -207,34 +224,41 @@ export function VehicleFormModal({
           >
             {/* Mobile bottom-sheet grabber */}
             <div
-              className="flex justify-center pt-2.5 pb-0.5 sm:hidden"
+              className="flex justify-center bg-[#0B1220] pt-2.5 pb-1 sm:hidden"
               aria-hidden="true"
             >
-              <span className="h-1 w-10 rounded-full bg-slate-300 dark:bg-slate-700" />
+              <span className="h-1 w-10 rounded-full bg-slate-600" />
             </div>
 
-            <div className="flex items-start justify-between gap-4 border-b border-slate-200/80 px-5 py-4 sm:px-6 dark:border-slate-800/80">
+            <div className="flex items-start justify-between gap-4 border-b border-slate-800 bg-[#0B1220] px-5 py-4 text-white sm:px-6">
               <div className="min-w-0">
                 <h2
                   id={titleId}
-                  className="font-display text-lg font-semibold tracking-tight text-slate-950 dark:text-slate-50"
+                  className="font-display text-lg font-bold tracking-tight text-white"
                 >
                   {mode === 'edit'
-                    ? 'Modifier le véhicule'
-                    : 'Ajouter un véhicule'}
+                    ? copy.form.editTitle
+                    : copy.form.createTitle}
                 </h2>
-                <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-                  {mode === 'edit' && vehicle
-                    ? `${vehicle.brand} ${vehicle.model} · ${vehicle.plate_number}`
-                    : 'Renseignez les informations techniques et tarifaires du véhicule.'}
+                <p className="mt-0.5 text-xs text-slate-400">
+                  {mode === 'edit' && vehicle ? (
+                    <>
+                      {vehicle.brand} {vehicle.model} ·{' '}
+                      <span dir="ltr" className="inline-block font-mono">
+                        {vehicle.plate_number}
+                      </span>
+                    </>
+                  ) : (
+                    copy.form.createSubtitle
+                  )}
                 </p>
               </div>
               <button
                 type="button"
                 onClick={onClose}
                 disabled={submitting}
-                aria-label="Fermer la fenêtre"
-                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600/30 disabled:opacity-50 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100 cursor-pointer"
+                aria-label={copy.form.closeAria}
+                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-slate-400 transition-colors hover:bg-slate-800 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 disabled:opacity-50 cursor-pointer"
               >
                 <X className="h-4 w-4" aria-hidden="true" />
               </button>
@@ -254,20 +278,21 @@ export function VehicleFormModal({
 
                 {/* Section 1: Identification */}
                 <fieldset className="space-y-4">
-                  <legend className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-500 dark:text-slate-400">
-                    Identification du véhicule
+                  <legend className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-600 dark:text-slate-300">
+                    {copy.form.sectionIdentification}
                   </legend>
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <FormField
                       id="vehicle-plate"
-                      label="Immatriculation"
+                      label={copy.form.fieldPlate}
                       required
-                      helperText="Unique au sein de votre agence (ex. 214 TU 4821)."
+                      helperText={copy.form.fieldPlateHelper}
                       errorText={fieldErrors.plate_number}
                     >
                       <input
                         id="vehicle-plate"
                         type="text"
+                        dir="ltr"
                         required
                         maxLength={32}
                         value={values.plate_number}
@@ -290,7 +315,7 @@ export function VehicleFormModal({
 
                     <FormField
                       id="vehicle-status"
-                      label="Statut opérationnel"
+                      label={copy.form.fieldStatus}
                       required
                       errorText={fieldErrors.status}
                     >
@@ -312,7 +337,7 @@ export function VehicleFormModal({
                       >
                         {VEHICLE_STATUS_VALUES.map((statusValue) => (
                           <option key={statusValue} value={statusValue}>
-                            {VEHICLE_STATUS_LABELS[statusValue]}
+                            {copy.statuses[statusValue]}
                           </option>
                         ))}
                       </select>
@@ -320,7 +345,7 @@ export function VehicleFormModal({
 
                     <FormField
                       id="vehicle-brand"
-                      label="Marque"
+                      label={copy.form.fieldBrand}
                       required
                       errorText={fieldErrors.brand}
                     >
@@ -333,7 +358,7 @@ export function VehicleFormModal({
                         onChange={(e) =>
                           updateField('brand', e.target.value, 'brand')
                         }
-                        placeholder="Peugeot, Hyundai, Clio..."
+                        placeholder={copy.form.fieldBrandPlaceholder}
                         disabled={submitting}
                         className={cn(
                           INPUT_BASE_CLASSES,
@@ -344,7 +369,7 @@ export function VehicleFormModal({
 
                     <FormField
                       id="vehicle-model"
-                      label="Modèle"
+                      label={copy.form.fieldModel}
                       required
                       errorText={fieldErrors.model}
                     >
@@ -357,7 +382,7 @@ export function VehicleFormModal({
                         onChange={(e) =>
                           updateField('model', e.target.value, 'model')
                         }
-                        placeholder="208, i20, Duster..."
+                        placeholder={copy.form.fieldModelPlaceholder}
                         disabled={submitting}
                         className={cn(
                           INPUT_BASE_CLASSES,
@@ -368,13 +393,14 @@ export function VehicleFormModal({
 
                     <FormField
                       id="vehicle-year"
-                      label="Année"
-                      helperText="Entre 1980 et 2100 (optionnel)."
+                      label={copy.form.fieldYear}
+                      helperText={copy.form.fieldYearHelper}
                       errorText={fieldErrors.model_year}
                     >
                       <input
                         id="vehicle-year"
                         type="number"
+                        dir="ltr"
                         inputMode="numeric"
                         min={1980}
                         max={2100}
@@ -398,13 +424,14 @@ export function VehicleFormModal({
 
                     <FormField
                       id="vehicle-vin"
-                      label="Numéro de châssis (VIN)"
-                      helperText="Optionnel, 32 caractères maximum."
+                      label={copy.form.fieldVin}
+                      helperText={copy.form.fieldVinHelper}
                       errorText={fieldErrors.vin}
                     >
                       <input
                         id="vehicle-vin"
                         type="text"
+                        dir="ltr"
                         maxLength={32}
                         value={values.vin}
                         onChange={(e) =>
@@ -422,15 +449,15 @@ export function VehicleFormModal({
                   </div>
                 </fieldset>
 
-                {/* Section 2: Caractéristiques */}
+                {/* Section 2: Specifications */}
                 <fieldset className="space-y-4 border-t border-slate-200/80 pt-5 dark:border-slate-800/80">
-                  <legend className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-500 dark:text-slate-400">
-                    Caractéristiques techniques
+                  <legend className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-600 dark:text-slate-300">
+                    {copy.form.sectionSpecs}
                   </legend>
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                     <FormField
                       id="vehicle-category"
-                      label="Catégorie"
+                      label={copy.form.fieldCategory}
                       required
                       errorText={fieldErrors.category}
                     >
@@ -446,9 +473,14 @@ export function VehicleFormModal({
                           getInputStateClasses(Boolean(fieldErrors.category))
                         )}
                       >
+                        {hasCustomCategory ? (
+                          <option value={values.category}>
+                            {values.category}
+                          </option>
+                        ) : null}
                         {VEHICLE_CATEGORY_OPTIONS.map((option) => (
                           <option key={option.value} value={option.value}>
-                            {option.label}
+                            {copy.categories[option.value as VehicleCategoryPreset]}
                           </option>
                         ))}
                       </select>
@@ -456,7 +488,7 @@ export function VehicleFormModal({
 
                     <FormField
                       id="vehicle-transmission"
-                      label="Transmission"
+                      label={copy.form.fieldTransmission}
                       required
                       errorText={fieldErrors.transmission}
                     >
@@ -480,7 +512,7 @@ export function VehicleFormModal({
                       >
                         {VEHICLE_TRANSMISSION_VALUES.map((tr) => (
                           <option key={tr} value={tr}>
-                            {VEHICLE_TRANSMISSION_LABELS[tr]}
+                            {copy.transmissions[tr]}
                           </option>
                         ))}
                       </select>
@@ -488,7 +520,7 @@ export function VehicleFormModal({
 
                     <FormField
                       id="vehicle-fuel"
-                      label="Carburant"
+                      label={copy.form.fieldFuel}
                       required
                       errorText={fieldErrors.fuel_type}
                     >
@@ -510,7 +542,7 @@ export function VehicleFormModal({
                       >
                         {VEHICLE_FUEL_VALUES.map((fuel) => (
                           <option key={fuel} value={fuel}>
-                            {VEHICLE_FUEL_LABELS[fuel]}
+                            {copy.fuels[fuel]}
                           </option>
                         ))}
                       </select>
@@ -518,13 +550,14 @@ export function VehicleFormModal({
 
                     <FormField
                       id="vehicle-seats"
-                      label="Nombre de places"
+                      label={copy.form.fieldSeats}
                       required
                       errorText={fieldErrors.seats}
                     >
                       <input
                         id="vehicle-seats"
                         type="number"
+                        dir="ltr"
                         inputMode="numeric"
                         min={1}
                         max={20}
@@ -544,7 +577,7 @@ export function VehicleFormModal({
 
                     <FormField
                       id="vehicle-odometer"
-                      label="Kilométrage (km)"
+                      label={copy.form.fieldOdometer}
                       required
                       className="sm:col-span-2"
                       errorText={fieldErrors.odometer_km}
@@ -552,6 +585,7 @@ export function VehicleFormModal({
                       <input
                         id="vehicle-odometer"
                         type="number"
+                        dir="ltr"
                         inputMode="numeric"
                         min={0}
                         max={5000000}
@@ -575,44 +609,45 @@ export function VehicleFormModal({
                   </div>
                 </fieldset>
 
-                {/* Section 3: Tarification */}
+                {/* Section 3: Pricing */}
                 <fieldset className="space-y-4 border-t border-slate-200/80 pt-5 dark:border-slate-800/80">
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <legend className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-500 dark:text-slate-400">
-                      Tarification ({currencyCode}, précision 3 décimales)
+                    <legend className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-600 dark:text-slate-300">
+                      {copy.form.sectionPricing(currencyCode)}
                     </legend>
                     <span className="text-[11px] text-slate-500 dark:text-slate-400">
-                      Tarifs saisonniers gérés dans la fiche véhicule
+                      {copy.form.seasonalManagedInDrawer}
                     </span>
                   </div>
 
                   {!pricingSchemaReady ? (
                     <AlertBanner variant="warning" compact>
-                      La migration Supabase{' '}
-                      <span className="font-mono">
+                      {copy.migrations.formPricingPrefix}{' '}
+                      <span dir="ltr" className="font-mono">
                         202611210005_vehicle_advanced_pricing.sql
                       </span>{' '}
-                      doit être installée avant d’enregistrer les forfaits 7 et
-                      30 jours. Le tarif journalier et la caution restent
-                      pleinement modifiables.
+                      {copy.migrations.formPricingSuffix}
                     </AlertBanner>
                   ) : null}
 
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <FormField
                       id="vehicle-daily-rate"
-                      label={`Tarif journalier (${currencyCode})`}
+                      label={copy.form.fieldDailyRate(currencyCode)}
                       required
                       helperText={
                         parsedDailyRate !== null && parsedDailyRate >= 0
-                          ? `Enregistré : ${formatTndFromMillimes(parsedDailyRate, 'fr')}`
-                          : 'Ex. 120,000 ou 95.500'
+                          ? copy.form.recordedPreview(
+                              formatTndFromMillimes(parsedDailyRate, locale)
+                            )
+                          : copy.form.fieldDailyRateHelper
                       }
                       errorText={fieldErrors.daily_rate_minor}
                     >
                       <input
                         id="vehicle-daily-rate"
                         type="text"
+                        dir="ltr"
                         inputMode="decimal"
                         required
                         value={values.daily_rate_tnd}
@@ -637,17 +672,20 @@ export function VehicleFormModal({
 
                     <FormField
                       id="vehicle-deposit"
-                      label={`Caution (${currencyCode})`}
+                      label={copy.form.fieldDeposit(currencyCode)}
                       helperText={
                         parsedDeposit !== null && parsedDeposit >= 0
-                          ? `Enregistré : ${formatTndFromMillimes(parsedDeposit, 'fr')}`
-                          : 'Ex. 1500,000 (0 par défaut)'
+                          ? copy.form.recordedPreview(
+                              formatTndFromMillimes(parsedDeposit, locale)
+                            )
+                          : copy.form.fieldDepositHelper
                       }
                       errorText={fieldErrors.deposit_minor}
                     >
                       <input
                         id="vehicle-deposit"
                         type="text"
+                        dir="ltr"
                         inputMode="decimal"
                         value={values.deposit_tnd}
                         onChange={(e) =>
@@ -671,19 +709,23 @@ export function VehicleFormModal({
 
                     <FormField
                       id="vehicle-weekly-rate"
-                      label={`Forfait 7 jours (${currencyCode})`}
+                      label={copy.form.fieldWeeklyRate(currencyCode)}
                       helperText={
                         !pricingSchemaReady
-                          ? 'Disponible après installation de la migration 0005.'
+                          ? copy.migrations.availableAfterMigration0005
                           : parsedWeeklyRate !== null && parsedWeeklyRate >= 0
-                            ? `Enregistré : ${formatTndFromMillimes(parsedWeeklyRate, 'fr')} pour 7 jours`
-                            : 'Optionnel · forfait fixe pour 7 jours standards'
+                            ? copy.form.recordedForDaysPreview(
+                                formatTndFromMillimes(parsedWeeklyRate, locale),
+                                7
+                              )
+                            : copy.form.fieldWeeklyRateHelper
                       }
                       errorText={fieldErrors.weekly_rate_minor}
                     >
                       <input
                         id="vehicle-weekly-rate"
                         type="text"
+                        dir="ltr"
                         inputMode="decimal"
                         value={values.weekly_rate_tnd}
                         onChange={(e) =>
@@ -707,19 +749,26 @@ export function VehicleFormModal({
 
                     <FormField
                       id="vehicle-monthly-rate"
-                      label={`Forfait 30 jours (${currencyCode})`}
+                      label={copy.form.fieldMonthlyRate(currencyCode)}
                       helperText={
                         !pricingSchemaReady
-                          ? 'Disponible après installation de la migration 0005.'
+                          ? copy.migrations.availableAfterMigration0005
                           : parsedMonthlyRate !== null && parsedMonthlyRate >= 0
-                            ? `Enregistré : ${formatTndFromMillimes(parsedMonthlyRate, 'fr')} pour 30 jours`
-                            : 'Optionnel · forfait fixe pour 30 jours standards'
+                            ? copy.form.recordedForDaysPreview(
+                                formatTndFromMillimes(
+                                  parsedMonthlyRate,
+                                  locale
+                                ),
+                                30
+                              )
+                            : copy.form.fieldMonthlyRateHelper
                       }
                       errorText={fieldErrors.monthly_rate_minor}
                     >
                       <input
                         id="vehicle-monthly-rate"
                         type="text"
+                        dir="ltr"
                         inputMode="decimal"
                         value={values.monthly_rate_tnd}
                         onChange={(e) =>
@@ -743,38 +792,37 @@ export function VehicleFormModal({
                   </div>
                 </fieldset>
 
-                {/* Section 4: Échéances administratives */}
+                {/* Section 4: Compliance expiry dates */}
                 <fieldset className="space-y-4 border-t border-slate-200/80 pt-5 dark:border-slate-800/80">
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <legend className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-500 dark:text-slate-400">
-                      Échéances administratives (optionnel)
+                    <legend className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-600 dark:text-slate-300">
+                      {copy.form.sectionCompliance}
                     </legend>
                     <span className="text-[11px] text-slate-500 dark:text-slate-400">
-                      Dates uniquement · aucun fichier requis
+                      {copy.form.datesOnlyNotice}
                     </span>
                   </div>
 
                   {!complianceSchemaReady ? (
                     <AlertBanner variant="warning" compact>
-                      La migration Supabase{' '}
-                      <span className="font-mono">
+                      {copy.migrations.formCompliancePrefix}{' '}
+                      <span dir="ltr" className="font-mono">
                         202611210004_vehicle_compliance_dates.sql
                       </span>{' '}
-                      doit être appliquée avant de pouvoir enregistrer ces
-                      dates. Vous pouvez laisser ces champs vides pour
-                      enregistrer le véhicule dès maintenant.
+                      {copy.migrations.formComplianceSuffix}
                     </AlertBanner>
                   ) : null}
 
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                     <FormField
                       id="vehicle-insurance-expiry"
-                      label="Expiration assurance"
+                      label={copy.form.fieldInsuranceExpiry}
                       errorText={fieldErrors.insurance_expires_on}
                     >
                       <input
                         id="vehicle-insurance-expiry"
                         type="date"
+                        dir="ltr"
                         min="1980-01-01"
                         max="2100-12-31"
                         value={values.insurance_expires_on}
@@ -798,12 +846,13 @@ export function VehicleFormModal({
 
                     <FormField
                       id="vehicle-inspection-expiry"
-                      label="Expiration visite technique"
+                      label={copy.form.fieldInspectionExpiry}
                       errorText={fieldErrors.technical_inspection_expires_on}
                     >
                       <input
                         id="vehicle-inspection-expiry"
                         type="date"
+                        dir="ltr"
                         min="1980-01-01"
                         max="2100-12-31"
                         value={values.technical_inspection_expires_on}
@@ -827,12 +876,13 @@ export function VehicleFormModal({
 
                     <FormField
                       id="vehicle-vignette-expiry"
-                      label="Expiration vignette"
+                      label={copy.form.fieldVignetteExpiry}
                       errorText={fieldErrors.vignette_expires_on}
                     >
                       <input
                         id="vehicle-vignette-expiry"
                         type="date"
+                        dir="ltr"
                         min="1980-01-01"
                         max="2100-12-31"
                         value={values.vignette_expires_on}
@@ -856,12 +906,12 @@ export function VehicleFormModal({
                   </div>
                 </fieldset>
 
-                {/* Section 5: Notes */}
+                {/* Section 5: Internal Notes */}
                 <div className="border-t border-slate-200/80 pt-5 dark:border-slate-800/80">
                   <FormField
                     id="vehicle-notes"
-                    label="Notes internes"
-                    helperText="Observations d’état, équipements ou consignes d’exploitation (optionnel)."
+                    label={copy.form.fieldNotes}
+                    helperText={copy.form.fieldNotesHelper}
                     errorText={fieldErrors.notes}
                   >
                     <textarea
@@ -873,7 +923,7 @@ export function VehicleFormModal({
                         updateField('notes', e.target.value, 'notes')
                       }
                       disabled={submitting}
-                      placeholder="Ex. GPS intégré, siège bébé disponible sur demande..."
+                      placeholder={copy.form.fieldNotesPlaceholder}
                       className={cn(
                         TEXTAREA_BASE_CLASSES,
                         getInputStateClasses(Boolean(fieldErrors.notes))
@@ -883,28 +933,34 @@ export function VehicleFormModal({
                 </div>
               </div>
 
-              <div className="pb-safe flex items-center justify-end gap-3 border-t border-slate-200/80 bg-slate-50/90 px-5 py-3.5 sm:px-6 dark:border-slate-800/80 dark:bg-slate-950/75">
+              <div className="pb-safe flex items-center justify-end gap-3 border-t border-slate-200 bg-[#F4F6FA] px-5 py-3.5 sm:px-6 dark:border-slate-800 dark:bg-slate-950/80">
                 <Button
                   type="button"
                   variant="secondary"
+                  className="h-11 sm:h-10"
                   onClick={onClose}
                   disabled={submitting}
                 >
-                  Annuler
+                  {copy.drawer.cancel}
                 </Button>
-                <Button type="submit" variant="primary" disabled={submitting}>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  className="h-11 sm:h-10"
+                  disabled={submitting}
+                >
                   {submitting ? (
                     <>
                       <Loader2
                         className="h-4 w-4 animate-spin"
                         aria-hidden="true"
                       />
-                      <span>Enregistrement...</span>
+                      <span>{copy.form.saving}</span>
                     </>
                   ) : mode === 'edit' ? (
-                    <span>Enregistrer les modifications</span>
+                    <span>{copy.form.saveChanges}</span>
                   ) : (
-                    <span>Créer le véhicule</span>
+                    <span>{copy.form.createVehicle}</span>
                   )}
                 </Button>
               </div>

@@ -1,10 +1,12 @@
+'use client';
+
 import React from 'react';
 import { AlertTriangle, CheckCircle2, Clock } from 'lucide-react';
+import { useAppPreferences } from '@/components/providers/app-preferences-provider';
+import type { SupportedLocale } from '@/lib/currency';
 import { cn } from '@/lib/utils';
-import {
-  COMPLIANCE_STATUS_LABELS,
-  type ComplianceStatus,
-} from '@/lib/vehicles/compliance';
+import type { ComplianceStatus } from '@/lib/vehicles/compliance';
+import { getVehiclesCopy } from '@/lib/vehicles/i18n';
 
 const COMPLIANCE_STYLES: Record<ComplianceStatus, string> = {
   valid:
@@ -20,15 +22,19 @@ const COMPLIANCE_STYLES: Record<ComplianceStatus, string> = {
 export interface VehicleComplianceBadgeProps {
   status: ComplianceStatus;
   labelOverride?: string;
+  locale?: SupportedLocale;
   className?: string;
 }
 
 export function VehicleComplianceBadge({
   status,
   labelOverride,
+  locale: localeOverride,
   className,
 }: VehicleComplianceBadgeProps) {
-  const label = labelOverride ?? COMPLIANCE_STATUS_LABELS[status];
+  const { locale } = useAppPreferences();
+  const copy = getVehiclesCopy(localeOverride ?? locale);
+  const label = labelOverride ?? copy.complianceStatuses[status];
 
   return (
     <span

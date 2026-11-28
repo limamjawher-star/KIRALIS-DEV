@@ -5,10 +5,18 @@ import { usePathname } from 'next/navigation';
 import { motion } from 'motion/react';
 import { isOnboardingPath, type AgencySummary } from '@/lib/agency/types';
 import { isPublicAuthPath } from '@/lib/auth/validation';
+import type { SupportedLocale } from '@/lib/currency';
 import type { SupabasePublicEnv } from '@/lib/supabase/env';
+import { useAppPreferences } from '@/components/providers/app-preferences-provider';
 import { MobileBottomNav } from './mobile-bottom-nav';
 import { Sidebar } from './sidebar';
 import { Topbar } from './topbar';
+
+const FOOTER_BRAND_BY_LOCALE: Record<SupportedLocale, string> = {
+  fr: 'KIRALIS · Plateforme de gestion d’agence de location',
+  en: 'KIRALIS · Car rental agency management platform',
+  ar: 'KIRALIS · منصة إدارة وكالات كراء السيارات',
+};
 
 export interface AppShellProps {
   children: React.ReactNode;
@@ -26,6 +34,7 @@ export function AppShell({
   agencies = [],
 }: AppShellProps) {
   const pathname = usePathname();
+  const { locale } = useAppPreferences();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -61,7 +70,7 @@ export function AppShell({
 
         <main
           id="main-content"
-          className="mx-auto w-full max-w-[1400px] flex-1 px-4 pt-5 pb-24 sm:px-6 sm:pt-6 lg:px-8 lg:pb-10"
+          className="mx-auto w-full max-w-[1400px] flex-1 px-4 pt-5 pb-24 sm:px-6 sm:pt-6 md:pb-8 lg:px-8 lg:pb-10"
         >
           <motion.div
             key={pathname}
@@ -76,9 +85,12 @@ export function AppShell({
         <footer className="mt-auto hidden border-t border-slate-300/75 bg-white/60 px-6 py-3 text-xs text-slate-500 lg:block lg:px-8 dark:border-slate-800/90 dark:bg-slate-950/40 dark:text-slate-400">
           <div className="mx-auto flex max-w-[1400px] items-center justify-between gap-4">
             <span className="font-medium text-slate-600 dark:text-slate-300">
-              KIRALIS · Plateforme de gestion d’agence de location
+              {FOOTER_BRAND_BY_LOCALE[locale]}
             </span>
-            <span className="font-mono text-[11px] tabular-nums text-slate-500 dark:text-slate-400">
+            <span
+              dir="ltr"
+              className="font-mono text-[11px] tabular-nums text-slate-500 dark:text-slate-400"
+            >
               {activeAgency
                 ? `${activeAgency.name} · ${activeAgency.slug} · TND · Africa/Tunis`
                 : 'TND · Africa/Tunis'}

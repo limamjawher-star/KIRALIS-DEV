@@ -10,6 +10,7 @@ import {
   Power,
 } from 'lucide-react';
 import { motion } from 'motion/react';
+import { useAppPreferences } from '@/components/providers/app-preferences-provider';
 import { AlertBanner } from '@/components/ui/alert-banner';
 import { Button } from '@/components/ui/button';
 import {
@@ -20,9 +21,12 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatTndFromMillimes, parseTndToMillimes } from '@/lib/currency';
 import { cn } from '@/lib/utils';
-import { formatIsoDateFr } from '@/lib/vehicles/compliance';
 import {
-  PRICING_PRECEDENCE_SUMMARY,
+  formatIsoDateLocalized,
+  getVehiclesCopy,
+  localizeSeasonalFieldErrors,
+} from '@/lib/vehicles/i18n';
+import {
   validateSeasonalRatePayload,
   type SeasonalRateFieldErrors,
   type SeasonalRateFormValues,
@@ -88,7 +92,7 @@ export interface SeasonalToggleUiState {
 export type SeasonalToggleAction =
   | { type: 'start'; rateId: string }
   | { type: 'failure'; error: string }
-  | { type: 'success'; isActive: boolean };
+  | { type: 'success'; isActive: boolean; feedbackMessage?: string };
 
 /**
  * Pure state transition for seasonal-rate activation/deactivation so any prior
@@ -118,9 +122,11 @@ export function reduceSeasonalToggleUiState(
         togglingId: null,
         loadError: null,
         formError: null,
-        feedback: action.isActive
-          ? 'Tarif saisonnier réactivé.'
-          : 'Tarif saisonnier désactivé.',
+        feedback:
+          action.feedbackMessage ??
+          (action.isActive
+            ? 'Tarif saisonnier réactivé.'
+            : 'Tarif saisonnier désactivé.'),
       };
   }
 }
@@ -133,6 +139,9 @@ export function VehiclePricingSection({
   onPricingSchemaDetected,
   onEditVehicle,
 }: VehiclePricingSectionProps) {
+  const { locale } = useAppPreferences();
+  const copy = getVehiclesCopy(locale);
+
   const [rates, setRates] = useState<VehicleSeasonalRateRecord[]>([]);
   const [loadingRates, setLoadingRates] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -155,6 +164,7 @@ export function VehiclePricingSection({
 
   useEffect(() => {
     let cancelled = false;
+    const errorCopy = getVehiclesCopy(locale).pricing;
 
     async function fetchRates() {
       try {
@@ -172,10 +182,7 @@ export function VehiclePricingSection({
         if (cancelled) return;
 
         if (!response.ok || !payload?.ok) {
-          setLoadError(
-            payload?.error ??
-              'Impossible de charger les tarifs saisonniers du véhicule.'
-          );
+          setLoadError(payload?.error ?? errorCopy.loadRatesError);
           setLoadingRates(false);
           return;
         }
@@ -190,7 +197,7 @@ export function VehiclePricingSection({
         setLoadingRates(false);
       } catch {
         if (cancelled) return;
-        setLoadError('Erreur réseau lors du chargement des tarifs saisonniers.');
+        setLoadError(errorCopy.loadRatesNetworkError);
         setLoadingRates(false);
       }
     }
@@ -199,7 +206,7 @@ export function VehiclePricingSection({
     return () => {
       cancelled = true;
     };
-  }, [vehicle.id, onPricingSchemaDetected]);
+  }, [vehicle.id, onPricingSchemaDetected, locale]);
 
   function openCreateForm() {
     setEditingRate(null);
@@ -256,8 +263,8 @@ export function VehiclePricingSection({
     });
 
     if (!validation.valid || !validation.data) {
-      setFieldErrors(validation.errors);
-      setFormError('Veuillez corriger les champs signalés ci-dessous.');
+      setFieldErrors(localizeSeasonalFieldErrors(validation.errors, locale));
+      setFormError(copy.form.fixFieldsError);
       return;
     }
 
@@ -294,11 +301,11 @@ export function VehiclePricingSection({
 
       if (!response.ok || !payload?.ok || !payload.rate) {
         if (payload?.fieldErrors) {
-          setFieldErrors(payload.fieldErrors);
+          setFieldErrors(
+            localizeSeasonalFieldErrors(payload.fieldErrors, locale)
+          );
         }
-        setFormError(
-          payload?.error ?? 'Impossible d’enregistrer ce tarif saisonnier.'
-        );
+        setFormError(payload?.error ?? copy.pricing.saveRuleError);
         setSaving(false);
         return;
       }
@@ -313,13 +320,13 @@ export function VehiclePricingSection({
       );
       setFeedback(
         editingRate
-          ? 'Tarif saisonnier mis à jour.'
-          : 'Nouveau tarif saisonnier enregistré.'
+          ? copy.pricing.ruleUpdatedFeedback
+          : copy.pricing.ruleCreatedFeedback
       );
       setSaving(false);
       closeForm();
     } catch {
-      setFormError('Erreur réseau lors de la sauvegarde du tarif saisonnier.');
+      setFormError(copy.pricing.saveRuleNetworkError);
       setSaving(false);
     }
   }
@@ -367,9 +374,7 @@ export function VehiclePricingSection({
       if (!response.ok || !payload?.ok || !payload.rate) {
         applyToggleUiAction({
           type: 'failure',
-          error:
-            payload?.error ??
-            'Impossible de modifier l’état de ce tarif saisonnier.',
+          error: payload?.error ?? copy.pricing.toggleRuleError,
         });
         return;
       }
@@ -383,11 +388,14 @@ export function VehiclePricingSection({
       applyToggleUiAction({
         type: 'success',
         isActive: updatedRate.is_active,
+        feedbackMessage: updatedRate.is_active
+          ? copy.pricing.ruleActivatedFeedback
+          : copy.pricing.ruleDeactivatedFeedback,
       });
     } catch {
       applyToggleUiAction({
         type: 'failure',
-        error: 'Erreur réseau lors de la mise à jour du tarif saisonnier.',
+        error: copy.pricing.toggleRuleNetworkError,
       });
     }
   }
@@ -396,66 +404,76 @@ export function VehiclePricingSection({
   const currencyCode = vehicle.currency_code || 'TND';
 
   return (
-    <section aria-label="Tarification" className="space-y-4">
+    <section aria-label={copy.pricing.sectionTitle} className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-500 dark:text-slate-400">
+        <h3 className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-600 dark:text-slate-300">
           <Banknote className="h-3.5 w-3.5" aria-hidden="true" />
-          <span>Tarification</span>
+          <span>{copy.pricing.sectionTitle}</span>
         </h3>
         {canManage ? (
           <button
             type="button"
             onClick={() => onEditVehicle(vehicle)}
-            className="inline-flex items-center gap-1 text-xs font-medium text-blue-700 hover:text-blue-800 focus-visible:outline-none focus-visible:underline dark:text-blue-400 dark:hover:text-blue-300 cursor-pointer"
+            className="inline-flex items-center gap-1 text-xs font-semibold text-[#1D4ED8] hover:text-blue-800 focus-visible:outline-none focus-visible:underline dark:text-blue-400 dark:hover:text-blue-300 cursor-pointer"
           >
             <Pencil className="h-3 w-3" aria-hidden="true" />
-            <span>Modifier les tarifs</span>
+            <span>{copy.pricing.editRates}</span>
           </button>
         ) : null}
       </div>
 
       {/* Standard pricing summary grid */}
       <div className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-slate-200/90 bg-slate-200/80 dark:border-slate-800 dark:bg-slate-800/80">
-        <div className="bg-slate-50/70 px-4 py-3 dark:bg-slate-950/60">
+        <div className="bg-[#F4F6FA] px-4 py-3 dark:bg-slate-950/60">
           <p className="text-[11px] text-slate-500 dark:text-slate-400">
-            Tarif journalier
+            {copy.pricing.dailyRate}
           </p>
-          <p className="mt-1 font-mono text-base font-semibold text-blue-700 tabular-nums dark:text-blue-400">
-            {formatTndFromMillimes(vehicle.daily_rate_minor, 'fr')}
+          <p
+            dir="ltr"
+            className="mt-1 font-mono text-base font-bold text-[#1D4ED8] tabular-nums rtl:text-right dark:text-blue-400"
+          >
+            {formatTndFromMillimes(vehicle.daily_rate_minor, locale)}
           </p>
         </div>
-        <div className="bg-slate-50/70 px-4 py-3 dark:bg-slate-950/60">
+        <div className="bg-[#F4F6FA] px-4 py-3 dark:bg-slate-950/60">
           <p className="text-[11px] text-slate-500 dark:text-slate-400">
-            Caution
+            {copy.pricing.deposit}
           </p>
-          <p className="mt-1 font-mono text-base font-semibold text-slate-950 tabular-nums dark:text-slate-50">
-            {formatTndFromMillimes(vehicle.deposit_minor, 'fr')}
+          <p
+            dir="ltr"
+            className="mt-1 font-mono text-base font-bold text-slate-950 tabular-nums rtl:text-right dark:text-slate-50"
+          >
+            {formatTndFromMillimes(vehicle.deposit_minor, locale)}
           </p>
         </div>
         <div className="bg-white px-4 py-3 dark:bg-slate-900/70">
           <p className="text-[11px] text-slate-500 dark:text-slate-400">
-            Forfait 7 jours
+            {copy.pricing.weeklyPackage}
           </p>
           <p className="mt-1 font-mono text-sm font-semibold text-slate-900 tabular-nums dark:text-slate-100">
             {vehicle.weekly_rate_minor !== null ? (
-              formatTndFromMillimes(vehicle.weekly_rate_minor, 'fr')
+              <span dir="ltr" className="inline-block">
+                {formatTndFromMillimes(vehicle.weekly_rate_minor, locale)}
+              </span>
             ) : (
-              <span className="font-sans text-xs font-normal text-slate-400 dark:text-slate-500">
-                Non défini
+              <span className="font-sans text-xs font-normal text-slate-500 dark:text-slate-400">
+                {copy.pricing.notDefined}
               </span>
             )}
           </p>
         </div>
         <div className="bg-white px-4 py-3 dark:bg-slate-900/70">
           <p className="text-[11px] text-slate-500 dark:text-slate-400">
-            Forfait 30 jours
+            {copy.pricing.monthlyPackage}
           </p>
           <p className="mt-1 font-mono text-sm font-semibold text-slate-900 tabular-nums dark:text-slate-100">
             {vehicle.monthly_rate_minor !== null ? (
-              formatTndFromMillimes(vehicle.monthly_rate_minor, 'fr')
+              <span dir="ltr" className="inline-block">
+                {formatTndFromMillimes(vehicle.monthly_rate_minor, locale)}
+              </span>
             ) : (
-              <span className="font-sans text-xs font-normal text-slate-400 dark:text-slate-500">
-                Non défini
+              <span className="font-sans text-xs font-normal text-slate-500 dark:text-slate-400">
+                {copy.pricing.notDefined}
               </span>
             )}
           </p>
@@ -467,14 +485,13 @@ export function VehiclePricingSection({
         <AlertBanner
           variant="warning"
           compact
-          title="Tarification avancée désactivée"
+          title={copy.migrations.advancedPricingDisabledTitle}
         >
-          Installez la migration{' '}
-          <span className="font-mono">
+          {copy.migrations.advancedPricingDisabledPrefix}{' '}
+          <span dir="ltr" className="font-mono">
             202611210005_vehicle_advanced_pricing.sql
           </span>{' '}
-          dans Supabase pour enregistrer des forfaits 7/30 jours et des tarifs
-          saisonniers. Le tarif journalier existant reste pleinement actif.
+          {copy.migrations.advancedPricingDisabledSuffix}
         </AlertBanner>
       ) : null}
 
@@ -487,7 +504,7 @@ export function VehiclePricingSection({
               aria-hidden="true"
             />
             <h4 className="text-xs font-semibold text-slate-800 dark:text-slate-200">
-              Tarifs saisonniers
+              {copy.pricing.seasonalRatesTitle}
             </h4>
           </div>
           {canManage ? (
@@ -499,12 +516,12 @@ export function VehiclePricingSection({
               className="min-h-9 sm:min-h-8"
               title={
                 !schemaReady
-                  ? 'Installez la migration 0005 dans Supabase pour activer cette action.'
+                  ? copy.migrations.installMigration0005Tooltip
                   : undefined
               }
             >
               <Plus className="h-3.5 w-3.5" aria-hidden="true" />
-              <span>Ajouter une période</span>
+              <span>{copy.pricing.addPeriod}</span>
             </Button>
           ) : null}
         </div>
@@ -514,7 +531,7 @@ export function VehiclePricingSection({
             variant="success"
             compact
             onDismiss={() => setFeedback(null)}
-            dismissLabel="Fermer"
+            dismissLabel={copy.list.close}
           >
             {feedback}
           </AlertBanner>
@@ -538,8 +555,8 @@ export function VehiclePricingSection({
           >
             <p className="text-xs font-semibold text-slate-950 dark:text-slate-100">
               {editingRate
-                ? 'Modifier le tarif saisonnier'
-                : 'Nouveau tarif saisonnier'}
+                ? copy.pricing.editSeasonalTitle
+                : copy.pricing.newSeasonalTitle}
             </p>
 
             {formError ? (
@@ -550,7 +567,7 @@ export function VehiclePricingSection({
 
             <FormField
               id="seasonal-label"
-              label="Libellé (optionnel)"
+              label={copy.pricing.seasonalLabel}
               errorText={fieldErrors.label}
             >
               <input
@@ -561,7 +578,7 @@ export function VehiclePricingSection({
                 onChange={(e) =>
                   updateFormField('label', e.target.value, 'label')
                 }
-                placeholder="Ex. Haute saison été, Vacances scolaires..."
+                placeholder={copy.pricing.seasonalLabelPlaceholder}
                 disabled={saving}
                 className={cn(
                   INPUT_BASE_CLASSES,
@@ -573,13 +590,14 @@ export function VehiclePricingSection({
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <FormField
                 id="seasonal-start-date"
-                label="Date de début (incluse)"
+                label={copy.pricing.seasonalStartDate}
                 required
                 errorText={fieldErrors.start_date}
               >
                 <input
                   id="seasonal-start-date"
                   type="date"
+                  dir="ltr"
                   required
                   min="1980-01-01"
                   max="2100-12-31"
@@ -598,13 +616,14 @@ export function VehiclePricingSection({
 
               <FormField
                 id="seasonal-end-date"
-                label="Date de fin (incluse)"
+                label={copy.pricing.seasonalEndDate}
                 required
                 errorText={fieldErrors.end_date}
               >
                 <input
                   id="seasonal-end-date"
                   type="date"
+                  dir="ltr"
                   required
                   min="1980-01-01"
                   max="2100-12-31"
@@ -624,18 +643,21 @@ export function VehiclePricingSection({
 
             <FormField
               id="seasonal-daily-rate"
-              label={`Tarif journalier saisonnier (${currencyCode})`}
+              label={copy.pricing.seasonalDailyRate(currencyCode)}
               required
               helperText={
                 parsedSeasonalPreview !== null && parsedSeasonalPreview >= 0
-                  ? `Enregistré : ${formatTndFromMillimes(parsedSeasonalPreview, 'fr')} / jour`
-                  : 'Ex. 165,000 (précision 3 décimales)'
+                  ? copy.pricing.recordedPerDayPreview(
+                      formatTndFromMillimes(parsedSeasonalPreview, locale)
+                    )
+                  : copy.pricing.seasonalDailyRateHelper
               }
               errorText={fieldErrors.daily_rate_minor}
             >
               <input
                 id="seasonal-daily-rate"
                 type="text"
+                dir="ltr"
                 inputMode="decimal"
                 required
                 value={formValues.daily_rate_tnd}
@@ -664,7 +686,7 @@ export function VehiclePricingSection({
                 disabled={saving}
                 onClick={closeForm}
               >
-                Annuler
+                {copy.drawer.cancel}
               </Button>
               <Button
                 type="submit"
@@ -678,12 +700,12 @@ export function VehiclePricingSection({
                       className="h-3.5 w-3.5 animate-spin"
                       aria-hidden="true"
                     />
-                    <span>Enregistrement...</span>
+                    <span>{copy.form.saving}</span>
                   </>
                 ) : editingRate ? (
-                  <span>Mettre à jour</span>
+                  <span>{copy.pricing.updateRule}</span>
                 ) : (
-                  <span>Enregistrer la règle</span>
+                  <span>{copy.pricing.saveRule}</span>
                 )}
               </Button>
             </div>
@@ -697,14 +719,15 @@ export function VehiclePricingSection({
             <Skeleton className="h-3 w-28" />
           </div>
         ) : rates.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 px-4 py-3.5 text-xs text-slate-500 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-400">
-            Aucun tarif saisonnier configuré pour ce véhicule.
+          <div className="rounded-xl border border-slate-200/90 bg-[#F4F6FA] px-4 py-3.5 text-xs font-medium text-slate-600 dark:border-slate-800 dark:bg-slate-950/50 dark:text-slate-300">
+            {copy.pricing.noSeasonalRates}
           </div>
         ) : (
           <div className="divide-y divide-slate-100 rounded-2xl border border-slate-200/90 bg-white dark:divide-slate-800/80 dark:border-slate-800 dark:bg-slate-950/40">
             {rates.map((rate) => {
               const delta = rate.daily_rate_minor - vehicle.daily_rate_minor;
               const isBusy = togglingId === rate.id;
+              const rateDisplayName = rate.label || rate.start_date;
 
               return (
                 <div
@@ -716,7 +739,9 @@ export function VehiclePricingSection({
                 >
                   <div className="min-w-0">
                     <p className="flex flex-wrap items-center gap-1.5 text-xs font-semibold text-slate-900 dark:text-slate-100">
-                      <span>{rate.label || 'Période saisonnière'}</span>
+                      <span>
+                        {rate.label || copy.pricing.defaultSeasonalLabel}
+                      </span>
                       <span
                         aria-hidden="true"
                         className="text-slate-300 dark:text-slate-700"
@@ -730,24 +755,37 @@ export function VehiclePricingSection({
                             : 'font-medium text-slate-500 dark:text-slate-400'
                         }
                       >
-                        {rate.is_active ? 'Actif' : 'Inactif'}
+                        {rate.is_active
+                          ? copy.pricing.active
+                          : copy.pricing.inactive}
                       </span>
                     </p>
-                    <p className="mt-0.5 font-mono text-[11px] text-slate-500 tabular-nums dark:text-slate-400">
-                      {formatIsoDateFr(rate.start_date)} →{' '}
-                      {formatIsoDateFr(rate.end_date)}
+                    <p
+                      dir="ltr"
+                      className="mt-0.5 font-mono text-[11px] text-slate-500 tabular-nums rtl:text-right dark:text-slate-400"
+                    >
+                      {formatIsoDateLocalized(rate.start_date, locale)} →{' '}
+                      {formatIsoDateLocalized(rate.end_date, locale)}
                     </p>
                   </div>
 
                   <div className="flex items-center gap-3">
                     <div className="text-end">
-                      <p className="font-mono text-xs font-semibold text-slate-950 tabular-nums dark:text-slate-100">
-                        {formatTndFromMillimes(rate.daily_rate_minor, 'fr')} / j
+                      <p
+                        dir="ltr"
+                        className="font-mono text-xs font-semibold text-slate-950 tabular-nums dark:text-slate-100"
+                      >
+                        {formatTndFromMillimes(rate.daily_rate_minor, locale)}{' '}
+                        {copy.pricing.perDayUnit}
                       </p>
                       {delta !== 0 ? (
-                        <p className="font-mono text-[11px] text-slate-500 tabular-nums dark:text-slate-400">
+                        <p
+                          dir="ltr"
+                          className="font-mono text-[11px] text-slate-500 tabular-nums dark:text-slate-400"
+                        >
                           {delta > 0 ? '+' : '−'}
-                          {formatTndFromMillimes(Math.abs(delta), 'fr')} vs std.
+                          {formatTndFromMillimes(Math.abs(delta), locale)}{' '}
+                          {copy.pricing.vsStandard}
                         </p>
                       ) : null}
                     </div>
@@ -758,8 +796,10 @@ export function VehiclePricingSection({
                           type="button"
                           onClick={() => openEditForm(rate)}
                           disabled={isBusy}
-                          aria-label={`Modifier le tarif saisonnier ${rate.label || rate.start_date}`}
-                          className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600/30 sm:h-8 sm:w-8 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100 cursor-pointer"
+                          aria-label={copy.pricing.editSeasonalAria(
+                            rateDisplayName
+                          )}
+                          className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600/30 sm:h-8 sm:w-8 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100 cursor-pointer"
                         >
                           <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
                         </button>
@@ -769,11 +809,19 @@ export function VehiclePricingSection({
                           disabled={isBusy}
                           aria-label={
                             rate.is_active
-                              ? `Désactiver le tarif saisonnier ${rate.label || rate.start_date}`
-                              : `Réactiver le tarif saisonnier ${rate.label || rate.start_date}`
+                              ? copy.pricing.deactivateSeasonalAria(
+                                  rateDisplayName
+                                )
+                              : copy.pricing.reactivateSeasonalAria(
+                                  rateDisplayName
+                                )
                           }
-                          title={rate.is_active ? 'Désactiver' : 'Réactiver'}
-                          className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600/30 sm:h-8 sm:w-8 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100 cursor-pointer"
+                          title={
+                            rate.is_active
+                              ? copy.pricing.deactivateTitle
+                              : copy.pricing.reactivateTitle
+                          }
+                          className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600/30 sm:h-8 sm:w-8 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100 cursor-pointer"
                         >
                           {isBusy ? (
                             <Loader2
@@ -794,7 +842,7 @@ export function VehiclePricingSection({
         )}
 
         <p className="text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
-          {PRICING_PRECEDENCE_SUMMARY}
+          {copy.pricing.precedenceSummary}
         </p>
       </div>
 
