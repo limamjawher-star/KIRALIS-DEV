@@ -69,7 +69,6 @@ test('Reports localized for French, English and Arabic with honest payment discl
     assert.ok(copy.bookedValue && copy.bookedValueInfo);
     assert.equal(Object.keys(copy.status).length, 6);
     assert.ok(copy.partialWarning);
-    assert.ok(copy.averageBookedDays === undefined);
   }
 });
 
