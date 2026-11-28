@@ -70,6 +70,7 @@ export function ReservationsWorkspace({
   const [modalError, setModalError] = useState('');
   const [changingId, setChangingId] = useState<string | null>(null);
   const requestId = useRef(0);
+  const creatingRef = useRef(false);
   const firstField = useRef<HTMLSelectElement>(null);
 
   const eligibleVehicles = useMemo(
@@ -163,15 +164,20 @@ export function ReservationsWorkspace({
   }
   async function createBooking(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (saving || quote?.key !== quoteKey) { setModalError(copy.quoteFirst); return; }
+    if (creatingRef.current || saving || quote?.key !== quoteKey) { setModalError(copy.quoteFirst); return; }
     const payload = buildPayload();
     if (!payload) { setModalError(copy.fromNow); return; }
+    creatingRef.current = true;
     setSaving(true);
     setModalError('');
     try {
       const response = await fetch('/api/reservations', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          ...payload,
+          expectedSubtotalMinor: quote.value.subtotalMinor,
+          expectedDepositMinor: quote.value.depositMinor,
+        }),
       });
       const data = (await response.json().catch(() => null)) as {
         ok?: boolean; reservation?: ReservationRow; error?: string;
@@ -188,7 +194,7 @@ export function ReservationsWorkspace({
       setQuote(null);
       router.refresh();
     } catch { setModalError(copy.actionError); setQuote(null); }
-    finally { setSaving(false); }
+    finally { creatingRef.current = false; setSaving(false); }
   }
   async function refresh() {
     if (refreshing) return;
