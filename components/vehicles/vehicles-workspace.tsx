@@ -7,6 +7,7 @@ import {
   Car,
   CheckCircle2,
   Clock,
+  Download,
   Eye,
   Pencil,
   Plus,
@@ -28,6 +29,7 @@ import { Surface } from '@/components/ui/surface';
 import type { AgencyRecord, AgencyRole } from '@/lib/agency/types';
 import { DEFAULT_TIMEZONE, formatTndFromMillimes } from '@/lib/currency';
 import { cn } from '@/lib/utils';
+import { buildFleetCsv } from '@/lib/vehicles/fleet-export';
 import {
   applyMobileVehicleFilters,
   resetMobileVehicleFilters,
@@ -366,6 +368,24 @@ export function VehiclesWorkspace({
     router.refresh();
   }
 
+  function downloadVisibleFleetCsv() {
+    if (filteredVehicles.length === 0) return;
+
+    // These records were supplied by the existing authenticated agency endpoint;
+    // export only the currently visible selection, never hidden agency data.
+    const csv = buildFleetCsv(filteredVehicles, copy);
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `kiralis-fleet-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    // Allow browsers time to hand off the download before releasing the URL.
+    window.setTimeout(() => URL.revokeObjectURL(url), 30_000);
+  }
+
   function openCreateModal() {
     setFeedbackBanner(null);
     setModalState({ open: true, mode: 'create', vehicle: null });
@@ -396,12 +416,24 @@ export function VehiclesWorkspace({
               onClick={refreshVehicles}
               disabled={refreshing}
               aria-label={copy.header.refreshAria}
+              className="h-10 w-10 px-0 sm:w-auto sm:px-4"
             >
               <RefreshCw
                 className={cn('h-4 w-4', refreshing && 'animate-spin')}
                 aria-hidden="true"
               />
-              <span>{copy.header.refresh}</span>
+              <span className="hidden sm:inline">{copy.header.refresh}</span>
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={downloadVisibleFleetCsv}
+              disabled={filteredVehicles.length === 0}
+              aria-label={copy.header.exportCsvAria}
+              title={copy.header.exportCsv}
+              className="h-10 w-10 px-0 sm:w-auto sm:px-4"
+            >
+              <Download className="h-4 w-4" aria-hidden="true" />
+              <span className="hidden sm:inline">{copy.header.exportCsv}</span>
             </Button>
             {canManage ? (
               <Button variant="primary" onClick={openCreateModal}>
@@ -1410,7 +1442,7 @@ export function VehiclesWorkspace({
                     id="mobile-filter-category"
                     value={mobileDraftFilters.category}
                     onChange={(e) =>
-                      setFilters((prev) => ({
+                      setMobileDraftFilters((prev) => ({
                         ...prev,
                         category: e.target.value,
                       }))
@@ -1438,7 +1470,7 @@ export function VehiclesWorkspace({
                       id="mobile-filter-transmission"
                       value={mobileDraftFilters.transmission}
                       onChange={(e) =>
-                        setFilters((prev) => ({
+                        setMobileDraftFilters((prev) => ({
                           ...prev,
                           transmission: e.target.value as
                             | 'all'
@@ -1469,7 +1501,7 @@ export function VehiclesWorkspace({
                       id="mobile-filter-fuel"
                       value={mobileDraftFilters.fuelType}
                       onChange={(e) =>
-                        setFilters((prev) => ({
+                        setMobileDraftFilters((prev) => ({
                           ...prev,
                           fuelType: e.target.value as 'all' | VehicleFuelType,
                         }))
@@ -1497,7 +1529,7 @@ export function VehiclesWorkspace({
                     id="mobile-filter-sort"
                     value={mobileDraftFilters.sortBy}
                     onChange={(e) =>
-                      setFilters((prev) => ({
+                      setMobileDraftFilters((prev) => ({
                         ...prev,
                         sortBy: e.target.value as VehicleSortKey,
                       }))

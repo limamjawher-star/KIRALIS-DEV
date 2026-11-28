@@ -16,6 +16,7 @@ export default async function VehiclesPage() {
 
   return (
     <VehiclesWorkspace
+      key={activeAgency.id}
       agency={activeAgency}
       role={activeMembership.role}
       initialVehicles={vehicles}
