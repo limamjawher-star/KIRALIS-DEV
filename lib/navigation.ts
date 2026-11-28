@@ -103,7 +103,7 @@ export const NAV_ITEMS: readonly NavItemConfig[] = [
     href: '/reports',
     group: 'finance',
     icon: 'BarChart3',
-    plannedPhase: 'Phase 8',
+    plannedPhase: 'Actif',
   },
   {
     key: 'assistant',
