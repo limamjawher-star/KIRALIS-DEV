@@ -1,124 +1,145 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 
+export type LogoSize = 'sm' | 'md' | 'lg';
+export type LogoVariant = 'full' | 'compact' | 'mark';
+export type LogoTone = 'auto' | 'dark' | 'light';
+
 export interface KiralisMarkProps {
-  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+  size?: LogoSize;
+  tone?: LogoTone;
   className?: string;
 }
 
-const MARK_SIZE_CLASSES: Record<NonNullable<KiralisMarkProps['size']>, string> = {
-  xs: 'h-6 w-6',
+const MARK_SIZE_CLASSES: Record<LogoSize, string> = {
   sm: 'h-7 w-7',
   md: 'h-8 w-8',
-  lg: 'h-10 w-10',
-  xl: 'h-12 w-12',
+  lg: 'h-11 w-11',
 };
 
 /**
- * Original KIRALIS geometric monogram mark.
- * Combines a precision architectural K pillar with dual forward mobility vectors.
+ * KIRALIS precision geometric brand mark.
+ * Architectural dark-obsidian chassis with a split kinetic chevron K
+ * in crisp white and electric cobalt — engineered for automotive-tech B2B authority.
  */
-export function KiralisMark({ size = 'md', className }: KiralisMarkProps) {
+export function KiralisMark({
+  size = 'md',
+  tone = 'auto',
+  className,
+}: KiralisMarkProps) {
+  const isDarkSurface = tone === 'dark';
+
   return (
     <svg
-      viewBox="0 0 36 36"
+      viewBox="0 0 40 40"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden="true"
-      className={cn(
-        'shrink-0 select-none',
-        MARK_SIZE_CLASSES[size],
-        className
-      )}
+      className={cn('shrink-0', MARK_SIZE_CLASSES[size], className)}
     >
-      {/* Architectural squircle emblem base */}
+      {/* Precision chassis tile */}
       <rect
         x="1"
         y="1"
-        width="34"
-        height="34"
-        rx="9.5"
-        className="fill-[#1D4ED8] dark:fill-[#2563EB]"
-      />
-      {/* Subtle geometric inner top-edge highlight for depth without noisy gradients */}
-      <rect
-        x="1.5"
-        y="1.5"
-        width="33"
-        height="33"
+        width="38"
+        height="38"
         rx="9"
-        stroke="white"
-        strokeOpacity="0.16"
-        strokeWidth="1"
+        className={
+          isDarkSurface
+            ? 'fill-[#162238] stroke-[#2A3B5C]'
+            : 'fill-[#0B1220] stroke-[#1E293B] dark:fill-[#162238] dark:stroke-[#2A3B5C]'
+        }
+        strokeWidth="1.25"
       />
-      {/* Precision K pillar (left vertical track) */}
-      <rect x="9.5" y="8.5" width="4.4" height="19" rx="2.2" fill="white" />
-      {/* Upper forward chevron arm (mobility vector) */}
+      {/* Subtle geometric diagonal highway facet */}
       <path
-        d="M16.2 17.6L22.9 9.5C23.45 8.85 24.3 8.5 25.15 8.5H26.4C27.12 8.5 27.52 9.33 27.06 9.88L20.1 18.1L16.2 17.6Z"
-        fill="white"
+        d="M25.5 2L38 14.5V9.5C38 5.36 34.64 2 30.5 2H25.5Z"
+        fill="#2563EB"
+        fillOpacity="0.24"
       />
-      {/* Lower acceleration wedge with subtle key-notch separation */}
+      {/* Vertical structural chassis stem of K */}
       <path
-        d="M16.1 18.2L20.4 17.9L27.15 26.15C27.58 26.68 27.2 27.5 26.5 27.5H24.6C23.82 27.5 23.08 27.14 22.6 26.53L16.1 18.2Z"
-        fill="white"
-        fillOpacity="0.92"
+        d="M10.5 9.5H15.2V30.5H10.5V9.5Z"
+        fill="#FFFFFF"
       />
-      {/* Precision route dot accent */}
-      <circle cx="15.8" cy="18" r="1.45" className="fill-[#93C5FD]" />
+      {/* Upper directional speed-lane blade (electric cobalt) */}
+      <path
+        d="M17.2 19.6L25.4 9.5H30.8L22.2 20.1L17.2 19.6Z"
+        fill="#3B82F6"
+      />
+      {/* Lower grounded torque leg (crisp white) */}
+      <path
+        d="M17.2 20.5L22.3 19.9L31.1 30.5H25.2L17.2 20.5Z"
+        fill="#FFFFFF"
+      />
     </svg>
   );
 }
 
 export interface KiralisLogoProps {
-  variant?: 'full' | 'compact' | 'mark';
-  size?: 'sm' | 'md' | 'lg';
+  variant?: LogoVariant;
+  size?: LogoSize;
+  tone?: LogoTone;
   subtitle?: string;
   className?: string;
 }
 
-const WORDMARK_SIZE_CLASSES: Record<
-  NonNullable<KiralisLogoProps['size']>,
-  string
-> = {
+const WORDMARK_SIZE_CLASSES: Record<LogoSize, string> = {
   sm: 'text-[15px]',
   md: 'text-[17px]',
-  lg: 'text-xl',
-};
-
-const MARK_BY_LOGO_SIZE: Record<
-  NonNullable<KiralisLogoProps['size']>,
-  NonNullable<KiralisMarkProps['size']>
-> = {
-  sm: 'sm',
-  md: 'md',
-  lg: 'lg',
+  lg: 'text-[22px]',
 };
 
 export function KiralisLogo({
-  variant = 'full',
+  variant = 'compact',
   size = 'md',
+  tone = 'auto',
   subtitle,
   className,
 }: KiralisLogoProps) {
   if (variant === 'mark') {
-    return <KiralisMark size={MARK_BY_LOGO_SIZE[size]} className={className} />;
+    return <KiralisMark size={size} tone={tone} className={className} />;
   }
 
+  const wordmarkToneClass =
+    tone === 'dark'
+      ? 'text-white'
+      : tone === 'light'
+        ? 'text-[#0B1220]'
+        : 'text-[#0B1220] dark:text-white';
+
+  const subtitleToneClass =
+    tone === 'dark'
+      ? 'text-slate-400'
+      : tone === 'light'
+        ? 'text-slate-500'
+        : 'text-slate-500 dark:text-slate-400';
+
   return (
-    <span className={cn('inline-flex items-center gap-2.5 select-none', className)}>
-      <KiralisMark size={MARK_BY_LOGO_SIZE[size]} />
+    <span
+      className={cn(
+        'inline-flex items-center gap-2.5 select-none whitespace-nowrap shrink-0',
+        className
+      )}
+    >
+      <KiralisMark size={size} tone={tone} />
       <span className="flex flex-col leading-none">
         <span
           className={cn(
-            'font-display font-bold tracking-[-0.03em] text-slate-950 whitespace-nowrap dark:text-slate-50',
+            'font-display font-extrabold tracking-[-0.04em]',
+            wordmarkToneClass,
             WORDMARK_SIZE_CLASSES[size]
           )}
         >
           KIRALIS
         </span>
         {variant === 'full' && subtitle ? (
-          <span className="mt-0.5 text-[10px] font-medium tracking-[0.02em] text-slate-500 whitespace-nowrap dark:text-slate-400">
+          <span
+            className={cn(
+              'mt-0.5 text-[11px] font-medium tracking-normal',
+              subtitleToneClass
+            )}
+          >
             {subtitle}
           </span>
         ) : null}

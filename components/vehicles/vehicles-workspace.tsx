@@ -85,7 +85,7 @@ const STATUS_FILTER_OPTIONS: readonly {
 ];
 
 const FILTER_SELECT_CLASSES =
-  'h-10 sm:h-9 rounded-xl border border-slate-200/90 bg-white px-3 text-xs font-medium text-slate-700 transition-colors hover:border-slate-300 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20 dark:border-slate-700/90 dark:bg-slate-950 dark:text-slate-200 dark:hover:border-slate-600 dark:focus:border-blue-400';
+  'h-10 sm:h-9 rounded-xl border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-800 transition-colors hover:border-slate-400 focus:border-[#1D4ED8] focus:outline-none focus:ring-2 focus:ring-blue-600/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-slate-600 dark:focus:border-blue-400 cursor-pointer';
 
 export function VehiclesWorkspace({
   agency,
@@ -465,7 +465,7 @@ export function VehiclesWorkspace({
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-2 bg-slate-50/75 px-4 py-2 text-[11px] text-slate-500 sm:px-5 dark:bg-slate-950/50 dark:text-slate-400">
+        <div className="flex flex-wrap items-center justify-between gap-2 bg-[#F4F6FA] px-4 py-2.5 text-[11px] font-medium text-slate-600 sm:px-5 dark:bg-slate-950/60 dark:text-slate-400">
           <span>{COMPLIANCE_INFORMATIONAL_NOTICE}</span>
           <span className="font-mono whitespace-nowrap tabular-nums">
             Réf. : {complianceSummary.referenceDate} ·{' '}
@@ -477,11 +477,11 @@ export function VehiclesWorkspace({
       {/* Inventory table surface */}
       <Surface className="overflow-hidden">
         {/* Toolbar: Search, status segmented control, secondary filters, sort */}
-        <div className="space-y-3 border-b border-slate-200/80 p-4 dark:border-slate-800/80">
+        <div className="space-y-3 border-b border-slate-200 bg-[#F4F6FA] p-4 sm:px-5 dark:border-slate-800 dark:bg-slate-950/60">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="relative w-full lg:max-w-sm">
               <Search
-                className="pointer-events-none absolute top-1/2 start-3.5 h-4 w-4 -translate-y-1/2 text-slate-400"
+                className="pointer-events-none absolute top-1/2 start-3.5 h-4 w-4 -translate-y-1/2 text-slate-500"
                 aria-hidden="true"
               />
               <input
@@ -492,7 +492,7 @@ export function VehiclesWorkspace({
                 }
                 placeholder="Rechercher par immatriculation, marque, modèle..."
                 aria-label="Rechercher dans la flotte"
-                className="h-11 w-full rounded-xl border border-slate-200/90 bg-white ps-10 pe-3.5 text-sm text-slate-900 placeholder:text-slate-400 transition-colors hover:border-slate-300 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20 sm:h-10 dark:border-slate-700/90 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:hover:border-slate-600 dark:focus:border-blue-400"
+                className="h-11 w-full rounded-xl border border-slate-300 bg-white ps-10 pe-3.5 text-sm text-slate-950 placeholder:text-slate-400 transition-colors hover:border-slate-400 focus:border-[#1D4ED8] focus:outline-none focus:ring-2 focus:ring-blue-600/20 sm:h-10 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500 dark:hover:border-slate-600 dark:focus:border-blue-400"
               />
             </div>
 
@@ -654,7 +654,7 @@ export function VehiclesWorkspace({
             <div className="hidden overflow-x-auto md:block">
               <table className="w-full border-collapse text-sm">
                 <thead>
-                  <tr className="border-b border-slate-200/80 bg-slate-50/80 text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-500 dark:border-slate-800/80 dark:bg-slate-950/60 dark:text-slate-400">
+                  <tr className="border-b border-slate-200 bg-white text-xs font-semibold text-slate-600 dark:border-slate-800 dark:bg-[#0F172A] dark:text-slate-400">
                     <th className="px-4 py-3 text-start">Véhicule</th>
                     <th className="px-4 py-3 text-start">Immatriculation</th>
                     <th className="px-4 py-3 text-start">Spécifications</th>
@@ -665,7 +665,7 @@ export function VehiclesWorkspace({
                     <th className="px-4 py-3 text-end">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-200/80 dark:divide-slate-800/80">
+                <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
                   {filteredVehicles.map((vehicle) => {
                     const kmFormatted = new Intl.NumberFormat('fr-TN').format(
                       vehicle.odometer_km
@@ -686,7 +686,7 @@ export function VehiclesWorkspace({
                     return (
                       <tr
                         key={vehicle.id}
-                        className="group transition-colors hover:bg-slate-50/90 dark:hover:bg-slate-800/40"
+                        className="group transition-colors hover:bg-blue-50/45 dark:hover:bg-slate-800/50"
                       >
                         <td className="px-4 py-3.5">
                           <button
@@ -694,7 +694,7 @@ export function VehiclesWorkspace({
                             onClick={() => setSelectedVehicle(vehicle)}
                             className="text-start focus-visible:outline-none focus-visible:underline cursor-pointer"
                           >
-                            <p className="font-semibold text-slate-950 transition-colors group-hover:text-blue-700 dark:text-slate-100 dark:group-hover:text-blue-400">
+                            <p className="font-semibold text-slate-950 transition-colors group-hover:text-[#1D4ED8] dark:text-white dark:group-hover:text-blue-400">
                               {vehicle.brand} {vehicle.model}
                               {vehicle.model_year ? (
                                 <span className="ms-1.5 font-mono text-xs font-normal text-slate-500 tabular-nums dark:text-slate-400">
@@ -702,14 +702,14 @@ export function VehiclesWorkspace({
                                 </span>
                               ) : null}
                             </p>
-                            <p className="text-xs text-slate-500 dark:text-slate-400">
+                            <p className="text-xs text-slate-600 dark:text-slate-400">
                               {getVehicleCategoryLabel(vehicle.category)}
                             </p>
                           </button>
                         </td>
 
                         <td className="px-4 py-3.5">
-                          <span className="inline-flex rounded-md border border-slate-200/80 bg-slate-50 px-2 py-0.5 font-mono text-xs font-medium text-slate-800 dark:border-slate-700/80 dark:bg-slate-950/70 dark:text-slate-200">
+                          <span className="inline-flex rounded-md border border-slate-300 bg-[#F4F6FA] px-2.5 py-0.5 font-mono text-xs font-bold tracking-wider text-slate-950 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100">
                             {vehicle.plate_number}
                           </span>
                         </td>

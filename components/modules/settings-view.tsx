@@ -47,11 +47,11 @@ export function SettingsView({ agency, role }: SettingsViewProps) {
   const readOnlyInputClass = cn(
     INPUT_BASE_CLASSES,
     getInputStateClasses(false),
-    'bg-slate-50/90 text-slate-900 dark:bg-slate-950/70 dark:text-slate-100'
+    'bg-[#F4F6FA] text-slate-950 dark:bg-slate-950/75 dark:text-slate-100'
   );
 
   return (
-    <div className="space-y-5 sm:space-y-6">
+    <div className="space-y-6">
       <PageHeader
         title={`${moduleCopy.title} — ${agency.name}`}
         description="Paramètres persistés de votre agence chargés en direct depuis Supabase PostgreSQL avec isolation par agence (RLS)."
@@ -69,22 +69,22 @@ export function SettingsView({ agency, role }: SettingsViewProps) {
       </AlertBanner>
 
       {/* Identity section */}
-      <Surface padded className="space-y-5">
-        <div className="flex items-start gap-3 border-b border-slate-200/80 pb-4 dark:border-slate-800/80">
-          <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-blue-200/80 bg-blue-50/80 text-blue-700 dark:border-blue-900/70 dark:bg-blue-950/50 dark:text-blue-400">
+      <Surface className="overflow-hidden">
+        <div className="flex items-start gap-3 border-b border-slate-200 bg-[#F4F6FA] px-5 py-4 sm:px-6 dark:border-slate-800 dark:bg-slate-950/60">
+          <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#0B1220] text-blue-400 dark:bg-slate-800">
             <Building2 className="h-4 w-4" aria-hidden="true" />
           </span>
           <div>
-            <h2 className="font-display text-base font-semibold tracking-tight text-slate-950 dark:text-slate-50">
+            <h2 className="font-display text-base font-bold tracking-tight text-slate-950 dark:text-white">
               {copy.identitySectionTitle}
             </h2>
-            <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+            <p className="mt-0.5 text-xs text-slate-600 dark:text-slate-400">
               {copy.identitySectionDesc}
             </p>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 p-5 sm:p-6 md:grid-cols-2">
           <FormField id="settings-agency-name" label={copy.fields.agencyName}>
             <input
               id="settings-agency-name"
@@ -190,22 +190,22 @@ export function SettingsView({ agency, role }: SettingsViewProps) {
       </Surface>
 
       {/* Regional & tax defaults */}
-      <Surface padded className="space-y-5">
-        <div className="flex items-start gap-3 border-b border-slate-200/80 pb-4 dark:border-slate-800/80">
-          <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-200/90 bg-slate-50 text-slate-600 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300">
+      <Surface className="overflow-hidden">
+        <div className="flex items-start gap-3 border-b border-slate-200 bg-[#F4F6FA] px-5 py-4 sm:px-6 dark:border-slate-800 dark:bg-slate-950/60">
+          <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
             <Globe className="h-4 w-4" aria-hidden="true" />
           </span>
           <div>
-            <h2 className="font-display text-base font-semibold tracking-tight text-slate-950 dark:text-slate-50">
+            <h2 className="font-display text-base font-bold tracking-tight text-slate-950 dark:text-white">
               {copy.regionalSectionTitle}
             </h2>
-            <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+            <p className="mt-0.5 text-xs text-slate-600 dark:text-slate-400">
               {copy.regionalSectionDesc}
             </p>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 p-5 sm:p-6 md:grid-cols-2">
           <FormField id="settings-currency" label={copy.fields.currency}>
             <input
               id="settings-currency"
@@ -258,20 +258,21 @@ export function SettingsView({ agency, role }: SettingsViewProps) {
       </Surface>
 
       {/* Tenant Security Summary */}
-      <Surface variant="subtle" padded className="flex items-start gap-3">
+      <Surface variant="dark" padded className="flex items-start gap-3.5">
         <span
           aria-hidden="true"
-          className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-blue-100/80 text-blue-700 dark:bg-blue-950/60 dark:text-blue-400"
+          className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-800 text-blue-400"
         >
           <ShieldCheck className="h-4 w-4" />
         </span>
-        <div className="space-y-0.5 text-xs text-slate-600 dark:text-slate-400">
-          <p className="font-semibold text-slate-900 dark:text-slate-100">
+        <div className="space-y-1 text-xs text-slate-300">
+          <p className="font-display text-sm font-bold text-white">
             Accès vérifié · Rôle {roleLabel}
           </p>
-          <p className="leading-relaxed">
-            Votre adhésion active à l’agence <strong>{agency.name}</strong> est
-            vérifiée côté serveur à chaque requête via Supabase Auth et les
+          <p className="leading-relaxed text-slate-400">
+            Votre adhésion active à l’agence{' '}
+            <strong className="font-semibold text-white">{agency.name}</strong>{' '}
+            est vérifiée côté serveur à chaque requête via Supabase Auth et les
             politiques Row Level Security (RLS).
           </p>
         </div>

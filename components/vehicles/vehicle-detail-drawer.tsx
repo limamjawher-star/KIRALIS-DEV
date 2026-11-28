@@ -168,28 +168,28 @@ function VehicleDetailDrawerContent({
       >
             {/* Mobile bottom-sheet grabber */}
             <div
-              className="flex justify-center pt-2.5 pb-1 md:hidden"
+              className="flex justify-center bg-[#0B1220] pt-2.5 pb-1 md:hidden"
               aria-hidden="true"
             >
-              <span className="h-1 w-10 rounded-full bg-slate-300 dark:bg-slate-700" />
+              <span className="h-1 w-10 rounded-full bg-slate-600" />
             </div>
 
-            {/* Sticky frosted header */}
-            <div className="flex items-start justify-between gap-4 border-b border-slate-200/80 bg-white/90 px-5 py-4 backdrop-blur-md sm:px-6 dark:border-slate-800/80 dark:bg-slate-900/90">
-              <div className="min-w-0 space-y-1.5">
+            {/* Executive obsidian dossier header */}
+            <div className="flex items-start justify-between gap-4 border-b border-slate-800 bg-[#0B1220] px-5 py-4 text-white sm:px-6">
+              <div className="min-w-0 space-y-2">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="rounded-md border border-slate-200/90 bg-slate-50 px-2 py-0.5 font-mono text-xs font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-950/70 dark:text-slate-300">
+                  <span className="rounded-md border border-slate-700 bg-slate-900 px-2.5 py-0.5 font-mono text-xs font-bold tracking-wider text-white">
                     {vehicle.plate_number}
                   </span>
                   <VehicleStatusBadge status={vehicle.status} />
                 </div>
                 <h2
                   id="vehicle-detail-title"
-                  className="font-display text-lg font-semibold tracking-tight text-slate-950 dark:text-slate-50"
+                  className="font-display text-lg font-bold tracking-tight text-white"
                 >
                   {vehicle.brand} {vehicle.model}
                   {vehicle.model_year ? (
-                    <span className="ms-1.5 font-mono text-sm font-normal text-slate-500 tabular-nums dark:text-slate-400">
+                    <span className="ms-1.5 font-mono text-sm font-normal text-slate-400 tabular-nums">
                       {vehicle.model_year}
                     </span>
                   ) : null}
@@ -201,7 +201,7 @@ function VehicleDetailDrawerContent({
                 onClick={onClose}
                 disabled={mutating}
                 aria-label="Fermer la fiche véhicule"
-                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600/30 disabled:opacity-50 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100 cursor-pointer"
+                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-slate-400 transition-colors hover:bg-slate-800 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 disabled:opacity-50 cursor-pointer"
               >
                 <X className="h-4 w-4" aria-hidden="true" />
               </button>
@@ -461,7 +461,7 @@ function VehicleDetailDrawerContent({
             </div>
 
             {/* Sticky safe-area footer actions */}
-            <div className="pb-safe flex flex-wrap items-center justify-between gap-3 border-t border-slate-200/80 bg-slate-50/90 px-5 py-3.5 backdrop-blur-md sm:px-6 dark:border-slate-800/80 dark:bg-slate-950/75">
+            <div className="pb-safe flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 bg-[#F4F6FA] px-5 py-3.5 sm:px-6 dark:border-slate-800 dark:bg-slate-950/80">
               {canManage ? (
                 <>
                   <Button

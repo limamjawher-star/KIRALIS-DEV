@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Menu } from 'lucide-react';
+import { motion } from 'motion/react';
 import { NAV_ITEMS, type ModuleKey, type NavItemConfig } from '@/lib/navigation';
 import { useAppPreferences } from '@/components/providers/app-preferences-provider';
 import { NavIcon } from '@/components/ui/nav-icon';
@@ -42,9 +43,9 @@ export function MobileBottomNav({
   return (
     <nav
       aria-label={dict.common.workspace}
-      className="pb-safe fixed inset-x-0 bottom-0 z-40 border-t border-slate-200/90 bg-white/95 backdrop-blur-md lg:hidden dark:border-slate-800/90 dark:bg-slate-950/95"
+      className="pb-safe fixed inset-x-0 bottom-0 z-40 border-t border-slate-300/85 bg-white/95 shadow-[0_-4px_20px_-6px_rgba(11,18,32,0.1)] backdrop-blur-md lg:hidden dark:border-slate-800 dark:bg-[#0B1220]/95"
     >
-      <div className="mx-auto grid h-[56px] max-w-lg grid-cols-5 items-stretch px-1">
+      <div className="mx-auto grid h-[58px] max-w-lg grid-cols-5 items-stretch px-1">
         {primaryItems.map((item) => {
           const active = !menuOpen && isRouteActive(pathname, item);
           const label = dict.modules[item.key].navLabel;
@@ -54,18 +55,25 @@ export function MobileBottomNav({
               href={item.href}
               aria-current={active ? 'page' : undefined}
               className={cn(
-                'group flex min-w-0 flex-col items-center justify-center gap-0.5 rounded-xl px-1 text-[10px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600/80 dark:focus-visible:ring-blue-400',
+                'group relative flex min-w-0 flex-col items-center justify-center gap-0.5 px-1 text-[10.5px] transition-colors active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600/80 dark:focus-visible:ring-blue-400',
                 active
-                  ? 'text-[#1D4ED8] dark:text-blue-400'
-                  : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'
+                  ? 'font-semibold text-[#1D4ED8] dark:text-blue-400'
+                  : 'font-medium text-slate-600 hover:text-slate-950 dark:text-slate-400 dark:hover:text-slate-100'
               )}
             >
+              {active ? (
+                <motion.span
+                  layoutId="mobile-bottom-nav-indicator"
+                  transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+                  className="absolute inset-x-3 top-0 h-[2.5px] rounded-b-full bg-[#1D4ED8] dark:bg-blue-400"
+                />
+              ) : null}
               <span
                 className={cn(
-                  'flex h-7 w-11 items-center justify-center rounded-full transition-colors duration-150',
+                  'flex h-7 w-11 items-center justify-center rounded-xl transition-colors duration-150',
                   active
-                    ? 'bg-blue-50 text-[#1D4ED8] dark:bg-blue-950/70 dark:text-blue-400'
-                    : 'group-active:bg-slate-100 dark:group-active:bg-slate-800/70'
+                    ? 'bg-blue-50 text-[#1D4ED8] dark:bg-blue-950/75 dark:text-blue-400'
+                    : 'group-active:bg-slate-100 dark:group-active:bg-slate-800/80'
                 )}
               >
                 <NavIcon name={item.icon} className="h-[18px] w-[18px]" />
@@ -81,18 +89,25 @@ export function MobileBottomNav({
           aria-label={dict.common.openNavigation}
           aria-expanded={menuOpen}
           className={cn(
-            'group flex min-w-0 flex-col items-center justify-center gap-0.5 rounded-xl px-1 text-[10px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600/80 dark:focus-visible:ring-blue-400 cursor-pointer',
+            'group relative flex min-w-0 flex-col items-center justify-center gap-0.5 px-1 text-[10.5px] transition-colors active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600/80 dark:focus-visible:ring-blue-400 cursor-pointer',
             menuOpen
-              ? 'text-[#1D4ED8] dark:text-blue-400'
-              : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'
+              ? 'font-semibold text-[#1D4ED8] dark:text-blue-400'
+              : 'font-medium text-slate-600 hover:text-slate-950 dark:text-slate-400 dark:hover:text-slate-100'
           )}
         >
+          {menuOpen ? (
+            <motion.span
+              layoutId="mobile-bottom-nav-indicator"
+              transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+              className="absolute inset-x-3 top-0 h-[2.5px] rounded-b-full bg-[#1D4ED8] dark:bg-blue-400"
+            />
+          ) : null}
           <span
             className={cn(
-              'flex h-7 w-11 items-center justify-center rounded-full transition-colors duration-150',
+              'flex h-7 w-11 items-center justify-center rounded-xl transition-colors duration-150',
               menuOpen
-                ? 'bg-blue-50 text-[#1D4ED8] dark:bg-blue-950/70 dark:text-blue-400'
-                : 'group-active:bg-slate-100 dark:group-active:bg-slate-800/70'
+                ? 'bg-blue-50 text-[#1D4ED8] dark:bg-blue-950/75 dark:text-blue-400'
+                : 'group-active:bg-slate-100 dark:group-active:bg-slate-800/80'
             )}
           >
             <Menu className="h-[18px] w-[18px]" aria-hidden="true" />

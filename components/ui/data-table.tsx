@@ -56,7 +56,7 @@ export function ModuleDataTable({
   return (
     <Surface className="overflow-hidden">
       {/* Toolbar */}
-      <div className="flex flex-col gap-3 border-b border-slate-200/90 px-4 py-3.5 sm:px-5 lg:flex-row lg:items-center lg:justify-between dark:border-slate-800/90">
+      <div className="flex flex-col gap-3 border-b border-slate-200 bg-[#F4F6FA] px-4 py-3.5 sm:px-5 lg:flex-row lg:items-center lg:justify-between dark:border-slate-800 dark:bg-slate-950/60">
         <SegmentedControl
           options={filterOptions}
           value={selectedFilter}
@@ -67,7 +67,7 @@ export function ModuleDataTable({
         <div className="flex flex-wrap items-center gap-2">
           <div className="relative flex-1 sm:flex-initial">
             <Search
-              className="pointer-events-none absolute start-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+              className="pointer-events-none absolute start-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500"
               aria-hidden="true"
             />
             <input
@@ -76,13 +76,13 @@ export function ModuleDataTable({
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={dict.common.searchPlaceholder}
               aria-label={searchAriaLabel}
-              className="h-10 sm:h-9 w-full rounded-xl border border-slate-200/95 bg-white ps-10 pe-3.5 text-sm text-slate-900 placeholder:text-slate-400 transition-colors focus:border-[#1D4ED8] focus:outline-none focus:ring-3 focus:ring-blue-600/15 sm:w-64 dark:border-slate-700/90 dark:bg-slate-950/90 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-blue-400 dark:focus:ring-blue-400/20"
+              className="h-10 sm:h-9 w-full rounded-xl border border-slate-300 bg-white ps-10 pe-3.5 text-sm text-slate-950 placeholder:text-slate-400 transition-colors focus:border-[#1D4ED8] focus:outline-none focus:ring-3 focus:ring-blue-600/15 sm:w-64 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-blue-400 dark:focus:ring-blue-400/20"
             />
           </div>
 
           {isFiltered ? (
             <Button
-              variant="ghost"
+              variant="secondary"
               size="sm"
               onClick={handleReset}
               aria-label={dict.common.resetFilters}
@@ -98,13 +98,13 @@ export function ModuleDataTable({
       <div className="overflow-x-auto">
         <table className="w-full min-w-[680px] border-collapse text-start">
           <thead>
-            <tr className="border-b border-slate-200/90 bg-slate-50/75 dark:border-slate-800/90 dark:bg-slate-950/50">
+            <tr className="border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-[#0F172A]">
               {columns.map((col) => (
                 <th
                   key={col.label}
                   scope="col"
                   className={cn(
-                    'h-10 px-4 text-[11px] font-semibold uppercase tracking-[0.04em] text-slate-500 whitespace-nowrap dark:text-slate-400',
+                    'h-10 px-4 text-xs font-semibold text-slate-600 whitespace-nowrap dark:text-slate-400',
                     col.align === 'right' ? 'text-end' : 'text-start'
                   )}
                 >
@@ -142,8 +142,10 @@ export function ModuleDataTable({
       </div>
 
       {/* Quiet count footer */}
-      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-200/90 bg-slate-50/60 px-4 py-2.5 text-xs text-slate-500 sm:px-5 dark:border-slate-800/90 dark:bg-slate-950/40 dark:text-slate-400">
-        <span className="font-mono tabular-nums">{dict.common.zeroRecords}</span>
+      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-200 bg-[#F4F6FA] px-4 py-2.5 text-xs text-slate-600 sm:px-5 dark:border-slate-800 dark:bg-slate-950/50 dark:text-slate-400">
+        <span className="font-mono font-medium tabular-nums">
+          {dict.common.zeroRecords}
+        </span>
         <span>{dict.common.noDatabaseConnected}</span>
       </div>
     </Surface>

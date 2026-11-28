@@ -1,12 +1,10 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { motion } from 'motion/react';
-import { useAppPreferences } from '@/components/providers/app-preferences-provider';
 import { isOnboardingPath, type AgencySummary } from '@/lib/agency/types';
 import { isPublicAuthPath } from '@/lib/auth/validation';
-import { createSupabaseBrowserClient } from '@/lib/supabase/browser';
 import type { SupabasePublicEnv } from '@/lib/supabase/env';
 import { MobileBottomNav } from './mobile-bottom-nav';
 import { Sidebar } from './sidebar';
@@ -28,48 +26,31 @@ export function AppShell({
   agencies = [],
 }: AppShellProps) {
   const pathname = usePathname();
-  const router = useRouter();
-  const { dict } = useAppPreferences();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const isStandalonePage =
+  const isStandaloneShell =
     isPublicAuthPath(pathname) || isOnboardingPath(pathname);
 
   useEffect(() => {
-    if (isPublicAuthPath(pathname) || !supabasePublicEnv) {
-      return;
-    }
+    const id = requestAnimationFrame(() => setMobileMenuOpen(false));
+    return () => cancelAnimationFrame(id);
+  }, [pathname]);
 
-    const supabase = createSupabaseBrowserClient(supabasePublicEnv);
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'SIGNED_OUT') {
-        router.replace('/login?message=signed_out');
-        router.refresh();
-      }
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [pathname, supabasePublicEnv, router]);
-
-  if (isStandalonePage) {
+  if (isStandaloneShell) {
     return <>{children}</>;
   }
 
   return (
-    <div className="flex min-h-screen w-full bg-[#F6F7F9] text-slate-950 dark:bg-[#090D16] dark:text-slate-100">
+    <div className="flex min-h-screen bg-[#ECEFF4] text-slate-950 dark:bg-[#070B14] dark:text-slate-100">
       <Sidebar
         collapsed={sidebarCollapsed}
-        onToggleCollapse={() => setSidebarCollapsed((prev) => !prev)}
+        onToggleCollapse={() => setSidebarCollapsed((c) => !c)}
         mobileOpen={mobileMenuOpen}
         onCloseMobile={() => setMobileMenuOpen(false)}
       />
 
-      <div className="flex min-w-0 flex-1 flex-col pb-[72px] lg:pb-0">
+      <div className="flex min-w-0 flex-1 flex-col">
         <Topbar
           onOpenMobileMenu={() => setMobileMenuOpen(true)}
           userEmail={userEmail}
@@ -78,25 +59,29 @@ export function AppShell({
           agencies={agencies}
         />
 
-        <main className="mx-auto w-full max-w-[1380px] flex-1 px-4 py-5 sm:px-6 sm:py-6 lg:px-8">
+        <main
+          id="main-content"
+          className="mx-auto w-full max-w-[1400px] flex-1 px-4 pt-5 pb-24 sm:px-6 sm:pt-6 lg:px-8 lg:pb-10"
+        >
           <motion.div
             key={pathname}
             initial={{ opacity: 0, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
-            className="space-y-6"
           >
             {children}
           </motion.div>
         </main>
 
-        <footer className="mt-auto border-t border-slate-200/80 px-4 py-3.5 text-xs text-slate-500 sm:px-6 lg:px-8 dark:border-slate-800/80 dark:text-slate-400">
-          <div className="mx-auto flex max-w-[1380px] flex-wrap items-center justify-between gap-2">
-            <span className="font-medium">
-              KIRALIS · {activeAgency ? activeAgency.name : dict.brandSubtitle}
+        <footer className="mt-auto hidden border-t border-slate-300/75 bg-white/60 px-6 py-3 text-xs text-slate-500 lg:block lg:px-8 dark:border-slate-800/90 dark:bg-slate-950/40 dark:text-slate-400">
+          <div className="mx-auto flex max-w-[1400px] items-center justify-between gap-4">
+            <span className="font-medium text-slate-600 dark:text-slate-300">
+              KIRALIS · Plateforme de gestion d’agence de location
             </span>
-            <span className="font-mono text-[11px] tabular-nums">
-              {dict.common.tunisia} · TND · Africa/Tunis
+            <span className="font-mono text-[11px] tabular-nums text-slate-500 dark:text-slate-400">
+              {activeAgency
+                ? `${activeAgency.name} · ${activeAgency.slug} · TND · Africa/Tunis`
+                : 'TND · Africa/Tunis'}
             </span>
           </div>
         </footer>

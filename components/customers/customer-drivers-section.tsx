@@ -594,14 +594,14 @@ export function CustomerDriversSection({
       ) : null}
 
       {effectiveStatus === 'ready' && drivers.length === 0 ? (
-        <div className="mt-3 rounded-2xl border border-dashed border-slate-200 bg-slate-50/60 px-4 py-6 text-center dark:border-slate-800 dark:bg-slate-900/40">
-          <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200/90 bg-white text-slate-400 shadow-xs dark:border-slate-800 dark:bg-slate-900 dark:text-slate-500">
+        <div className="mt-3 rounded-2xl border border-slate-300/80 bg-[#F4F6FA] px-4 py-6 text-center dark:border-slate-800 dark:bg-slate-900/60">
+          <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl border border-slate-300/80 bg-white text-slate-600 shadow-xs dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">
             <Users className="h-4 w-4" aria-hidden="true" />
           </div>
-          <p className="mt-3 text-xs font-semibold text-slate-900 dark:text-slate-100">
+          <p className="mt-3 text-xs font-semibold text-slate-950 dark:text-white">
             {driversCopy.emptyTitle}
           </p>
-          <p className="mx-auto mt-1 max-w-xs text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+          <p className="mx-auto mt-1 max-w-xs text-xs leading-relaxed text-slate-600 dark:text-slate-400">
             {driversCopy.emptyDescription}
           </p>
         </div>
@@ -644,10 +644,10 @@ export function CustomerDriversSection({
                   key={driver.id}
                   className={`rounded-2xl border p-4 transition-colors ${
                     isInlinePanelActive
-                      ? 'border-blue-300/80 bg-blue-50/35 shadow-xs dark:border-blue-900/70 dark:bg-blue-950/20'
+                      ? 'border-blue-400/80 bg-blue-50/45 shadow-xs dark:border-blue-800 dark:bg-blue-950/25'
                       : driver.is_active
-                        ? 'border-slate-200/90 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.03)] dark:border-slate-800 dark:bg-slate-900/70'
-                        : 'border-slate-200/80 bg-slate-50/80 dark:border-slate-800/80 dark:bg-slate-900/35'
+                        ? 'border-slate-300/85 bg-white shadow-[0_1px_2px_rgba(11,18,32,0.04)] dark:border-slate-800 dark:bg-slate-900/80'
+                        : 'border-slate-300/75 bg-[#F4F6FA] dark:border-slate-800 dark:bg-slate-900/40'
                   }`}
                 >
                   {isEditingThisDriver ? (
@@ -673,10 +673,10 @@ export function CustomerDriversSection({
                         <div className="flex min-w-0 flex-1 items-center gap-2.5">
                           <span
                             aria-hidden="true"
-                            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-xs font-semibold ${
+                            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl font-display text-xs font-bold ${
                               driver.is_active
-                                ? 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200'
-                                : 'bg-slate-200/70 text-slate-500 dark:bg-slate-800/70 dark:text-slate-400'
+                                ? 'bg-[#0B1220] text-white dark:bg-slate-800 dark:text-slate-100'
+                                : 'bg-slate-200 text-slate-500 dark:bg-slate-800/70 dark:text-slate-400'
                             }`}
                           >
                             {getDriverInitials(driver.full_name)}
@@ -685,32 +685,22 @@ export function CustomerDriversSection({
                             <p
                               className={`truncate text-sm font-semibold ${
                                 driver.is_active
-                                  ? 'text-slate-950 dark:text-slate-50'
+                                  ? 'text-slate-950 dark:text-white'
                                   : 'text-slate-600 dark:text-slate-400'
                               }`}
                             >
                               {driver.full_name}
                             </p>
-                            <p className="mt-0.5 flex items-center gap-1.5 text-[11px] font-medium">
-                              <span
-                                aria-hidden="true"
-                                className={`h-1.5 w-1.5 rounded-full ${
-                                  driver.is_active
-                                    ? 'bg-emerald-500'
-                                    : 'bg-slate-400 dark:bg-slate-500'
-                                }`}
-                              />
-                              <span
-                                className={
-                                  driver.is_active
-                                    ? 'text-emerald-700 dark:text-emerald-400'
-                                    : 'text-slate-500 dark:text-slate-400'
-                                }
-                              >
-                                {driver.is_active
-                                  ? driversCopy.statusActive
-                                  : driversCopy.statusInactive}
-                              </span>
+                            <p
+                              className={`mt-0.5 text-[11px] font-semibold ${
+                                driver.is_active
+                                  ? 'text-emerald-700 dark:text-emerald-400'
+                                  : 'text-slate-500 dark:text-slate-400'
+                              }`}
+                            >
+                              {driver.is_active
+                                ? driversCopy.statusActive
+                                : driversCopy.statusInactive}
                             </p>
                           </div>
                         </div>

@@ -275,11 +275,11 @@ export function CustomersDirectory({
 
       <Surface className="overflow-hidden" aria-busy={refreshing}>
         {/* Search, customer type filter & sort toolbar */}
-        <div className="space-y-3 border-b border-slate-200/90 p-4 sm:px-5 dark:border-slate-800/90">
+        <div className="space-y-3 border-b border-slate-200 bg-[#F4F6FA] p-4 sm:px-5 dark:border-slate-800 dark:bg-slate-950/60">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="relative w-full lg:max-w-md">
               <Search
-                className="pointer-events-none absolute top-1/2 start-3.5 h-4 w-4 -translate-y-1/2 text-slate-400"
+                className="pointer-events-none absolute top-1/2 start-3.5 h-4 w-4 -translate-y-1/2 text-slate-500"
                 aria-hidden="true"
               />
               <input
@@ -290,7 +290,7 @@ export function CustomersDirectory({
                 }
                 placeholder={copy.searchPlaceholder}
                 aria-label={copy.searchAriaLabel}
-                className="h-11 sm:h-10 w-full rounded-xl border border-slate-200/95 bg-white ps-10 pe-3.5 text-sm text-slate-900 placeholder:text-slate-400 shadow-[0_1px_2px_rgba(15,23,42,0.03)] transition-[border-color,box-shadow] focus:border-[#1D4ED8] focus:outline-none focus:ring-3 focus:ring-blue-600/15 dark:border-slate-700/90 dark:bg-slate-950/90 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-blue-400 dark:focus:ring-blue-400/20"
+                className="h-11 sm:h-10 w-full rounded-xl border border-slate-300 bg-white ps-10 pe-3.5 text-sm text-slate-950 placeholder:text-slate-400 shadow-[0_1px_2px_rgba(11,18,32,0.04)] transition-[border-color,box-shadow] focus:border-[#1D4ED8] focus:outline-none focus:ring-3 focus:ring-blue-600/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-blue-400 dark:focus:ring-blue-400/20"
               />
             </div>
 
@@ -313,7 +313,7 @@ export function CustomersDirectory({
                     sortBy: e.target.value as CustomerSortKey,
                   }))
                 }
-                className="h-10 rounded-xl border border-slate-200/95 bg-white px-3 text-xs font-medium text-slate-700 shadow-[0_1px_2px_rgba(15,23,42,0.03)] transition-colors hover:border-slate-300 focus:border-[#1D4ED8] focus:outline-none focus:ring-3 focus:ring-blue-600/15 dark:border-slate-700/90 dark:bg-slate-950/90 dark:text-slate-200 dark:hover:border-slate-600 dark:focus:border-blue-400 cursor-pointer"
+                className="h-10 rounded-xl border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-800 shadow-[0_1px_2px_rgba(11,18,32,0.04)] transition-colors hover:border-slate-400 focus:border-[#1D4ED8] focus:outline-none focus:ring-3 focus:ring-blue-600/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-slate-600 dark:focus:border-blue-400 cursor-pointer"
               >
                 {CUSTOMER_SORT_OPTIONS.map((opt) => (
                   <option key={opt.value} value={opt.value}>
@@ -411,7 +411,7 @@ export function CustomersDirectory({
                 className="w-full border-collapse text-sm"
               >
                 <thead>
-                  <tr className="border-b border-slate-200/90 bg-slate-50/75 text-[11px] font-semibold uppercase tracking-[0.04em] text-slate-500 dark:border-slate-800/90 dark:bg-slate-950/50 dark:text-slate-400">
+                  <tr className="border-b border-slate-200 bg-white text-xs font-semibold text-slate-600 dark:border-slate-800 dark:bg-[#0F172A] dark:text-slate-400">
                     <th scope="col" className="px-5 py-3 text-start">
                       {copy.columns.customer}
                     </th>
@@ -432,7 +432,7 @@ export function CustomersDirectory({
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-200/80 dark:divide-slate-800/80">
+                <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
                   {filteredCustomers.map((customer) => {
                     const formattedDate = formatCreatedDate(
                       customer.created_at,
@@ -447,8 +447,8 @@ export function CustomersDirectory({
                         key={customer.id}
                         onClick={() => openCustomerDetail(customer.id)}
                         className={cn(
-                          'group cursor-pointer transition-colors hover:bg-slate-50/90 dark:hover:bg-slate-800/45',
-                          isSelected && 'bg-blue-50/60 dark:bg-blue-950/35'
+                          'group cursor-pointer transition-colors hover:bg-blue-50/45 dark:hover:bg-slate-800/50',
+                          isSelected && 'bg-blue-50/80 dark:bg-blue-950/40'
                         )}
                       >
                         <td className="px-5 py-3.5 align-middle">
@@ -458,8 +458,8 @@ export function CustomersDirectory({
                               className={cn(
                                 'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl font-display text-xs font-bold transition-colors',
                                 customer.customer_type === 'corporate'
-                                  ? 'bg-blue-50 text-[#1D4ED8] ring-1 ring-blue-200/70 dark:bg-blue-950/60 dark:text-blue-300 dark:ring-blue-900/60'
-                                  : 'bg-slate-100 text-slate-700 ring-1 ring-slate-200/80 dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-700/70'
+                                  ? 'bg-[#0B1220] text-blue-400 dark:bg-[#1D4ED8] dark:text-white'
+                                  : 'bg-slate-200/80 text-slate-800 dark:bg-slate-800 dark:text-slate-100'
                               )}
                             >
                               {initials}

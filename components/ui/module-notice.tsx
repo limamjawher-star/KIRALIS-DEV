@@ -13,15 +13,15 @@ export function ModuleNotice({ title, body, className }: ModuleNoticeProps) {
     <div
       role="status"
       className={cn(
-        'flex items-start gap-3 rounded-2xl border border-slate-200/90 bg-white/80 px-4 py-3.5 text-sm shadow-[0_1px_2px_rgba(15,23,42,0.03)] dark:border-slate-800/90 dark:bg-slate-900/70 dark:shadow-none',
+        'flex items-start gap-3.5 rounded-2xl border border-slate-300/85 bg-[#F4F6FA] px-4 py-3.5 text-sm dark:border-slate-800 dark:bg-[#111A2E]',
         className
       )}
     >
-      <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-[#1D4ED8] dark:bg-blue-950/60 dark:text-blue-400">
+      <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#0B1220] text-blue-400 dark:bg-[#1D4ED8]/20 dark:text-blue-400">
         <Info className="h-3.5 w-3.5" aria-hidden="true" />
       </span>
       <div className="min-w-0 space-y-0.5">
-        <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+        <p className="text-sm font-semibold text-slate-950 dark:text-white">
           {title}
         </p>
         <p className="text-xs leading-relaxed text-slate-600 dark:text-slate-400">

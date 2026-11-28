@@ -107,19 +107,18 @@ export function Topbar({
   }
 
   return (
-    <header className="sticky top-0 z-30 flex h-[52px] shrink-0 items-center justify-between gap-2 border-b border-slate-200/90 bg-white/92 px-3.5 backdrop-blur-md sm:h-[60px] sm:gap-4 sm:px-6 lg:px-8 dark:border-slate-800/90 dark:bg-slate-950/92">
-      {/* Left: Mobile compact brand + title / Tablet menu + Breadcrumbs */}
+    <header className="sticky top-0 z-30 flex h-[54px] shrink-0 items-center justify-between gap-3 border-b border-slate-300/80 bg-white/95 px-3.5 backdrop-blur-md sm:h-[58px] sm:gap-6 sm:px-6 lg:px-8 dark:border-slate-800 dark:bg-[#0B1220]/95">
+      {/* Left: Mobile brand + breadcrumb trail */}
       <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
         <button
           type="button"
           onClick={onOpenMobileMenu}
           aria-label={dict.common.openNavigation}
-          className="hidden h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-200/90 bg-white text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600/80 sm:inline-flex lg:hidden dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 cursor-pointer"
+          className="hidden h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-300/80 bg-white text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600/80 sm:inline-flex lg:hidden dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 cursor-pointer"
         >
           <Menu className="h-4 w-4" aria-hidden="true" />
         </button>
 
-        {/* Mobile compact mark */}
         <Link
           href="/"
           aria-label="KIRALIS"
@@ -132,19 +131,7 @@ export function Topbar({
           aria-label="Breadcrumb"
           className="flex min-w-0 items-center gap-2 text-sm"
         >
-          <Link
-            href="/"
-            className="hidden font-display font-bold tracking-[-0.02em] text-slate-500 transition-colors hover:text-slate-900 whitespace-nowrap lg:inline dark:text-slate-400 dark:hover:text-slate-100"
-          >
-            KIRALIS
-          </Link>
-          <span
-            className="hidden text-slate-300 lg:inline dark:text-slate-700"
-            aria-hidden="true"
-          >
-            /
-          </span>
-          <span className="hidden text-slate-500 whitespace-nowrap md:inline dark:text-slate-400">
+          <span className="hidden text-xs font-medium text-slate-500 whitespace-nowrap md:inline dark:text-slate-400">
             {groupLabel}
           </span>
           <span
@@ -153,13 +140,13 @@ export function Topbar({
           >
             /
           </span>
-          <span className="truncate font-display text-[15px] font-semibold tracking-tight text-slate-950 sm:text-sm dark:text-slate-50">
+          <span className="truncate font-display text-[15px] font-bold tracking-[-0.02em] text-slate-950 dark:text-slate-50">
             {currentTitle}
           </span>
         </nav>
       </div>
 
-      {/* Right: Agency selector + Language + Theme + Unified Account popover */}
+      {/* Right: Agency selector + compact preferences + account popover */}
       <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
         <AgencySelector activeAgency={activeAgency} agencies={agencies} />
 
@@ -167,7 +154,7 @@ export function Topbar({
         <div
           role="group"
           aria-label={dict.common.languageSelectorLabel}
-          className="hidden items-center rounded-xl border border-slate-200/90 bg-slate-100/90 p-0.5 md:inline-flex dark:border-slate-800 dark:bg-slate-900"
+          className="hidden items-center rounded-xl border border-slate-300/80 bg-slate-100 p-0.5 md:inline-flex dark:border-slate-700/90 dark:bg-slate-900"
         >
           {SUPPORTED_LOCALES.map((code) => {
             const active = code === locale;
@@ -180,8 +167,8 @@ export function Topbar({
                 className={cn(
                   'h-8 rounded-lg px-2.5 text-xs font-semibold uppercase whitespace-nowrap shrink-0 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600/80 dark:focus-visible:ring-blue-400 cursor-pointer',
                   active
-                    ? 'bg-white text-slate-950 shadow-[0_1px_2px_rgba(15,23,42,0.08)] dark:bg-slate-800 dark:text-slate-50'
-                    : 'text-slate-500 hover:text-slate-950 dark:text-slate-400 dark:hover:text-slate-100'
+                    ? 'bg-white text-slate-950 shadow-[0_1px_2px_rgba(15,23,42,0.1)] dark:bg-slate-800 dark:text-white'
+                    : 'text-slate-600 hover:text-slate-950 dark:text-slate-400 dark:hover:text-slate-100'
                 )}
               >
                 {code.toUpperCase()}
@@ -190,7 +177,7 @@ export function Topbar({
           })}
         </div>
 
-        {/* Light / Dark toggle (sm+) */}
+        {/* Light / Dark toggle */}
         <button
           type="button"
           onClick={toggleTheme}
@@ -204,7 +191,7 @@ export function Topbar({
               ? dict.common.toggleThemeLight
               : dict.common.toggleThemeDark
           }
-          className="hidden h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-200/90 bg-white text-slate-700 transition-colors hover:bg-slate-50 hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600/80 sm:inline-flex dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 dark:hover:text-white cursor-pointer"
+          className="hidden h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-300/80 bg-white text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600/80 sm:inline-flex dark:border-slate-700/90 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 dark:hover:text-white cursor-pointer"
         >
           {theme === 'dark' ? (
             <Sun className="h-4 w-4" aria-hidden="true" />
@@ -213,7 +200,7 @@ export function Topbar({
           )}
         </button>
 
-        {/* Account menu (avatar + email + sign out) */}
+        {/* Account menu */}
         <div ref={accountMenuRef} className="relative">
           <button
             type="button"
@@ -221,9 +208,9 @@ export function Topbar({
             aria-expanded={accountOpen}
             aria-haspopup="menu"
             aria-label={userEmail ? `Compte ${userEmail}` : 'Menu du compte'}
-            className="inline-flex h-9 items-center gap-2 rounded-xl border border-slate-200/90 bg-white ps-1.5 pe-2 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-50 hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600/80 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 cursor-pointer"
+            className="inline-flex h-9 items-center gap-2 rounded-xl border border-slate-300/80 bg-white ps-1.5 pe-2 text-xs font-medium text-slate-800 transition-colors hover:border-slate-400/80 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600/80 dark:border-slate-700/90 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800 cursor-pointer"
           >
-            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-[#1D4ED8]/10 font-display text-[11px] font-bold text-[#1D4ED8] dark:bg-blue-500/20 dark:text-blue-300">
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-[#0B1220] font-display text-[11px] font-bold text-white dark:bg-[#1D4ED8]">
               {initials}
             </span>
             {userEmail ? (
@@ -248,24 +235,24 @@ export function Topbar({
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: -4, scale: 0.98 }}
                 transition={{ duration: 0.14, ease: [0.16, 1, 0.3, 1] }}
-                className="absolute end-0 top-[calc(100%+6px)] z-50 w-[264px] overflow-hidden rounded-2xl border border-slate-200/95 bg-white shadow-[0_12px_32px_-8px_rgba(15,23,42,0.16)] dark:border-slate-800 dark:bg-slate-900 dark:shadow-[0_12px_32px_-8px_rgba(0,0,0,0.6)]"
+                className="absolute end-0 top-[calc(100%+6px)] z-50 w-[264px] overflow-hidden rounded-2xl border border-slate-300/90 bg-white shadow-[0_16px_36px_-10px_rgba(11,18,32,0.22)] dark:border-slate-700 dark:bg-slate-900 dark:shadow-[0_16px_36px_-10px_rgba(0,0,0,0.65)]"
               >
-                <div className="border-b border-slate-200/90 px-3.5 py-3 dark:border-slate-800">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.05em] text-slate-400 dark:text-slate-500">
+                <div className="border-b border-slate-200 bg-slate-50/90 px-3.5 py-3 dark:border-slate-800 dark:bg-slate-950/60">
+                  <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
                     Compte connecté
                   </p>
-                  <p className="mt-0.5 truncate text-xs font-semibold text-slate-900 dark:text-slate-100">
+                  <p className="mt-0.5 truncate text-xs font-semibold text-slate-950 dark:text-slate-100">
                     {userEmail ?? 'Session active'}
                   </p>
                 </div>
 
                 {/* Quick preferences for narrow screens */}
-                <div className="space-y-2 border-b border-slate-200/90 p-2.5 md:hidden dark:border-slate-800">
+                <div className="space-y-2 border-b border-slate-200 p-2.5 md:hidden dark:border-slate-800">
                   <div className="flex items-center justify-between gap-2">
                     <div
                       role="group"
                       aria-label={dict.common.languageSelectorLabel}
-                      className="inline-flex flex-1 items-center rounded-lg border border-slate-200/90 bg-slate-100/80 p-0.5 dark:border-slate-800 dark:bg-slate-950"
+                      className="inline-flex flex-1 items-center rounded-lg border border-slate-200 bg-slate-100 p-0.5 dark:border-slate-800 dark:bg-slate-950"
                     >
                       {SUPPORTED_LOCALES.map((code) => {
                         const active = code === locale;
@@ -278,8 +265,8 @@ export function Topbar({
                             className={cn(
                               'h-7 flex-1 rounded-md text-[11px] font-semibold uppercase transition-colors cursor-pointer',
                               active
-                                ? 'bg-white text-slate-950 shadow-xs dark:bg-slate-800 dark:text-slate-50'
-                                : 'text-slate-500 dark:text-slate-400'
+                                ? 'bg-white text-slate-950 shadow-xs dark:bg-slate-800 dark:text-white'
+                                : 'text-slate-600 dark:text-slate-400'
                             )}
                           >
                             {code.toUpperCase()}
@@ -296,7 +283,7 @@ export function Topbar({
                           ? dict.common.toggleThemeLight
                           : dict.common.toggleThemeDark
                       }
-                      className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-200/90 bg-white text-slate-700 sm:hidden dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 cursor-pointer"
+                      className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 sm:hidden dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 cursor-pointer"
                     >
                       {theme === 'dark' ? (
                         <Sun className="h-3.5 w-3.5" aria-hidden="true" />

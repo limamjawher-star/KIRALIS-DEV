@@ -37,8 +37,7 @@ export function Sidebar({
   onCloseMobile,
 }: SidebarProps) {
   const pathname = usePathname();
-  const { dict, locale, setLocale, theme, toggleTheme } =
-    useAppPreferences();
+  const { dict, locale, setLocale, theme, toggleTheme } = useAppPreferences();
 
   useEffect(() => {
     if (!mobileOpen) return;
@@ -55,11 +54,11 @@ export function Sidebar({
     const onLinkClick = isMobileDrawer ? onCloseMobile : undefined;
 
     return (
-      <div className="flex h-full flex-col">
+      <div className="flex h-full flex-col bg-[#0B1220] text-slate-300 dark:bg-[#090E1A]">
         {/* Brand header */}
         <div
           className={cn(
-            'flex h-[60px] shrink-0 items-center border-b border-slate-200/90 dark:border-slate-800/90',
+            'flex h-[58px] shrink-0 items-center border-b border-slate-800/90',
             isCompact ? 'justify-center px-2' : 'justify-between px-4'
           )}
         >
@@ -67,11 +66,12 @@ export function Sidebar({
             href="/"
             onClick={onLinkClick}
             aria-label="KIRALIS"
-            className="flex items-center rounded-xl py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600/80 dark:focus-visible:ring-blue-400"
+            className="flex items-center rounded-lg py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
           >
             <KiralisLogo
               variant={isCompact ? 'mark' : 'compact'}
               size="md"
+              tone="dark"
             />
           </Link>
 
@@ -81,7 +81,7 @@ export function Sidebar({
               onClick={onToggleCollapse}
               aria-label={dict.common.collapseSidebar}
               title={dict.common.collapseSidebar}
-              className="hidden h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600/80 lg:inline-flex dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100 cursor-pointer"
+              className="hidden h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-800/80 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 lg:inline-flex cursor-pointer"
             >
               <PanelLeftClose
                 className="h-4 w-4 rtl:rotate-180"
@@ -95,7 +95,7 @@ export function Sidebar({
               type="button"
               onClick={onCloseMobile}
               aria-label={dict.common.closeNavigation}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-xl text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600/80 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white cursor-pointer"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-xl text-slate-300 transition-colors hover:bg-slate-800 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 cursor-pointer"
             >
               <X className="h-4 w-4" aria-hidden="true" />
             </button>
@@ -112,13 +112,13 @@ export function Sidebar({
             return (
               <div key={groupId} className="space-y-1">
                 {!isCompact ? (
-                  <p className="px-2.5 pb-1 text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400 dark:text-slate-500">
+                  <p className="px-3 pb-1 text-[11px] font-semibold tracking-wide text-slate-500">
                     {dict.navGroups[groupId]}
                   </p>
                 ) : (
                   <div
                     aria-hidden="true"
-                    className="mx-auto my-2 h-px w-6 bg-slate-200/90 dark:bg-slate-800"
+                    className="mx-auto my-2 h-px w-6 bg-slate-800"
                   />
                 )}
                 <ul className="space-y-0.5">
@@ -133,12 +133,12 @@ export function Sidebar({
                           aria-current={active ? 'page' : undefined}
                           title={isCompact ? label : undefined}
                           className={cn(
-                            'group relative flex items-center rounded-xl text-[13.5px] font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600/80 dark:focus-visible:ring-blue-400',
+                            'group relative flex items-center rounded-xl text-[13.5px] font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400',
                             isMobileDrawer ? 'h-11' : 'h-10',
                             isCompact ? 'justify-center px-0' : 'gap-3 px-3',
                             active
-                              ? 'bg-blue-50/95 text-[#1D4ED8] shadow-[inset_0_0_0_1px_rgba(29,78,216,0.12)] dark:bg-blue-950/60 dark:text-blue-300 dark:shadow-[inset_0_0_0_1px_rgba(59,130,246,0.22)]'
-                              : 'text-slate-600 hover:bg-slate-100/90 hover:text-slate-950 dark:text-slate-300 dark:hover:bg-slate-800/75 dark:hover:text-slate-50'
+                              ? 'bg-[#1D4ED8] text-white shadow-[0_1px_2px_rgba(0,0,0,0.28)]'
+                              : 'text-slate-300 hover:bg-slate-800/80 hover:text-white'
                           )}
                         >
                           <NavIcon
@@ -146,12 +146,14 @@ export function Sidebar({
                             className={cn(
                               'h-[17px] w-[17px] shrink-0 transition-colors',
                               active
-                                ? 'text-[#1D4ED8] dark:text-blue-300'
-                                : 'text-slate-400 group-hover:text-slate-700 dark:text-slate-500 dark:group-hover:text-slate-200'
+                                ? 'text-white'
+                                : 'text-slate-400 group-hover:text-slate-100'
                             )}
                           />
                           {!isCompact ? (
-                            <span className="truncate">{label}</span>
+                            <span className="truncate whitespace-nowrap">
+                              {label}
+                            </span>
                           ) : (
                             <span className="sr-only">{label}</span>
                           )}
@@ -167,12 +169,12 @@ export function Sidebar({
 
         {/* Mobile drawer quick preferences (Language + Theme) */}
         {isMobileDrawer ? (
-          <div className="shrink-0 space-y-3 border-t border-slate-200/90 bg-slate-50/70 p-4 dark:border-slate-800/90 dark:bg-slate-950/50">
+          <div className="shrink-0 space-y-3 border-t border-slate-800/90 bg-[#080D18] p-4">
             <div className="flex items-center justify-between gap-2">
               <div
                 role="group"
                 aria-label={dict.common.languageSelectorLabel}
-                className="inline-flex flex-1 items-center rounded-xl border border-slate-200/90 bg-white p-1 dark:border-slate-800 dark:bg-slate-900"
+                className="inline-flex flex-1 items-center rounded-xl border border-slate-800 bg-slate-900/90 p-1"
               >
                 {SUPPORTED_LOCALES.map((code) => {
                   const active = code === locale;
@@ -183,10 +185,10 @@ export function Sidebar({
                       aria-pressed={active}
                       onClick={() => setLocale(code)}
                       className={cn(
-                        'h-9 flex-1 rounded-lg text-xs font-semibold uppercase transition-colors cursor-pointer',
+                        'h-9 flex-1 rounded-lg text-xs font-semibold uppercase transition-colors cursor-pointer whitespace-nowrap',
                         active
-                          ? 'bg-[#1D4ED8] text-white dark:bg-blue-600'
-                          : 'text-slate-600 hover:text-slate-950 dark:text-slate-400 dark:hover:text-slate-100'
+                          ? 'bg-[#1D4ED8] text-white'
+                          : 'text-slate-400 hover:text-white'
                       )}
                     >
                       {code.toUpperCase()}
@@ -203,7 +205,7 @@ export function Sidebar({
                     ? dict.common.toggleThemeLight
                     : dict.common.toggleThemeDark
                 }
-                className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-slate-200/90 bg-white text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 cursor-pointer"
+                className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-slate-800 bg-slate-900/90 text-slate-200 transition-colors hover:bg-slate-800 hover:text-white cursor-pointer"
               >
                 {theme === 'dark' ? (
                   <Sun className="h-4 w-4" aria-hidden="true" />
@@ -217,14 +219,14 @@ export function Sidebar({
 
         {/* Desktop collapsed expand button */}
         {!isMobileDrawer && isCompact ? (
-          <div className="shrink-0 border-t border-slate-200/90 px-3 py-3 dark:border-slate-800/90">
+          <div className="shrink-0 border-t border-slate-800/90 px-3 py-3">
             <div className="flex justify-center">
               <button
                 type="button"
                 onClick={onToggleCollapse}
                 aria-label={dict.common.expandSidebar}
                 title={dict.common.expandSidebar}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-xl text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600/80 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100 cursor-pointer"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-xl text-slate-400 transition-colors hover:bg-slate-800 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 cursor-pointer"
               >
                 <PanelLeftOpen
                   className="h-4 w-4 rtl:rotate-180"
@@ -238,15 +240,15 @@ export function Sidebar({
     );
   };
 
-  const drawerOffsetX = locale === 'ar' ? 280 : -280;
+  const drawerOffsetX = locale === 'ar' ? 288 : -288;
 
   return (
     <>
-      {/* Desktop rail */}
+      {/* Signature deep obsidian desktop sidebar */}
       <aside
         className={cn(
-          'hidden shrink-0 border-e border-slate-200/90 bg-white transition-[width] duration-200 ease-out lg:block dark:border-slate-800/90 dark:bg-slate-900',
-          collapsed ? 'w-[72px]' : 'w-[256px]'
+          'hidden shrink-0 border-e border-slate-800/90 bg-[#0B1220] transition-[width] duration-200 ease-out lg:block dark:bg-[#090E1A]',
+          collapsed ? 'w-[72px]' : 'w-[252px]'
         )}
       >
         <div className="sticky top-0 h-screen">{renderNavContent(collapsed)}</div>
@@ -266,7 +268,7 @@ export function Sidebar({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.16 }}
-              className="fixed inset-0 bg-slate-950/50 backdrop-blur-[2px]"
+              className="fixed inset-0 bg-slate-950/60 backdrop-blur-[2px]"
               aria-hidden="true"
               onClick={onCloseMobile}
             />
@@ -275,7 +277,7 @@ export function Sidebar({
               animate={{ x: 0 }}
               exit={{ x: drawerOffsetX }}
               transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-              className="relative z-10 flex h-full w-[288px] max-w-[85vw] flex-col border-e border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-900"
+              className="relative z-10 flex h-full w-[288px] max-w-[85vw] flex-col border-e border-slate-800 bg-[#0B1220] shadow-2xl"
             >
               {renderNavContent(false, true)}
             </motion.aside>

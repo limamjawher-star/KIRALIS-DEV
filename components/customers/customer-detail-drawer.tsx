@@ -311,25 +311,28 @@ export function CustomerDetailDrawer({
             className="flex max-h-[92dvh] w-full flex-col overflow-hidden rounded-t-3xl border-t border-slate-200/90 bg-white shadow-2xl md:h-full md:max-h-none md:max-w-[540px] md:rounded-none md:border-s md:border-t-0 dark:border-slate-800 dark:bg-slate-900"
           >
             {/* Mobile bottom-sheet grabber affordance */}
-            <div className="flex justify-center pt-2.5 pb-1 md:hidden" aria-hidden="true">
-              <span className="h-1 w-10 rounded-full bg-slate-300 dark:bg-slate-700" />
+            <div
+              className="flex justify-center bg-[#0B1220] pt-2.5 pb-1 md:hidden"
+              aria-hidden="true"
+            >
+              <span className="h-1 w-10 rounded-full bg-slate-600" />
             </div>
 
-            {/* Sticky Header */}
-            <div className="flex items-start justify-between gap-4 border-b border-slate-200/90 bg-white/95 px-5 py-4 sm:px-6 sm:py-5 dark:border-slate-800 dark:bg-slate-900/95">
+            {/* Executive Obsidian Header */}
+            <div className="flex items-start justify-between gap-4 border-b border-slate-800 bg-[#0B1220] px-5 py-4 text-white sm:px-6 sm:py-5">
               <div className="min-w-0 flex-1">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400 dark:text-slate-500">
+                <p className="text-xs font-medium text-slate-400">
                   {drawerCopy.kicker}
                 </p>
                 {isEditing && customer ? (
                   <div className="mt-1">
                     <h2
                       id={titleId}
-                      className="truncate font-display text-lg font-bold tracking-tight text-slate-950 dark:text-slate-50"
+                      className="truncate font-display text-lg font-bold tracking-tight text-white"
                     >
                       {drawerCopy.editTitle}
                     </h2>
-                    <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+                    <p className="mt-0.5 text-xs text-slate-400">
                       {drawerCopy.editSubtitle}
                     </p>
                   </div>
@@ -337,12 +340,7 @@ export function CustomerDetailDrawer({
                   <div className="mt-2 flex items-start gap-3">
                     <span
                       aria-hidden="true"
-                      className={cn(
-                        'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl font-display text-sm font-bold',
-                        customer.customer_type === 'corporate'
-                          ? 'bg-blue-50 text-[#1D4ED8] ring-1 ring-blue-200/80 dark:bg-blue-950/60 dark:text-blue-300 dark:ring-blue-900/60'
-                          : 'bg-slate-100 text-slate-700 ring-1 ring-slate-200/80 dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-700/70'
-                      )}
+                      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#1D4ED8] font-display text-sm font-bold text-white"
                     >
                       {getCustomerInitials(customer.full_name)}
                     </span>
@@ -350,7 +348,7 @@ export function CustomerDetailDrawer({
                       <div className="flex flex-wrap items-center gap-2">
                         <h2
                           id={titleId}
-                          className="truncate font-display text-lg font-bold tracking-tight text-slate-950 dark:text-slate-50"
+                          className="truncate font-display text-lg font-bold tracking-tight text-white"
                         >
                           {customer.full_name}
                         </h2>
@@ -360,7 +358,7 @@ export function CustomerDetailDrawer({
                         />
                       </div>
                       {customer.company_name ? (
-                        <p className="truncate text-xs font-medium text-slate-500 dark:text-slate-400">
+                        <p className="truncate text-xs font-medium text-slate-400">
                           {customer.company_name}
                         </p>
                       ) : null}
@@ -369,7 +367,7 @@ export function CustomerDetailDrawer({
                 ) : effectiveStatus === 'error' ? (
                   <h2
                     id={titleId}
-                    className="mt-1 font-display text-base font-semibold tracking-tight text-slate-950 dark:text-slate-50"
+                    className="mt-1 font-display text-base font-semibold tracking-tight text-white"
                   >
                     {drawerCopy.errorTitle}
                   </h2>
@@ -378,10 +376,10 @@ export function CustomerDetailDrawer({
                     <h2 id={titleId} className="sr-only">
                       {drawerCopy.loadingTitle}
                     </h2>
-                    <Skeleton rounded="lg" className="h-10 w-10 shrink-0" />
+                    <Skeleton rounded="lg" className="h-10 w-10 shrink-0 bg-slate-800" />
                     <div className="space-y-1.5">
-                      <Skeleton className="h-5 w-44" />
-                      <Skeleton className="h-3.5 w-28" />
+                      <Skeleton className="h-5 w-44 bg-slate-800" />
+                      <Skeleton className="h-3.5 w-28 bg-slate-800" />
                     </div>
                   </div>
                 )}
@@ -393,7 +391,7 @@ export function CustomerDetailDrawer({
                 onClick={handleClose}
                 disabled={isSavingEdit}
                 aria-label={drawerCopy.closeAriaLabel}
-                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600/80 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-slate-400 transition-colors hover:bg-slate-800 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <X className="h-4 w-4" aria-hidden="true" />
               </button>
@@ -669,7 +667,7 @@ export function CustomerDetailDrawer({
                 </div>
 
                 {/* Sticky Read-Only Footer */}
-                <div className="pb-safe flex flex-wrap items-center justify-end gap-2.5 border-t border-slate-200/90 bg-slate-50/80 px-5 py-3.5 sm:px-6 sm:py-4 dark:border-slate-800 dark:bg-slate-950/70">
+                <div className="pb-safe flex flex-wrap items-center justify-end gap-2.5 border-t border-slate-200 bg-[#F4F6FA] px-5 py-3.5 sm:px-6 sm:py-4 dark:border-slate-800 dark:bg-slate-950/80">
                   <Button variant="secondary" onClick={handleClose}>
                     {drawerCopy.closeLabel}
                   </Button>

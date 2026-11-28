@@ -123,7 +123,7 @@ export function AgencySelector({
         aria-expanded={open}
         aria-haspopup="menu"
         aria-label="Sélectionner l’agence active"
-        className="inline-flex h-9 max-w-[165px] sm:max-w-[220px] items-center gap-2 rounded-xl border border-slate-200/90 bg-slate-50/90 px-2.5 text-xs font-semibold text-slate-800 transition-colors hover:border-slate-300 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600/80 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:hover:border-slate-700 dark:hover:bg-slate-800 cursor-pointer"
+        className="inline-flex h-9 max-w-[165px] sm:max-w-[230px] items-center gap-2 rounded-xl border border-slate-300/80 bg-slate-100/85 px-2.5 text-xs font-semibold text-slate-900 transition-colors hover:border-slate-400/80 hover:bg-slate-200/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600/80 dark:border-slate-700/90 dark:bg-slate-900 dark:text-slate-100 dark:hover:border-slate-600 dark:hover:bg-slate-800 cursor-pointer"
       >
         <Building2
           className="h-3.5 w-3.5 shrink-0 text-[#1D4ED8] dark:text-blue-400"
@@ -132,7 +132,7 @@ export function AgencySelector({
         <span className="truncate">{activeAgency.name}</span>
         <ChevronDown
           className={cn(
-            'h-3.5 w-3.5 shrink-0 text-slate-400 transition-transform duration-150',
+            'h-3.5 w-3.5 shrink-0 text-slate-500 transition-transform duration-150 dark:text-slate-400',
             open && 'rotate-180'
           )}
           aria-hidden="true"
@@ -147,10 +147,10 @@ export function AgencySelector({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -4, scale: 0.98 }}
             transition={{ duration: 0.14, ease: [0.16, 1, 0.3, 1] }}
-            className="absolute end-0 top-[calc(100%+6px)] z-50 w-[288px] overflow-hidden rounded-2xl border border-slate-200/95 bg-white shadow-[0_12px_32px_-8px_rgba(15,23,42,0.16)] dark:border-slate-800 dark:bg-slate-900 dark:shadow-[0_12px_32px_-8px_rgba(0,0,0,0.6)]"
+            className="absolute end-0 top-[calc(100%+6px)] z-50 w-[292px] overflow-hidden rounded-2xl border border-slate-300/90 bg-white shadow-[0_16px_36px_-10px_rgba(11,18,32,0.22)] dark:border-slate-700 dark:bg-slate-900 dark:shadow-[0_16px_36px_-10px_rgba(0,0,0,0.65)]"
           >
-            <div className="border-b border-slate-200/90 px-3.5 py-2.5 dark:border-slate-800">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400 dark:text-slate-500">
+            <div className="border-b border-slate-200 bg-slate-50/90 px-3.5 py-2.5 dark:border-slate-800 dark:bg-slate-950/60">
+              <p className="text-[11px] font-semibold text-slate-600 dark:text-slate-400">
                 {hasMultiple ? 'Vos agences actives' : 'Agence active'}
               </p>
             </div>
@@ -176,7 +176,7 @@ export function AgencySelector({
                     className={cn(
                       'flex w-full items-center justify-between gap-2.5 rounded-xl px-2.5 py-2 text-start transition-colors cursor-pointer disabled:opacity-60',
                       isSelected
-                        ? 'bg-blue-50/90 text-[#1D4ED8] dark:bg-blue-950/60 dark:text-blue-200'
+                        ? 'bg-blue-50 text-[#1D4ED8] dark:bg-blue-950/70 dark:text-blue-200'
                         : 'text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800'
                     )}
                   >
@@ -186,7 +186,7 @@ export function AgencySelector({
                           'flex h-7 w-7 shrink-0 items-center justify-center rounded-lg font-display text-[11px] font-bold',
                           isSelected
                             ? 'bg-[#1D4ED8] text-white dark:bg-blue-600'
-                            : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'
+                            : 'bg-slate-200/80 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
                         )}
                       >
                         {getAgencyInitials(agency.name)}
@@ -217,7 +217,7 @@ export function AgencySelector({
               })}
             </div>
 
-            <div className="border-t border-slate-200/90 p-1.5 dark:border-slate-800">
+            <div className="border-t border-slate-200 p-1.5 dark:border-slate-800">
               <Link
                 href="/onboarding"
                 onClick={() => setOpen(false)}

@@ -31,7 +31,7 @@ export function SegmentedControl<T extends string>({
       role="group"
       aria-label={ariaLabel}
       className={cn(
-        'no-scrollbar inline-flex max-w-full items-center gap-0.5 overflow-x-auto rounded-xl border border-slate-200/90 bg-slate-100/90 p-1 dark:border-slate-800 dark:bg-slate-950/80',
+        'no-scrollbar inline-flex max-w-full items-center gap-0.5 overflow-x-auto rounded-xl border border-slate-300/85 bg-slate-200/75 p-1 dark:border-slate-700/90 dark:bg-slate-950/90',
         className
       )}
     >
@@ -44,9 +44,9 @@ export function SegmentedControl<T extends string>({
             aria-pressed={isActive}
             onClick={() => onChange(option.value)}
             className={cn(
-              'relative z-10 inline-flex h-8 items-center justify-center rounded-lg px-3 text-xs font-medium whitespace-nowrap shrink-0 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600/80 dark:focus-visible:ring-blue-400 cursor-pointer select-none',
+              'relative z-10 inline-flex h-8 items-center justify-center rounded-lg px-3 text-xs font-semibold whitespace-nowrap shrink-0 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600/80 dark:focus-visible:ring-blue-400 cursor-pointer select-none',
               isActive
-                ? 'text-slate-950 dark:text-slate-50'
+                ? 'text-slate-950 dark:text-white'
                 : 'text-slate-600 hover:text-slate-950 dark:text-slate-400 dark:hover:text-slate-100'
             )}
           >
@@ -54,7 +54,7 @@ export function SegmentedControl<T extends string>({
               <motion.span
                 layoutId={`segmented-pill-${layoutId}`}
                 transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-                className="absolute inset-0 -z-10 rounded-lg bg-white shadow-[0_1px_2px_rgba(15,23,42,0.08)] ring-1 ring-slate-900/[0.04] dark:bg-slate-800 dark:ring-white/[0.06]"
+                className="absolute inset-0 -z-10 rounded-lg bg-white shadow-[0_1px_2px_rgba(11,18,32,0.12)] ring-1 ring-slate-900/[0.06] dark:bg-slate-800 dark:ring-white/[0.08]"
               />
             ) : null}
             <span>{option.label}</span>

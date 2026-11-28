@@ -62,7 +62,7 @@ export default async function RootLayout({
     <html lang="fr" suppressHydrationWarning>
       <body
         suppressHydrationWarning
-        className="min-h-screen bg-slate-50 text-slate-950 antialiased dark:bg-slate-950 dark:text-slate-100"
+        className="min-h-screen bg-[#ECEFF4] text-slate-950 antialiased dark:bg-[#070B14] dark:text-slate-100"
       >
         <AppPreferencesProvider>
           <AppShell
