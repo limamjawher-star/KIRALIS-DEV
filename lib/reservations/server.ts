@@ -131,9 +131,22 @@ export async function createAgencyReservation(
     currencyCode: string; raw: unknown;
   }
 ): Promise<ReservationResult<ReservationRow>> {
-  const quote = await quoteAgencyReservation(supabase, params);
+  // The browser may display a quote just before fleet rates change.
+  // Expected amounts are only a consistency check; never authoritative prices.
+  const input = params.raw as Record<string, unknown> | null;
+  if (!input || typeof input !== 'object' || Array.isArray(input) ||
+      !Number.isSafeInteger(input.expectedSubtotalMinor) ||
+      !Number.isSafeInteger(input.expectedDepositMinor)) {
+    return { ok: false, status: 400, error: 'A current reservation quote is required.' };
+  }
+  const { expectedSubtotalMinor, expectedDepositMinor, ...draftInput } = input;
+  const quote = await quoteAgencyReservation(supabase, { ...params, raw: draftInput });
   if (!quote.ok) return quote;
   const { draft, preview, depositMinor, dailyRateMinor } = quote.data;
+  if (preview.subtotalMinor !== expectedSubtotalMinor ||
+      depositMinor !== expectedDepositMinor) {
+    return { ok: false, status: 409, error: 'Rates changed. Please recalculate the quote before booking.' };
+  }
   const referenceCode = `KRL-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
   const payload = {
     agency_id: params.agencyId,
