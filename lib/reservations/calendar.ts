@@ -1,7 +1,7 @@
 import type { ReservationRow } from '@/lib/supabase/database.types';
 import { agencyDateForInstant } from './domain';
 
-export type DispatchEventKind = 'pickup' | 'return' | 'in_use';
+export type DispatchEventKind = 'pickup' | 'return' | 'in_use' | 'tentative';
 export interface DispatchEvent {
   reservation: ReservationRow;
   kind: DispatchEventKind;
@@ -24,14 +24,15 @@ export function getDayDispatchEvents(
     const pickupDate = agencyDateForInstant(reservation.pickup_at, agencyTimeZone);
     const returnDate = agencyDateForInstant(reservation.return_at, agencyTimeZone);
     if (!pickupDate || !returnDate || pickupDate >= returnDate) continue;
-    const kind: DispatchEventKind | null =
-      isoDate === pickupDate ? 'pickup' :
-      isoDate === returnDate ? 'return' :
-      isoDate > pickupDate && isoDate < returnDate ? 'in_use' :
-      null;
+    const tentative = reservation.status === 'draft' || reservation.status === 'pending';
+    const kind: DispatchEventKind | null = tentative
+      ? isoDate >= pickupDate && isoDate < returnDate ? 'tentative' : null
+      : isoDate === pickupDate ? 'pickup' :
+        isoDate === returnDate ? 'return' :
+        isoDate > pickupDate && isoDate < returnDate ? 'in_use' : null;
     if (kind) result.push({ reservation, kind, date: isoDate });
   }
-  const order: Record<DispatchEventKind, number> = { pickup: 0, return: 1, in_use: 2 };
+  const order: Record<DispatchEventKind, number> = { pickup: 0, return: 1, in_use: 2, tentative: 3 };
   return result.sort((a, b) =>
     order[a.kind] - order[b.kind] ||
     a.reservation.reference_code.localeCompare(b.reservation.reference_code)
@@ -73,14 +74,16 @@ export function buildDispatchEventIndex(
     const returnDate = agencyDateForInstant(reservation.return_at, agencyTimeZone);
     if (!pickupDate || !returnDate || pickupDate >= returnDate) continue;
     for (const date of days) {
-      const kind: DispatchEventKind | null =
-        date === pickupDate ? 'pickup' :
-        date === returnDate ? 'return' :
-        date > pickupDate && date < returnDate ? 'in_use' : null;
+      const tentative = reservation.status === 'draft' || reservation.status === 'pending';
+      const kind: DispatchEventKind | null = tentative
+        ? date >= pickupDate && date < returnDate ? 'tentative' : null
+        : date === pickupDate ? 'pickup' :
+          date === returnDate ? 'return' :
+          date > pickupDate && date < returnDate ? 'in_use' : null;
       if (kind) index.get(date)!.push({ reservation, kind, date });
     }
   }
-  const order: Record<DispatchEventKind, number> = { pickup: 0, return: 1, in_use: 2 };
+  const order: Record<DispatchEventKind, number> = { pickup: 0, return: 1, in_use: 2, tentative: 3 };
   for (const events of index.values()) {
     events.sort((a, b) =>
       order[a.kind] - order[b.kind] ||
