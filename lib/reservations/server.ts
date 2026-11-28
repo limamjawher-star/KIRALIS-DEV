@@ -125,7 +125,7 @@ export async function quoteAgencyReservation(
  * the existing database RPC, which enforces tenant permissions and overlap.
  */
 export async function createAgencyReservation(
-  supabase: Pick<SupabaseClient, 'from'>,
+  supabase: Pick<SupabaseClient, 'from' | 'rpc'>,
   params: {
     agencyId: string; userId: string; timeZone: string;
     currencyCode: string; raw: unknown;
@@ -147,34 +147,36 @@ export async function createAgencyReservation(
       depositMinor !== expectedDepositMinor) {
     return { ok: false, status: 409, error: 'Rates changed. Please recalculate the quote before booking.' };
   }
-  const referenceCode = `KRL-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
-  const payload = {
-    agency_id: params.agencyId,
-    created_by: params.userId,
-    updated_by: params.userId,
-    reference_code: referenceCode,
-    vehicle_id: draft.vehicleId,
-    customer_id: draft.customerId,
-    status: 'pending' as const,
-    pickup_at: draft.pickupAt,
-    return_at: draft.returnAt,
-    pickup_location: draft.pickupLocation,
-    return_location: draft.returnLocation,
-    notes: draft.notes,
-    currency_code: 'TND',
-    daily_rate_minor: dailyRateMinor,
-    subtotal_minor: preview.subtotalMinor,
-    tax_minor: 0, // MVP: no tax assumptions; tax configuration is a later phase.
-    discount_minor: 0,
-    total_minor: preview.subtotalMinor,
-    deposit_minor: depositMinor,
-  };
-  const { data, error } = await supabase.from('reservations')
-    .insert(payload).select(RESERVATION_SELECT_COLUMNS).single();
+  // The database RPC re-computes the entire agency-local seasonal/package
+  // price and derives tenant, actor, currency and reference itself.
+  // Authenticated clients have NO direct INSERT privilege on reservations.
+  const { data, error } = await supabase.rpc('create_agency_reservation_secure', {
+    p_vehicle_id: draft.vehicleId,
+    p_customer_id: draft.customerId,
+    p_pickup_at: draft.pickupAt,
+    p_return_at: draft.returnAt,
+    p_pickup_location: draft.pickupLocation,
+    p_return_location: draft.returnLocation,
+    p_notes: draft.notes,
+    p_expected_subtotal_minor: preview.subtotalMinor,
+    p_expected_deposit_minor: depositMinor,
+  });
   if (error) {
-    if (error.code === '23505') return { ok: false, status: 409, error: 'Reservation reference collision; retry.' };
-    if (error.code === '23P01') return { ok: false, status: 409, error: 'Overlapping confirmed reservation.' };
-    if (error.code === '42501') return { ok: false, status: 403, error: 'Reservation creation is not permitted.' };
+    if (error.code === '23P01') {
+      return { ok: false, status: 409, error: 'The vehicle is already booked for those dates.' };
+    }
+    if (error.code === '23514') {
+      return { ok: false, status: 409, error: 'Rates or availability changed; recalculate the quote.' };
+    }
+    if (error.code === '42501') {
+      return { ok: false, status: 403, error: 'Reservation creation is not permitted.' };
+    }
+    if (error.code === 'PGRST202' || error.code === '42883') {
+      return { ok: false, status: 503, error: 'Booking database upgrade is not installed yet.' };
+    }
+    if (error.code === '23505') {
+      return { ok: false, status: 409, error: 'Reservation reference collision; retry.' };
+    }
     return { ok: false, status: 500, error: 'Unable to create the reservation.' };
   }
   if (!data) return { ok: false, status: 500, error: 'Reservation could not be saved.' };
