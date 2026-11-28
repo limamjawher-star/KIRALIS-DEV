@@ -41,6 +41,8 @@ export interface VehiclesCopy {
     refresh: string;
     refreshAria: string;
     addVehicle: string;
+    exportCsv: string;
+    exportCsvAria: string;
   };
   migrations: {
     complianceBannerTitle: string;
@@ -373,6 +375,8 @@ const FR_COPY: VehiclesCopy = {
     refresh: 'Actualiser',
     refreshAria: 'Actualiser la flotte',
     addVehicle: 'Ajouter un véhicule',
+    exportCsv: 'Exporter CSV',
+    exportCsvAria: 'Télécharger les véhicules affichés au format CSV',
   },
   migrations: {
     complianceBannerTitle: 'Migration des échéances en attente',
@@ -762,6 +766,8 @@ const EN_COPY: VehiclesCopy = {
     refresh: 'Refresh',
     refreshAria: 'Refresh fleet inventory',
     addVehicle: 'Add vehicle',
+    exportCsv: 'Export CSV',
+    exportCsvAria: 'Download visible vehicles as CSV',
   },
   migrations: {
     complianceBannerTitle: 'Compliance migration pending',
@@ -1139,6 +1145,8 @@ const AR_COPY: VehiclesCopy = {
     refresh: 'تحديث',
     refreshAria: 'تحديث قائمة السيارات',
     addVehicle: 'إضافة سيارة',
+    exportCsv: 'تصدير CSV',
+    exportCsvAria: 'تنزيل السيارات المعروضة في ملف CSV',
   },
   migrations: {
     complianceBannerTitle: 'ترحيل الوثائق الإدارية قيد الانتظار',
