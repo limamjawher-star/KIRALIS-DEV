@@ -1,4 +1,6 @@
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
 import test from 'node:test';
 import { buildFleetCsv, escapeFleetCsvCell, fleetTndAmount } from './fleet-export';
 import { getVehiclesCopy } from './i18n';
@@ -56,6 +58,9 @@ test('Export only approved business fields with exact three-decimal TND values',
   assert.ok(!csv.includes('PRIVATE_NOTES_DO_NOT_EXPORT'));
   assert.ok(!csv.includes('private-user'));
   assert.ok(!csv.includes('agency-1'));
+  assert.equal(fleetTndAmount(1), '0.001');
+  assert.equal(fleetTndAmount(1001), '1.001');
+  assert.equal(fleetTndAmount(999999), '999.999');
   assert.equal(fleetTndAmount(null), '');
   assert.equal(fleetTndAmount(-1000), '');
   assert.equal(fleetTndAmount(Number.NaN), '');
@@ -92,4 +97,12 @@ test('Localized custom categories are preserved, but CSV injection still blocked
     getVehiclesCopy('en')
   );
   assert.ok(csv.includes('"\'=CMD()"'));
+});
+
+test('Vehicle workspace is keyed by agency so tenant-local UI state is not reused', () => {
+  const source = fs.readFileSync(
+    path.join(process.cwd(), 'app/vehicles/page.tsx'),
+    'utf8'
+  );
+  assert.match(source, /<VehiclesWorkspace\s+key=\{activeAgency\.id\}/);
 });
