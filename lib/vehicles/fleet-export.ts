@@ -18,7 +18,9 @@ export function escapeFleetCsvCell(value: string | number | null | undefined): s
 export function fleetTndAmount(minor: number | null | undefined): string {
   if (minor == null) return '';
   if (!Number.isSafeInteger(minor) || minor < 0) return '';
-  return (minor / 1000).toFixed(3);
+  const dinars = Math.floor(minor / 1000);
+  const millimes = String(minor % 1000).padStart(3, '0');
+  return `${dinars}.${millimes}`;
 }
 
 function categoryName(category: string, copy: VehiclesCopy): string {
