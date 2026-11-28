@@ -25,7 +25,7 @@ export async function listAgencyHandovers(agencyId:string): Promise<HandoverList
     }
     if (error) return { inspections: [], schemaReady: false, limited: false,
       error: 'Handover inspection data could not be loaded.' };
-    const items=(data??[]) as HandoverInspection[];
+    const items=(data??[]) as unknown as HandoverInspection[];
     return { inspections: items.slice(0,500), schemaReady: true,
       limited: items.length>500, error:null };
   } catch {
