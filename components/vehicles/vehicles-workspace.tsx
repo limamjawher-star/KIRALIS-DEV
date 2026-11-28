@@ -1442,7 +1442,7 @@ export function VehiclesWorkspace({
                     id="mobile-filter-category"
                     value={mobileDraftFilters.category}
                     onChange={(e) =>
-                      setFilters((prev) => ({
+                      setMobileDraftFilters((prev) => ({
                         ...prev,
                         category: e.target.value,
                       }))
@@ -1470,7 +1470,7 @@ export function VehiclesWorkspace({
                       id="mobile-filter-transmission"
                       value={mobileDraftFilters.transmission}
                       onChange={(e) =>
-                        setFilters((prev) => ({
+                        setMobileDraftFilters((prev) => ({
                           ...prev,
                           transmission: e.target.value as
                             | 'all'
@@ -1501,7 +1501,7 @@ export function VehiclesWorkspace({
                       id="mobile-filter-fuel"
                       value={mobileDraftFilters.fuelType}
                       onChange={(e) =>
-                        setFilters((prev) => ({
+                        setMobileDraftFilters((prev) => ({
                           ...prev,
                           fuelType: e.target.value as 'all' | VehicleFuelType,
                         }))
@@ -1529,7 +1529,7 @@ export function VehiclesWorkspace({
                     id="mobile-filter-sort"
                     value={mobileDraftFilters.sortBy}
                     onChange={(e) =>
-                      setFilters((prev) => ({
+                      setMobileDraftFilters((prev) => ({
                         ...prev,
                         sortBy: e.target.value as VehicleSortKey,
                       }))
