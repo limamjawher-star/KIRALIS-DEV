@@ -63,7 +63,8 @@ test('Audit is transactional with no customer documents or notes',()=>{
   assert.match(sql,/reservation\.created/);
   assert.match(sql,/reservation\.status_changed/);
   assert.match(sql,/REVOKE ALL ON FUNCTION public\.audit_booking_lifecycle/);
-  assert.doesNotMatch(sql,/jsonb_build_object\([\s\S]*?(customer_id|notes)/);
+  const auditFn = sql.slice(sql.indexOf('CREATE OR REPLACE FUNCTION public.audit_booking_lifecycle'), sql.indexOf('\nCOMMIT;'));
+  assert.doesNotMatch(auditFn,/\b(customer_id|notes)\b/);
 });
 
 test('Verification SQL tests core RLS, API access and destructive permissions',()=>{
