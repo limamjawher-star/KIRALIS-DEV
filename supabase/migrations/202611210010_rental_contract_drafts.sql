@@ -73,7 +73,8 @@ BEGIN
     END IF;
     SELECT r.status INTO v_reservation_status
       FROM public.reservations r
-     WHERE r.agency_id = NEW.agency_id AND r.id = NEW.reservation_id;
+     WHERE r.agency_id = NEW.agency_id AND r.id = NEW.reservation_id
+     FOR SHARE;
     IF NOT FOUND OR v_reservation_status NOT IN
        ('confirmed'::public.reservation_status,
         'active'::public.reservation_status,
@@ -89,7 +90,8 @@ BEGIN
        NEW.reservation_id IS DISTINCT FROM OLD.reservation_id OR
        NEW.contract_number IS DISTINCT FROM OLD.contract_number OR
        NEW.template_version IS DISTINCT FROM OLD.template_version OR
-       NEW.created_by IS DISTINCT FROM OLD.created_by OR
+       (NEW.created_by IS DISTINCT FROM OLD.created_by
+        AND NOT (NEW.created_by IS NULL AND OLD.created_by IS NOT NULL)) OR
        NEW.created_at IS DISTINCT FROM OLD.created_at OR
        NEW.status IS DISTINCT FROM OLD.status THEN
       RAISE EXCEPTION 'Draft contract identity and status are immutable in phase 10A.'
