@@ -677,7 +677,7 @@ const FR_DICTIONARY: Dictionary = {
     selectedDateLabel: 'Date sélectionnée',
     noScheduledEvents:
       'Aucun départ ni retour prévu pour cette date.',
-    legendHint: 'Fuseau horaire de référence : Africa/Tunis (UTC+1).',
+    legendHint: 'Les dates utilisent le fuseau horaire de votre agence.',
   },
   assistant: {
     noticeTitle: 'Assistant IA en préparation',
@@ -1254,8 +1254,8 @@ const EN_DICTIONARY: Dictionary = {
     viewList: 'Month list',
     selectedDateLabel: 'Selected date',
     noScheduledEvents:
-      'No pickups, returns, or maintenance events are scheduled for this date.',
-    legendHint: 'Reference timezone: Africa/Tunis (UTC+1).',
+      'No reservation activity is scheduled for this date.',
+    legendHint: 'Dates use your agency's timezone.',
   },
   assistant: {
     noticeTitle: 'AI Assistant in preparation',
@@ -1831,8 +1831,8 @@ const AR_DICTIONARY: Dictionary = {
     viewList: 'قائمة الشهر',
     selectedDateLabel: 'التاريخ المحدد',
     noScheduledEvents:
-      'لا توجد عمليات تسليم أو استرجاع أو صيانة مجدولة في هذا التاريخ.',
-    legendHint: 'المنطقة الزمنية المرجعية: Africa/Tunis (UTC+1).',
+      'لا توجد أنشطة حجوزات مبرمجة لهذا التاريخ.',
+    legendHint: 'يتم عرض التواريخ بالتوقيت المحلي لوكالتك.',
   },
   assistant: {
     noticeTitle: 'المساعد الذكي قيد الإعداد',
