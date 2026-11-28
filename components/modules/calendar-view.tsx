@@ -26,23 +26,23 @@ import { cn } from '@/lib/utils';
 type CalendarViewMode = 'month' | 'list';
 type DispatchCopy = {
   pickup: string; return: string; in_use: string; tentative: string;
-  openBookings: string; eventCount: (n: number) => string;
+  openBookings: string; activityLabel: string; eventCount: (n: number) => string;
   noBookings: string;
 };
 const DISPATCH_COPY: Record<SupportedLocale, DispatchCopy> = {
   fr: {
     pickup: 'Départ', return: 'Retour', in_use: 'En location', tentative: 'À confirmer',
-    openBookings: 'Ouvrir les réservations', eventCount: n => `${n} activité${n > 1 ? 's' : ''}`,
+    openBookings: 'Ouvrir les réservations', activityLabel: 'Activités', eventCount: n => `${n} activité${n > 1 ? 's' : ''}`,
     noBookings: 'Aucune réservation prévue pour ce jour.',
   },
   en: {
     pickup: 'Pickup', return: 'Return', in_use: 'In use', tentative: 'Tentative',
-    openBookings: 'Open reservations', eventCount: n => `${n} activit${n === 1 ? 'y' : 'ies'}`,
+    openBookings: 'Open reservations', activityLabel: 'Activities', eventCount: n => `${n} activit${n === 1 ? 'y' : 'ies'}`,
     noBookings: 'No reservations scheduled for this day.',
   },
   ar: {
     pickup: 'تسليم', return: 'إرجاع', in_use: 'قيد الكراء', tentative: 'بانتظار التأكيد',
-    openBookings: 'فتح الحجوزات', eventCount: n => `${n} نشاط`,
+    openBookings: 'فتح الحجوزات', activityLabel: 'الأنشطة', eventCount: n => `${n} نشاط`,
     noBookings: 'لا توجد حجوزات مبرمجة لهذا اليوم.',
   },
 };
@@ -214,7 +214,7 @@ export function CalendarView({
             <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-[11px] font-medium text-slate-600 dark:text-slate-400">
               <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-blue-600"/>{copy.pickup}</span>
               <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-emerald-600"/>{copy.return}</span>
-              <span className="inline-flex items-center gap-1.5"><span className="inline-flex h-4 min-w-4 items-center justify-center rounded bg-slate-200 px-1 text-[9px] font-bold text-slate-800 dark:bg-slate-700 dark:text-white">N</span>{copy.eventCount(2)}</span>
+              <span className="inline-flex items-center gap-1.5"><span className="inline-flex h-4 min-w-4 items-center justify-center rounded bg-slate-200 px-1 text-[9px] font-bold text-slate-800 dark:bg-slate-700 dark:text-white">N</span>{copy.activityLabel}</span>
             </div>
           </div> : monthReservations.length === 0
             ? <EmptyState icon={<CalendarRange className="h-5 w-5" aria-hidden="true"/>}
