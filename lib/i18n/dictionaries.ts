@@ -1255,7 +1255,7 @@ const EN_DICTIONARY: Dictionary = {
     selectedDateLabel: 'Selected date',
     noScheduledEvents:
       'No reservation activity is scheduled for this date.',
-    legendHint: 'Dates use your agency's timezone.',
+    legendHint: 'Dates use the timezone configured for your agency.',
   },
   assistant: {
     noticeTitle: 'AI Assistant in preparation',
