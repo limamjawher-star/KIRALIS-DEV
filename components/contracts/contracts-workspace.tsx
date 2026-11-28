@@ -11,7 +11,6 @@ import type { ReservationRow } from '@/lib/supabase/database.types';
 import type { CustomerRecord } from '@/lib/customers/types';
 import type { VehicleRecord } from '@/lib/vehicles/types';
 import type { RentalContractDraft } from '@/lib/contracts/server';
-import { formatTndFromMillimes } from '@/lib/currency';
 import { useAppPreferences } from '@/components/providers/app-preferences-provider';
 import { AlertBanner } from '@/components/ui/alert-banner';
 import { cn } from '@/lib/utils';
@@ -142,8 +141,6 @@ export function ContractsWorkspace({
       }).format(new Date(iso));
     } catch { return iso; }
   };
-  const formatMoney = (minor:number) =>
-    agency.currency_code==='TND'?formatTndFromMillimes(minor,locale):'—';
 
   async function refresh() {
     if(refreshing)return;
