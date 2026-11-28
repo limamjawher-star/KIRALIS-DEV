@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { ContractsWorkspace } from '@/components/contracts/contracts-workspace';
 import { requireActiveAgencyContext } from '@/lib/agency/server';
 import { listAgencyContractDrafts } from '@/lib/contracts/server';
+import { listAgencyHandovers } from '@/lib/handovers/server';
 import { listAgencyReservations } from '@/lib/reservations/server';
 import { listAgencyVehicles } from '@/lib/vehicles/server';
 import { listAgencyCustomers } from '@/lib/customers/server';
@@ -11,8 +12,9 @@ export const metadata: Metadata = { title: 'Contrats — KIRALIS' };
 
 export default async function ContractsPage() {
   const { activeAgency, activeMembership } = await requireActiveAgencyContext();
-  const [registry, reservations, fleet, customers] = await Promise.all([
+  const [registry, inspections, reservations, fleet, customers] = await Promise.all([
     listAgencyContractDrafts(activeAgency.id),
+    listAgencyHandovers(activeAgency.id),
     listAgencyReservations(activeAgency.id),
     listAgencyVehicles(activeAgency.id),
     listAgencyCustomers(activeAgency.id),
@@ -23,6 +25,10 @@ export default async function ContractsPage() {
       agency={activeAgency}
       role={activeMembership.role}
       initialContracts={registry.contracts}
+      initialInspections={inspections.inspections}
+      inspectionSchemaReady={inspections.schemaReady}
+      inspectionLimited={inspections.limited}
+      inspectionError={inspections.error}
       schemaReady={registry.schemaReady}
       limited={registry.limited}
       initialError={registry.error || reservations.error || fleet.error || customers.error}
