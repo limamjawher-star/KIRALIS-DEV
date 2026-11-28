@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import type { ReservationRow } from '@/lib/supabase/database.types';
-import { getDayDispatchEvents, getMonthReservations } from './calendar';
+import { buildDispatchEventIndex, getDayDispatchEvents, getMonthReservations } from './calendar';
 
 const base: ReservationRow = {
   id: 'reservation-1', agency_id: 'agency-1',
@@ -51,4 +51,27 @@ test('Return and pickup entries are sorted ahead of occupancy', () => {
     { ...base, reference_code: 'KRL-C', pickup_at: '2026-11-29T09:00:00Z', return_at: '2026-12-02T09:00:00Z' },
   ];
   assert.deepEqual(getDayDispatchEvents(all, '2026-12-02', 'Africa/Tunis').map(x => x.kind), ['pickup', 'return', 'in_use']);
+});
+
+
+test('Unconfirmed reservations are tentative rather than occupied or picked up', () => {
+  for (const status of ['draft', 'pending'] as const) {
+    const tentative = { ...base, status };
+    assert.deepEqual(getDayDispatchEvents([tentative], '2026-12-01', 'Africa/Tunis').map(x => x.kind), ['tentative']);
+    assert.deepEqual(getDayDispatchEvents([tentative], '2026-12-02', 'Africa/Tunis').map(x => x.kind), ['tentative']);
+    assert.equal(getDayDispatchEvents([tentative], '2026-12-04', 'Africa/Tunis').length, 0);
+  }
+});
+
+test('Optimized dispatch index matches single-day events', () => {
+  const cases = [
+    base,
+    { ...base, id: 'reservation-pending', status: 'pending' as const, reference_code: 'KRL-02' },
+    { ...base, id: 'reservation-cancelled', status: 'cancelled' as const, reference_code: 'KRL-03' },
+  ];
+  const days = ['2026-12-01', '2026-12-02', '2026-12-03', '2026-12-04'];
+  const index = buildDispatchEventIndex(cases, days, 'Africa/Tunis');
+  for (const day of days) {
+    assert.deepEqual(index.get(day), getDayDispatchEvents(cases, day, 'Africa/Tunis'));
+  }
 });
