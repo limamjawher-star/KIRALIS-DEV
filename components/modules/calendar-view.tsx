@@ -25,23 +25,23 @@ import { cn } from '@/lib/utils';
 
 type CalendarViewMode = 'month' | 'list';
 type DispatchCopy = {
-  pickup: string; return: string; in_use: string;
+  pickup: string; return: string; in_use: string; tentative: string;
   openBookings: string; eventCount: (n: number) => string;
   noBookings: string;
 };
 const DISPATCH_COPY: Record<SupportedLocale, DispatchCopy> = {
   fr: {
-    pickup: 'Départ', return: 'Retour', in_use: 'En location',
+    pickup: 'Départ', return: 'Retour', in_use: 'En location', tentative: 'À confirmer',
     openBookings: 'Ouvrir les réservations', eventCount: n => `${n} activité${n > 1 ? 's' : ''}`,
     noBookings: 'Aucune réservation prévue pour ce jour.',
   },
   en: {
-    pickup: 'Pickup', return: 'Return', in_use: 'In use',
+    pickup: 'Pickup', return: 'Return', in_use: 'In use', tentative: 'Tentative',
     openBookings: 'Open reservations', eventCount: n => `${n} activit${n === 1 ? 'y' : 'ies'}`,
     noBookings: 'No reservations scheduled for this day.',
   },
   ar: {
-    pickup: 'تسليم', return: 'إرجاع', in_use: 'قيد الكراء',
+    pickup: 'تسليم', return: 'إرجاع', in_use: 'قيد الكراء', tentative: 'بانتظار التأكيد',
     openBookings: 'فتح الحجوزات', eventCount: n => `${n} نشاط`,
     noBookings: 'لا توجد حجوزات مبرمجة لهذا اليوم.',
   },
@@ -122,6 +122,7 @@ export function CalendarView({
     pickup: 'bg-blue-100 text-blue-800 dark:bg-blue-950/50 dark:text-blue-300',
     return: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300',
     in_use: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
+    tentative: 'bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300',
   };
 
   return (
