@@ -495,7 +495,7 @@ const FR_DICTIONARY: Dictionary = {
       navLabel: 'Rapports',
       title: 'Rapports',
       description:
-        'Analyses de taux d’occupation, chiffre d’affaires encaissé, rentabilité par véhicule et charges de flotte.',
+        'Suivi des réservations, montants engagés et jours de location à partir des données réelles de votre agence.',
       emptyTitle: 'Aucune donnée analytique disponible',
       emptyDescription:
         'Les rapports ne présentent aucune statistique simulée. Les indicateurs seront calculés uniquement à partir des données réelles de votre agence.',
@@ -1108,7 +1108,7 @@ const EN_DICTIONARY: Dictionary = {
       navLabel: 'Reports',
       title: 'Reports',
       description:
-        'Fleet utilization, collected revenue, vehicle profitability, and maintenance cost analytics.',
+        'Real booking counts, committed values, and rental days drawn from your agency records.',
       emptyTitle: 'No analytics available',
       emptyDescription:
         'Reports do not display fabricated metrics. Calculations will run strictly on verified agency records.',
@@ -1685,7 +1685,7 @@ const AR_DICTIONARY: Dictionary = {
       navLabel: 'التقارير',
       title: 'التقارير',
       description:
-        'تحليل نسبة الاستغلال والمداخيل المحصلة ومردودية كل سيارة وتكاليف الأسطول.',
+        'متابعة الحجوزات وقيمتها وأيام الكراء اعتماداً على بيانات وكالتك الفعلية.',
       emptyTitle: 'لا توجد بيانات تحليلية متاحة',
       emptyDescription:
         'لا تعرض التقارير أي أرقام وهمية. ستُحسب المؤشرات حصرياً من بيانات الوكالة الفعلية.',
