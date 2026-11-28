@@ -29,6 +29,10 @@ import type { AgencyRecord, AgencyRole } from '@/lib/agency/types';
 import { DEFAULT_TIMEZONE, formatTndFromMillimes } from '@/lib/currency';
 import { cn } from '@/lib/utils';
 import {
+  applyMobileVehicleFilters,
+  resetMobileVehicleFilters,
+} from '@/lib/vehicles/mobile-filters';
+import {
   computeFleetComplianceSummary,
   DEFAULT_COMPLIANCE_WARNING_DAYS,
   evaluateVehicleCompliance,
@@ -112,6 +116,8 @@ export function VehiclesWorkspace({
     DEFAULT_VEHICLE_FILTERS
   );
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [mobileDraftFilters, setMobileDraftFilters] =
+    useState<VehicleFilterState>(DEFAULT_VEHICLE_FILTERS);
 
   const [selectedVehicle, setSelectedVehicle] = useState<VehicleRecord | null>(
     null
@@ -176,6 +182,28 @@ export function VehiclesWorkspace({
       }),
     [vehicles, filters, agencyTimeZone]
   );
+
+  // Sheet changes remain drafts until Apply, including the preview count.
+  const mobilePreviewCount = useMemo(
+    () =>
+      mobileFiltersOpen
+        ? filterAndSortVehicles(vehicles, mobileDraftFilters, {
+            timeZone: agencyTimeZone,
+            warningThresholdDays: DEFAULT_COMPLIANCE_WARNING_DAYS,
+          }).length
+        : 0,
+    [mobileFiltersOpen, vehicles, mobileDraftFilters, agencyTimeZone]
+  );
+
+  const openMobileFilters = () => {
+    setMobileDraftFilters({ ...filters });
+    setMobileFiltersOpen(true);
+  };
+
+  const applyMobileFilters = () => {
+    setFilters((previous) => applyMobileVehicleFilters(previous, mobileDraftFilters));
+    setMobileFiltersOpen(false);
+  };
 
   const secondaryFilterCount =
     (filters.compliance !== 'all' ? 1 : 0) +
@@ -630,7 +658,7 @@ export function VehiclesWorkspace({
               {/* Mobile Filter Bottom Sheet Trigger */}
               <button
                 type="button"
-                onClick={() => setMobileFiltersOpen(true)}
+                onClick={openMobileFilters}
                 aria-label={copy.toolbar.filtersOpenAria}
                 aria-expanded={mobileFiltersOpen}
                 className={cn(
@@ -1318,7 +1346,7 @@ export function VehiclesWorkspace({
                   </h2>
                   <p className="mt-0.5 font-mono text-[11px] text-slate-400 tabular-nums">
                     {copy.toolbar.countRatio(
-                      filteredVehicles.length,
+                      mobilePreviewCount,
                       vehicles.length
                     )}
                   </p>
@@ -1344,9 +1372,9 @@ export function VehiclesWorkspace({
                   </label>
                   <select
                     id="mobile-filter-compliance"
-                    value={filters.compliance}
+                    value={mobileDraftFilters.compliance}
                     onChange={(e) =>
-                      setFilters((prev) => ({
+                      setMobileDraftFilters((prev) => ({
                         ...prev,
                         compliance: e.target.value as VehicleComplianceFilter,
                       }))
@@ -1380,7 +1408,7 @@ export function VehiclesWorkspace({
                   </label>
                   <select
                     id="mobile-filter-category"
-                    value={filters.category}
+                    value={mobileDraftFilters.category}
                     onChange={(e) =>
                       setFilters((prev) => ({
                         ...prev,
@@ -1408,7 +1436,7 @@ export function VehiclesWorkspace({
                     </label>
                     <select
                       id="mobile-filter-transmission"
-                      value={filters.transmission}
+                      value={mobileDraftFilters.transmission}
                       onChange={(e) =>
                         setFilters((prev) => ({
                           ...prev,
@@ -1439,7 +1467,7 @@ export function VehiclesWorkspace({
                     </label>
                     <select
                       id="mobile-filter-fuel"
-                      value={filters.fuelType}
+                      value={mobileDraftFilters.fuelType}
                       onChange={(e) =>
                         setFilters((prev) => ({
                           ...prev,
@@ -1467,7 +1495,7 @@ export function VehiclesWorkspace({
                   </label>
                   <select
                     id="mobile-filter-sort"
-                    value={filters.sortBy}
+                    value={mobileDraftFilters.sortBy}
                     onChange={(e) =>
                       setFilters((prev) => ({
                         ...prev,
@@ -1491,7 +1519,11 @@ export function VehiclesWorkspace({
                   type="button"
                   variant="secondary"
                   className="h-11"
-                  onClick={() => setFilters(DEFAULT_VEHICLE_FILTERS)}
+                  onClick={() =>
+                    setMobileDraftFilters((previous) =>
+                      resetMobileVehicleFilters(previous)
+                    )
+                  }
                 >
                   <RotateCcw className="h-4 w-4" aria-hidden="true" />
                   <span>{copy.toolbar.reset}</span>
@@ -1500,10 +1532,10 @@ export function VehiclesWorkspace({
                   type="button"
                   variant="primary"
                   className="h-11 flex-1"
-                  onClick={() => setMobileFiltersOpen(false)}
+                  onClick={applyMobileFilters}
                 >
                   <span>
-                    {copy.toolbar.applyCount(filteredVehicles.length)}
+                    {copy.toolbar.applyCount(mobilePreviewCount)}
                   </span>
                 </Button>
               </div>
