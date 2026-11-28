@@ -32,7 +32,7 @@ export interface DashboardViewProps {
   stats: AgencyDashboardStats;
 }
 
-const CONNECTED_MODULE_KEYS = new Set(['vehicles', 'customers', 'reservations', 'calendar', 'settings']);
+const CONNECTED_MODULE_KEYS = new Set(['vehicles', 'customers', 'reservations', 'calendar', 'reports', 'settings']);
 
 interface DashboardLocalizedCopy {
   headerDescription: (location: string) => string;
