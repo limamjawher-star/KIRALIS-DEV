@@ -336,8 +336,9 @@ CREATE TRIGGER trg_reservations_guard_snapshot BEFORE UPDATE ON public.reservati
 CREATE OR REPLACE FUNCTION public.audit_booking_lifecycle()
 RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path = ''
 AS $fn$
-DECLARE v_action text;
-DECLARE v_metadata jsonb;
+DECLARE
+  v_action text;
+  v_metadata jsonb;
 BEGIN
   IF TG_OP='INSERT' THEN
     v_action := 'reservation.created';
