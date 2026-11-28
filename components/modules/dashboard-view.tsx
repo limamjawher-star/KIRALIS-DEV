@@ -4,8 +4,8 @@ import * as React from 'react';
 import Link from 'next/link';
 import {
   Activity, ArrowDownRight, ArrowRight, ArrowUpRight, CalendarDays, CarFront,
-  CheckCircle2, ChevronDown, Clock3, FileBarChart2, FilterX, Gauge, LayoutDashboard,
-  Layers3, Settings2, Users2, Wallet, Wrench, type LucideIcon,
+  ChevronDown, Clock3, FileBarChart2, FilterX, Gauge, LayoutDashboard,
+  Layers3, Settings2, Wallet, Wrench, type LucideIcon,
 } from 'lucide-react';
 import type { AgencyDashboardStats, AgencyRecord, AgencyRole } from '@/lib/agency/types';
 import { formatAgencyRoleLabel } from '@/lib/agency/types';
@@ -18,9 +18,9 @@ import { AlertBanner } from '@/components/ui/alert-banner';
 import {
   analyzeCommandCenter, percentChange, DASHBOARD_RANGES,
   DASHBOARD_STATUSES, type CommandCenterAnalytics, type DashboardMetric,
-  type DashboardRange, type FleetPerformance,
+  type DashboardRange,
 } from '@/lib/dashboard/analytics';
-import { getCommandCenterCopy, type CommandCenterCopy } from '@/lib/dashboard/copy';
+import { getCommandCenterCopy } from '@/lib/dashboard/copy';
 import { formatTndFromMillimes, type SupportedLocale } from '@/lib/currency';
 import { cn } from '@/lib/utils';
 
