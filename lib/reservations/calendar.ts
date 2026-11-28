@@ -54,3 +54,38 @@ export function getMonthReservations(
     return Boolean(pickup && returnDate && pickup < end && returnDate >= start);
   }).sort((a, b) => a.pickup_at.localeCompare(b.pickup_at));
 }
+
+
+/**
+ * Index all visible calendar days using one timezone conversion per reservation,
+ * avoiding repeated Intl work in every one of the 42 calendar cells.
+ */
+export function buildDispatchEventIndex(
+  reservations: readonly ReservationRow[],
+  isoDates: readonly string[],
+  agencyTimeZone: string
+): Map<string, DispatchEvent[]> {
+  const index = new Map<string, DispatchEvent[]>(isoDates.map(date => [date, []]));
+  const days = [...index.keys()];
+  for (const reservation of reservations) {
+    if (reservation.status === 'cancelled') continue;
+    const pickupDate = agencyDateForInstant(reservation.pickup_at, agencyTimeZone);
+    const returnDate = agencyDateForInstant(reservation.return_at, agencyTimeZone);
+    if (!pickupDate || !returnDate || pickupDate >= returnDate) continue;
+    for (const date of days) {
+      const kind: DispatchEventKind | null =
+        date === pickupDate ? 'pickup' :
+        date === returnDate ? 'return' :
+        date > pickupDate && date < returnDate ? 'in_use' : null;
+      if (kind) index.get(date)!.push({ reservation, kind, date });
+    }
+  }
+  const order: Record<DispatchEventKind, number> = { pickup: 0, return: 1, in_use: 2 };
+  for (const events of index.values()) {
+    events.sort((a, b) =>
+      order[a.kind] - order[b.kind] ||
+      a.reservation.reference_code.localeCompare(b.reservation.reference_code)
+    );
+  }
+  return index;
+}
