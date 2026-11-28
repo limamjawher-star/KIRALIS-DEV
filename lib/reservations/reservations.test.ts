@@ -84,6 +84,9 @@ test('Reservation API enforces agency scope, server quotation and RPC confirmati
   assert.match(server, /vehicle_seasonal_rates/);
   assert.match(server, /\.eq\('agency_id', params\.agencyId\)/);
   assert.match(server, /status: 'pending'/);
+  assert.match(server, /expectedSubtotalMinor/);
+  assert.match(server, /expectedDepositMinor/);
+  assert.match(server, /Rates changed/);
   assert.match(server, /tax_minor: 0/);
   assert.match(route, /resolveAuthenticatedAgencyForApi/);
   assert.match(route, /isTrustedOriginRequest/);
