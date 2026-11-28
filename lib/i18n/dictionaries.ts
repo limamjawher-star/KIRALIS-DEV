@@ -455,10 +455,10 @@ const FR_DICTIONARY: Dictionary = {
       navLabel: 'Calendrier',
       title: 'Calendrier',
       description:
-        'Planning mensuel des départs, retours et immobilisations de flotte sur le fuseau horaire Africa/Tunis.',
+        'Planning réel des départs, retours et locations en cours, dans le fuseau horaire de votre agence.',
       emptyTitle: 'Aucun mouvement planifié',
       emptyDescription:
-        'Sélectionnez une date pour consulter les mouvements prévus. Les réservations et entretiens s’afficheront ici une fois connectés.',
+        'Sélectionnez une date pour consulter les réservations et mouvements de votre agence.',
       plannedFeatureSummary: 'Planning visuel multi-véhicules, départs, retours et périodes de maintenance.',
     },
     contracts: {
@@ -676,7 +676,7 @@ const FR_DICTIONARY: Dictionary = {
     viewList: 'Liste du mois',
     selectedDateLabel: 'Date sélectionnée',
     noScheduledEvents:
-      'Aucun départ, retour ou entretien n’est planifié pour cette date.',
+      'Aucun départ ni retour prévu pour cette date.',
     legendHint: 'Fuseau horaire de référence : Africa/Tunis (UTC+1).',
   },
   assistant: {
@@ -1068,10 +1068,10 @@ const EN_DICTIONARY: Dictionary = {
       navLabel: 'Calendar',
       title: 'Calendar',
       description:
-        'Monthly schedule of pickups, returns, and maintenance holds in the Africa/Tunis timezone.',
+        'Live schedule of vehicle pickups, returns and ongoing rentals in your agency timezone.',
       emptyTitle: 'No scheduled movements',
       emptyDescription:
-        'Select any date to inspect planned activity. Reservations and maintenance slots will appear here once connected.',
+        'Select a date to see your agency reservations and handover activities.',
       plannedFeatureSummary: 'Multi-vehicle visual schedule, handovers, and service windows.',
     },
     contracts: {
@@ -1645,10 +1645,10 @@ const AR_DICTIONARY: Dictionary = {
       navLabel: 'الرزنامة',
       title: 'الرزنامة',
       description:
-        'الجدول الشهري لعمليات التسليم والاسترجاع والصيانة بتوقيت تونس (Africa/Tunis).',
+        'جدول عمليات التسليم والإرجاع والكراء الجاري بتوقيت وكالتك المحلي.',
       emptyTitle: 'لا توجد مواعيد مجدولة',
       emptyDescription:
-        'اختر أي تاريخ للاطلاع على المواعيد. ستظهر الحجوزات والصيانة هنا بعد ربط قاعدة البيانات.',
+        'اختر تاريخاً لعرض حجوزات الوكالة وعمليات تسليم السيارات وإرجاعها.',
       plannedFeatureSummary: 'جدول زمني متعدد السيارات للتسليم والاسترجاع والصيانة.',
     },
     contracts: {
