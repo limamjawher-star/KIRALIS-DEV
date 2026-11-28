@@ -6,7 +6,7 @@ import { diffCalendarDays } from '@/lib/vehicles/compliance';
 export type ReportPeriod = 'month' | 'quarter' | 'year';
 export type ReportBookingRow = Pick<ReservationRow,
   'id' | 'reference_code' | 'vehicle_id' | 'status' | 'pickup_at' | 'return_at' | 'total_minor'>;
-export type BookingReportStatus = 'pending' | 'confirmed' | 'active' | 'completed' | 'cancelled';
+export type BookingReportStatus = 'draft' | 'pending' | 'confirmed' | 'active' | 'completed' | 'cancelled';
 const BOOKED_STATUSES = new Set(['confirmed', 'active', 'completed']);
 
 export interface OperationalSummary {
@@ -62,12 +62,11 @@ export function summarizeAgencyBookings(
     return pickup !== null && pickup >= startDate && pickup < endDateExclusive;
   });
   const counts: OperationalSummary['counts'] =
-    { pending: 0, confirmed: 0, active: 0, completed: 0, cancelled: 0 };
+    { draft: 0, pending: 0, confirmed: 0, active: 0, completed: 0, cancelled: 0 };
   let bookedValueMinor = 0;
   let bookedRentalDays = 0;
   let committedBookingCount = 0;
   for (const booking of selected) {
-    if (booking.status === 'draft') continue;
     if (Object.prototype.hasOwnProperty.call(counts, booking.status)) {
       counts[booking.status as BookingReportStatus] += 1;
     }
