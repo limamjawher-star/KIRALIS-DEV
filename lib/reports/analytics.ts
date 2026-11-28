@@ -4,6 +4,8 @@ import { agencyDateForInstant } from '@/lib/reservations/domain';
 import { diffCalendarDays } from '@/lib/vehicles/compliance';
 
 export type ReportPeriod = 'month' | 'quarter' | 'year';
+export type ReportBookingRow = Pick<ReservationRow,
+  'id' | 'reference_code' | 'vehicle_id' | 'status' | 'pickup_at' | 'return_at' | 'total_minor'>;
 export type BookingReportStatus = 'pending' | 'confirmed' | 'active' | 'completed' | 'cancelled';
 const BOOKED_STATUSES = new Set(['confirmed', 'active', 'completed']);
 
@@ -18,7 +20,7 @@ export interface OperationalSummary {
   averageBookedDays: number | null;
   activeFleetCount: number;
   counts: Record<BookingReportStatus, number>;
-  recent: ReservationRow[];
+  recent: ReportBookingRow[];
 }
 
 function pad(n: number) { return String(n).padStart(2, '0'); }
@@ -51,7 +53,7 @@ export function summarizeAgencyBookings(
   period: ReportPeriod,
   today: string,
   timeZone: string,
-  reservations: readonly ReservationRow[],
+  reservations: readonly ReportBookingRow[],
   vehicles: readonly VehicleRecord[]
 ): OperationalSummary {
   const { startDate, endDateExclusive } = agencyReportWindow(period, today);
