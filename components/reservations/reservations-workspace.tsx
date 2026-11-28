@@ -164,7 +164,7 @@ export function ReservationsWorkspace({
   }
   async function createBooking(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (creatingRef.current || saving || quote?.key !== quoteKey) { setModalError(copy.quoteFirst); return; }
+    if (creatingRef.current || saving || !quote || quote.key !== quoteKey) { setModalError(copy.quoteFirst); return; }
     const payload = buildPayload();
     if (!payload) { setModalError(copy.fromNow); return; }
     creatingRef.current = true;
