@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS public.vehicle_handover_inspections (
   keys_count smallint NOT NULL CHECK (keys_count BETWEEN 0 AND 10),
   documents_present boolean NOT NULL,
   staff_attested boolean NOT NULL CHECK (staff_attested = true),
-  recorded_by uuid NOT NULL REFERENCES auth.users(id) ON DELETE RESTRICT DEFAULT auth.uid(),
+  recorded_by uuid REFERENCES auth.users(id) ON DELETE SET NULL DEFAULT auth.uid(),
   created_at timestamptz NOT NULL DEFAULT now(),
   CONSTRAINT handover_agency_id_unique UNIQUE (agency_id,id),
   CONSTRAINT handover_one_per_kind UNIQUE (agency_id,reservation_id,inspection_kind),
@@ -104,8 +104,7 @@ BEGIN
     'vehicle_handover_inspection',NEW.id,
     pg_catalog.jsonb_build_object(
       'reservation_id',NEW.reservation_id,
-      'kind',NEW.inspection_kind,
-      'recorded_by',NEW.recorded_by
+      'kind',NEW.inspection_kind
     )
   );
   RETURN NEW;
