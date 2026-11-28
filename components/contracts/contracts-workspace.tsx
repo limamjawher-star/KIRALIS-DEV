@@ -11,6 +11,8 @@ import type { ReservationRow } from '@/lib/supabase/database.types';
 import type { CustomerRecord } from '@/lib/customers/types';
 import type { VehicleRecord } from '@/lib/vehicles/types';
 import type { RentalContractDraft } from '@/lib/contracts/server';
+import type { HandoverInspection } from '@/lib/handovers/domain';
+import { HandoverWorkspace } from '@/components/contracts/handover-workspace';
 import { useAppPreferences } from '@/components/providers/app-preferences-provider';
 import { AlertBanner } from '@/components/ui/alert-banner';
 import { cn } from '@/lib/utils';
@@ -96,12 +98,17 @@ export interface ContractsWorkspaceProps {
   schemaReady: boolean;
   limited: boolean;
   initialError: string | null;
+  initialInspections: HandoverInspection[];
+  inspectionSchemaReady: boolean;
+  inspectionLimited: boolean;
+  inspectionError: string | null;
 }
 const PANEL = 'min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_2px_12px_-7px_rgba(15,23,42,.15)] dark:border-slate-800 dark:bg-[#111827]';
 
 export function ContractsWorkspace({
   agency, role, reservations, vehicles, customers,
   initialContracts, schemaReady, limited, initialError,
+  initialInspections, inspectionSchemaReady, inspectionLimited, inspectionError,
 }: ContractsWorkspaceProps) {
   const { locale } = useAppPreferences();
   const copy = TEXT[locale];
@@ -264,6 +271,11 @@ export function ContractsWorkspace({
                     {booking?.reference_code||contract.reservation_id.slice(0,8)} · {fmtDate(contract.created_at)}
                   </p>
                 </div>
+                {booking && ['confirmed','active','completed'].includes(booking.status) ? <Link
+                  href={`/contracts/preview/${booking.id}`}
+                  className="inline-flex min-h-9 items-center rounded-lg border border-indigo-200 bg-indigo-50 px-3 text-[11px] font-semibold text-indigo-700 hover:bg-indigo-100 focus-visible:ring-2 focus-visible:ring-indigo-500 dark:border-indigo-800 dark:bg-indigo-950/40 dark:text-indigo-300">
+                  {locale === 'fr' ? 'Fiche à imprimer' : locale === 'ar' ? 'ورقة للطباعة' : 'Print preparation sheet'}
+                </Link> : null}
                 <span className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-[11px] font-semibold text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
                   <LockKeyhole className="h-3.5 w-3.5" aria-hidden="true"/>{contract.status==='draft'?copy.privateDraft:contract.status}
                 </span>
@@ -323,6 +335,16 @@ export function ContractsWorkspace({
           </div>}
         </section>
       </div>
+      <HandoverWorkspace
+        key={agency.id}
+        agency={agency}
+        reservations={reservations}
+        vehicles={vehicles}
+        initialInspections={initialInspections}
+        schemaReady={inspectionSchemaReady}
+        limited={inspectionLimited}
+        initialError={inspectionError}
+      />
       <div className="flex flex-wrap items-start gap-3 rounded-xl border border-amber-200 bg-amber-50/70 px-4 py-3 text-xs text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-200">
         <LockKeyhole className="h-4 w-4 shrink-0" aria-hidden="true"/>
         <p className="flex-1 leading-relaxed">{copy.legalNotice}</p>
