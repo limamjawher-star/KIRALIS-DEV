@@ -142,7 +142,7 @@ export async function createAgencyReservation(
   const { expectedSubtotalMinor, expectedDepositMinor, ...draftInput } = input;
   const quote = await quoteAgencyReservation(supabase, { ...params, raw: draftInput });
   if (!quote.ok) return quote;
-  const { draft, preview, depositMinor, dailyRateMinor } = quote.data;
+  const { draft, preview, depositMinor } = quote.data;
   if (preview.subtotalMinor !== expectedSubtotalMinor ||
       depositMinor !== expectedDepositMinor) {
     return { ok: false, status: 409, error: 'Rates changed. Please recalculate the quote before booking.' };
